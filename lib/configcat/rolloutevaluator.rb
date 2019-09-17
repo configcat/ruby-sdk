@@ -29,12 +29,12 @@ module ConfigCat
         comparator = rollout_rule.fetch("Comparator", nil)
         value = rollout_rule.fetch("Value", nil)
         if comparator == 0
-          if comparison_value.to_s.split_p(",").map { |x| x.strip() }.include?(user_value.to_s)
+          if comparison_value.to_s.split(",").map { |x| x.strip() }.include?(user_value.to_s)
             return value
           end
         else
           if comparator == 1
-            if !comparison_value.to_s.split_p(",").map { |x| x.strip() }.include?(user_value.to_s)
+            if !comparison_value.to_s.split(",").map { |x| x.strip() }.include?(user_value.to_s)
               return value
             end
           else

@@ -7,7 +7,7 @@ module ConfigCat
 
     PREDEFINED = ["identifier", "email", "country"]
 
-    def initialize(identifier, email=nil, country=nil, custom=nil)
+    def initialize(identifier, email: nil, country: nil, custom: nil)
       @__identifier = identifier
       @__data = {"identifier" => identifier, "email" => email, "country" => country}
       @__custom = custom
@@ -25,7 +25,7 @@ module ConfigCat
 
       if !@__custom.equal?(nil)
         for customField in @__custom
-          if customField.downcase() == attribute
+          if customField.to_s.downcase() == attribute
             return @__custom[customField]
           end
         end
