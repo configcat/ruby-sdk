@@ -1,11 +1,12 @@
 module ConfigCat
 
-  __PREDEFINED__ = ["identifier", "email", "country"]
-
   class User
     #
     #    The user object for variation evaluation
     #
+
+    PREDEFINED = ["identifier", "email", "country"]
+
     def initialize(identifier, email=nil, country=nil, custom=nil)
       @__identifier = identifier
       @__data = {"identifier" => identifier, "email" => email, "country" => country}
@@ -18,7 +19,7 @@ module ConfigCat
 
     def get_attribute(attribute)
       attribute = attribute.to_s.downcase()
-      if __PREDEFINED__.include?(attribute)
+      if PREDEFINED.include?(attribute)
         return @__data[attribute]
       end
 

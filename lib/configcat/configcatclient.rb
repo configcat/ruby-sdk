@@ -1,5 +1,9 @@
 require 'configcat/interfaces'
 require 'configcat/configcache'
+require 'configcat/configfetcher'
+require 'configcat/autopollingcachepolicy'
+require 'configcat/manualpollingcachepolicy'
+require 'configcat/rolloutevaluator'
 
 module ConfigCat
   class ConfigCatClient
@@ -21,26 +25,26 @@ module ConfigCat
         @_config_cache = InMemoryConfigCache.new()
       end
 
-      # if poll_interval_seconds > 0
-      #   @_config_fetcher = CacheControlConfigFetcher.new(api_key, "p", base_url)
-      #   @_cache_policy = AutoPollingCachePolicy.new(@_config_fetcher, @_config_cache, poll_interval_seconds, max_init_wait_time_seconds, on_configuration_changed_callback)
-      # else
-      #   if cache_time_to_live_seconds > 0
-      #     @_config_fetcher = CacheControlConfigFetcher.new(api_key, "l", base_url)
-      #     @_cache_policy = LazyLoadingCachePolicy.new(@_config_fetcher, @_config_cache, cache_time_to_live_seconds)
-      #   else
-      #     @_config_fetcher = CacheControlConfigFetcher.new(api_key, "m", base_url)
-      #     @_cache_policy = ManualPollingCachePolicy.new(@_config_fetcher, @_config_cache)
-      #   end
-      # end
+      if poll_interval_seconds > 0
+        @_config_fetcher = CacheControlConfigFetcher.new(api_key, "p", base_url)
+        @_cache_policy = AutoPollingCachePolicy.new(@_config_fetcher, @_config_cache, poll_interval_seconds, max_init_wait_time_seconds, on_configuration_changed_callback)
+      else
+        if cache_time_to_live_seconds > 0
+          @_config_fetcher = CacheControlConfigFetcher.new(api_key, "l", base_url)
+          @_cache_policy = LazyLoadingCachePolicy.new(@_config_fetcher, @_config_cache, cache_time_to_live_seconds)
+        else
+          @_config_fetcher = CacheControlConfigFetcher.new(api_key, "m", base_url)
+          @_cache_policy = ManualPollingCachePolicy.new(@_config_fetcher, @_config_cache)
+        end
+      end
     end
 
     def get_value(key, default_value, user=nil)
-      # config = @_cache_policy.get()
+      config = @_cache_policy.get()
       if config === nil
         return default_value
       end
-      # return RolloutEvaluator.evaluate(key, user, default_value, config)
+      return RolloutEvaluator.evaluate(key, user, default_value, config)
     end
 
     def get_all_keys()
