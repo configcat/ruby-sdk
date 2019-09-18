@@ -24,9 +24,9 @@ module ConfigCat
       end
 
       if !@__custom.equal?(nil)
-        for customField in @__custom
+        @__custom.each do |customField, customValue|
           if customField.to_s.downcase() == attribute
-            return @__custom[customField]
+            return customValue
           end
         end
       end
