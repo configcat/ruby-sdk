@@ -39,12 +39,12 @@ module ConfigCat
             end
           else
             if comparator == 2
-              if user_value.to_s.__contains__(comparison_value.to_s)
+              if user_value.to_s.include?(comparison_value.to_s)
                 return value
               end
             else
               if comparator == 3
-                if !user_value.to_s.__contains__(comparison_value.to_s)
+                if !user_value.to_s.include?(comparison_value.to_s)
                   return value
                 end
               end
@@ -56,7 +56,7 @@ module ConfigCat
       if rollout_percentage_items.size > 0
         user_key = user.get_identifier()
         hash_candidate = ("%s%s" % [key, user_key]).encode("utf-8")
-        hash_val = Digest::SHA256.hexdigest(hash_candidate)[0...7].to_i(base=16) % 100
+        hash_val = Digest::SHA1.hexdigest(hash_candidate)[0...7].to_i(base=16) % 100
         bucket = 0
         for rollout_percentage_item in rollout_percentage_items || []
           bucket += rollout_percentage_item.fetch("Percentage", 0)
