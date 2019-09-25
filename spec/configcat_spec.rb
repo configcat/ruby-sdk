@@ -1,4 +1,4 @@
-require "configcat"
+require 'configcat'
 
 RSpec.describe ConfigCat do
   it "has a version number" do
