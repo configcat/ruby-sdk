@@ -1,8 +1,11 @@
-require 'test/unit'
-require_relative '../lib/configcat'
+require 'configcat'
 
-class RolloutTests < Test::Unit::TestCase
-  def test_matrix()
+RSpec.describe ConfigCat do
+  it "has a version number" do
+    expect(ConfigCat::VERSION).not_to be nil
+  end
+
+  it "integration test matrix" do
     script_dir = File.dirname(__FILE__)
     file_path = File.join(script_dir,"./testmatrix.csv")
     content = ""
@@ -42,14 +45,15 @@ class RolloutTests < Test::Unit::TestCase
         i += 1
       end
     end
-    assert_equal(errors, "")
+    expect(errors).to eq ""
     client.stop()
   end
 
-  def test_wrong_user_object()
+  it "test wrong user object" do
     client = ConfigCat.create_client("PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A")
     setting_value = client.get_value("stringContainsDogDefaultCat", "Lion", {"Email" => "a@configcat.com"})
-    assert_equal(setting_value, "Cat")
+    expect(setting_value).to eq "Cat"
     client.stop()
   end
+
 end
