@@ -48,4 +48,12 @@ RSpec.describe ConfigCat do
     expect(errors).to eq ""
     client.stop()
   end
+
+  it "test wrong user object" do
+    client = ConfigCat.create_client("PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A")
+    setting_value = client.get_value("stringContainsDogDefaultCat", "Lion", {"Email" => "a@configcat.com"})
+    expect(setting_value).to eq "Cat"
+    client.stop()
+  end
+
 end
