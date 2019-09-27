@@ -52,7 +52,7 @@ module ConfigCat
       if config === nil
         return []
       end
-      return config.to_a
+      return config
     end
 
     def force_refresh()

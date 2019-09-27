@@ -14,7 +14,7 @@ module ConfigCat
       @_api_key = api_key
       @_headers = {"User-Agent" => ((("ConfigCat-Ruby/") + mode) + ("-")) + VERSION, "X-ConfigCat-UserAgent" => ((("ConfigCat-Ruby/") + mode) + ("-")) + VERSION, "Content-Type" => "application/json"}
       if !base_url.equal?(nil)
-        @_base_url = base_url.rstrip("/")
+        @_base_url = base_url.chomp("/")
       else
         @_base_url = BASE_URL
       end

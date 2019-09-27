@@ -13,7 +13,7 @@ module ConfigCat
     return create_client_with_auto_poll(api_key)
   end
 
-  def ConfigCat.create_client_with_auto_poll(api_key, poll_interval_seconds=60, max_init_wait_time_seconds=5, on_configuration_changed_callback=nil, config_cache_class=nil, base_url=nil)
+  def ConfigCat.create_client_with_auto_poll(api_key, poll_interval_seconds: 60, max_init_wait_time_seconds: 5, on_configuration_changed_callback: nil, config_cache_class: nil, base_url: nil)
     #
     #   Create an instance of ConfigCatClient and setup Auto Poll mode with custom options
     #
