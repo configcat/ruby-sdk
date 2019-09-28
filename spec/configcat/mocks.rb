@@ -32,9 +32,9 @@ class ConfigFetcherWithErrorMock < ConfigFetcher
     @_exception = exception
   end
   def get_configuration_json()
+    raise @_exception
   end
   def close()
-    # pass
   end
 end
 
@@ -47,7 +47,6 @@ class ConfigFetcherWaitMock < ConfigFetcher
     return TEST_JSON
   end
   def close()
-    # pass
   end
 end
 
@@ -60,7 +59,6 @@ class ConfigFetcherCountMock < ConfigFetcher
     return @_value
   end
   def close()
-    # pass
   end
 end
 
