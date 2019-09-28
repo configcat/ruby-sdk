@@ -1,7 +1,5 @@
 require 'configcat/configcache'
-
-TEST_JSON = '{"testKey": { "Value": "testValue", "SettingType": 1, ' \
-            '"PercentageRolloutItems": [], "TargetedRolloutRules": [] }}'
+require_relative 'mocks'
 
 RSpec.describe ConfigCat::InMemoryConfigCache do
   it "test cache" do

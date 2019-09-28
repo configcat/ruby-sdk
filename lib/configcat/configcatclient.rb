@@ -21,7 +21,7 @@ module ConfigCat
       @_api_key = api_key
 
       if config_cache_class
-        @_config_cache = config_cache_class.()
+        @_config_cache = config_cache_class.new()
       else
         @_config_cache = InMemoryConfigCache.new()
       end
@@ -53,7 +53,7 @@ module ConfigCat
       if config === nil
         return []
       end
-      return config
+      return config.keys
     end
 
     def force_refresh()
