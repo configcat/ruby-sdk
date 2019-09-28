@@ -43,7 +43,7 @@ class ConfigFetcherWaitMock < ConfigFetcher
     @_wait_seconds = wait_seconds
   end
   def get_configuration_json()
-    time.sleep(@_wait_seconds)
+    sleep(@_wait_seconds)
     return TEST_JSON
   end
   def close()

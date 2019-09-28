@@ -3,7 +3,7 @@ require_relative 'mocks'
 
 RSpec.describe ConfigCat::InMemoryConfigCache do
   it "test cache" do
-    config_store = ConfigCat::InMemoryConfigCache.new()
+    config_store = InMemoryConfigCache.new()
     value = config_store.get()
     expect(value).to be nil
     config_store.set(TEST_JSON)
