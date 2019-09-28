@@ -69,9 +69,8 @@ module ConfigCat
           # TODO: Logger is needed
           # log.exception(sys.exc_info()[0])
         end
-      rescue HTTPError => e
+      rescue StandardError => e
         # log.error("Received unexpected response from ConfigFetcher " + e.response.to_s)
-      rescue
         # log.exception(sys.exc_info()[0])
       end
     end

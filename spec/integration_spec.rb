@@ -67,3 +67,58 @@ RSpec.describe 'Integration test: AutoPollTests', type: :feature do
     client.stop()
   end
 end
+
+RSpec.describe 'Integration test: LazyLoadingTests', type: :feature do
+  it "test_without_api_key" do
+    expect {
+      ConfigCat::create_client_with_lazy_load(nil)
+    }.to raise_error(ConfigCat::ConfigCatClientException)
+  end
+  it "test_client_works" do
+    client = ConfigCat::create_client_with_lazy_load(_API_KEY)
+    expect(client.get_value("keySampleText", "default value")).to eq "This text came from ConfigCat"
+    client.stop()
+  end
+  it "test_client_works_valid_base_url" do
+    client = ConfigCat::create_client_with_lazy_load(_API_KEY, base_url: "https://cdn.configcat.com")
+    expect(client.get_value("keySampleText", "default value")).to eq "This text came from ConfigCat"
+    client.stop()
+  end
+  it "test_client_works_invalid_base_url" do
+    client = ConfigCat::create_client_with_lazy_load(_API_KEY, base_url: "https://invalidcdn.configcat.com")
+    expect(client.get_value("keySampleText", "default value")).to eq "default value"
+    client.stop()
+  end
+  it "test_wrong_param" do
+    client = ConfigCat::create_client_with_lazy_load(_API_KEY, cache_time_to_live_seconds: 0)
+    expect(client.get_value("keySampleText", "default value")).to eq "This text came from ConfigCat"
+    client.stop()
+  end
+end
+
+RSpec.describe 'Integration test: ManualPollingTests', type: :feature do
+  it "test_without_api_key" do
+    expect {
+      ConfigCat::create_client_with_manual_poll(nil)
+    }.to raise_error(ConfigCat::ConfigCatClientException)
+  end
+  it "test_client_works" do
+    client = ConfigCat::create_client_with_manual_poll(_API_KEY)
+    expect(client.get_value("keySampleText", "default value")).to eq "default value"
+    client.force_refresh()
+    expect(client.get_value("keySampleText", "default value")).to eq "This text came from ConfigCat"
+    client.stop()
+  end
+  it "test_client_works_valid_base_url" do
+    client = ConfigCat::create_client_with_manual_poll(_API_KEY, base_url: "https://cdn.configcat.com")
+    client.force_refresh()
+    expect(client.get_value("keySampleText", "default value")).to eq "This text came from ConfigCat"
+    client.stop()
+  end
+  it "test_client_works_invalid_base_url" do
+    client = ConfigCat::create_client_with_manual_poll(_API_KEY, base_url: "https://invalidcdn.configcat.com")
+    client.force_refresh()
+    expect(client.get_value("keySampleText", "default value")).to eq "default value"
+    client.stop()
+  end
+end

@@ -37,7 +37,7 @@ module ConfigCat
     return ConfigCatClient.new(api_key, poll_interval_seconds, max_init_wait_time_seconds, on_configuration_changed_callback, 0, config_cache_class, base_url)
   end
 
-  def ConfigCat.create_client_with_lazy_load(api_key, cache_time_to_live_seconds=60, config_cache_class=nil, base_url=nil)
+  def ConfigCat.create_client_with_lazy_load(api_key, cache_time_to_live_seconds: 60, config_cache_class: nil, base_url: nil)
     #
     #   Create an instance of ConfigCatClient and setup Lazy Load mode with custom options
     #
@@ -56,7 +56,7 @@ module ConfigCat
     return ConfigCatClient.new(api_key, 0, 0, nil, cache_time_to_live_seconds, config_cache_class, base_url)
   end
 
-  def ConfigCat.create_client_with_manual_poll(api_key, config_cache_class=nil, base_url=nil)
+  def ConfigCat.create_client_with_manual_poll(api_key, config_cache_class: nil, base_url: nil)
     #
     #   Create an instance of ConfigCatClient and setup Manual Poll mode with custom options
     #

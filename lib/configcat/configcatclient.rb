@@ -3,6 +3,7 @@ require 'configcat/configcache'
 require 'configcat/configfetcher'
 require 'configcat/autopollingcachepolicy'
 require 'configcat/manualpollingcachepolicy'
+require 'configcat/lazyloadingcachepolicy'
 require 'configcat/rolloutevaluator'
 
 module ConfigCat

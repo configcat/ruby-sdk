@@ -28,10 +28,9 @@ module ConfigCat
         ensure
           @_lock.release_write_lock()
         end
-      rescue HTTPError => e
+      rescue StandardError => e
         # TODO: logger is needed
         # log.error("Received unexpected response from ConfigFetcher " + e.response.to_s)
-      rescue
         # log.exception(sys.exc_info()[0])
       end
     end
