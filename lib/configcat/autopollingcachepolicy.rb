@@ -27,9 +27,10 @@ module ConfigCat
     def _run()
       @_is_running = true
       @_is_started.set()
-      while @_is_running
+      loop do
         force_refresh()
         sleep(@_poll_interval_seconds)
+        break if !@_is_running
       end
     end
 
