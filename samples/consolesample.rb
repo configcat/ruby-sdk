@@ -30,7 +30,7 @@ my_setting_value = client.get_value("keySampleText", "default value")
 puts("'keySampleText' value from ConfigCat: " + my_setting_value.to_s)
 
 # 'myKeyNotExits' setting doesn't exist in the project configuration and the client returns default value ('N/A');
-my_setting_not_exists = client.get_value("myKeyNotExits", "N/A")
-puts("'myKeyNotExits' value from ConfigCat: " + my_setting_not_exists.to_s)
+my_setting_not_exists = client.get_value("myKeyNotExists", "N/A")
+puts("'myKeyNotExists' value from ConfigCat: " + my_setting_not_exists.to_s)
 
 client.stop()
