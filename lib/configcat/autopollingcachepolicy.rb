@@ -66,13 +66,13 @@ module ConfigCat
           if !@_on_configuration_changed_callback.equal?(nil) && configuration != old_configuration
             @_on_configuration_changed_callback.call()
           end
-        rescue
-          # TODO: Logger is needed
-          # log.exception(sys.exc_info()[0])
+        rescue Exception => e
+          ConfigCat.logger.error "threw exception #{e.class}:'#{e}'"
+          ConfigCat.logger.error "stacktrace: #{e.backtrace}"
         end
       rescue StandardError => e
-        # log.error("Received unexpected response from ConfigFetcher " + e.response.to_s)
-        # log.exception(sys.exc_info()[0])
+        ConfigCat.logger.error "threw exception #{e.class}:'#{e}'"
+        ConfigCat.logger.error "stacktrace: #{e.backtrace}"
       end
     end
 

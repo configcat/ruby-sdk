@@ -49,9 +49,8 @@ module ConfigCat
           @_lock.release_write_lock()
         end
       rescue StandardError => e
-        # TODO: logger is needed
-        # log.error("Received unexpected response from ConfigFetcher " + e.response.to_s)
-        # log.exception(sys.exc_info()[0])
+        ConfigCat.logger.error "threw exception #{e.class}:'#{e}'"
+        ConfigCat.logger.error "stacktrace: #{e.backtrace}"
       end
     end
 

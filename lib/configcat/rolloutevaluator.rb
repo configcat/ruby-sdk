@@ -6,13 +6,12 @@ module ConfigCat
 
     def self.evaluate(key, user, default_value, config)
       if !user.equal?(nil) && !user.class.equal?(User)
-        # TODO: logging is needed
-        # log.warning("User parameter is not an instance of User type.")
+        ConfigCat.logger.warn "User parameter is not an instance of User type."
         user = nil
       end
       setting_descriptor = config.fetch(key, nil)
       if setting_descriptor === nil
-        # log.warning("Could not find setting by key, returning default value. Key: [%s]", key)
+        ConfigCat.logger.warn "Could not find setting by key, returning default value. Key: #{key}"
         return default_value
       end
       if user === nil

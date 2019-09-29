@@ -1,8 +1,14 @@
 require 'configcat/interfaces'
 require 'configcat/configcatclient'
 require 'configcat/user'
+require 'logger'
 
 module ConfigCat
+
+  @logger = Logger.new(STDOUT)
+  class << self
+    attr_accessor :logger
+  end
 
   def ConfigCat.create_client(api_key)
     #

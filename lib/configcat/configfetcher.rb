@@ -26,13 +26,13 @@ module ConfigCat
     end
 
     def get_configuration_json()
-      # TODO: logger is needed
-      # log.debug("Fetching configuration from ConfigCat")
+      ConfigCat.logger.debug "Fetching configuration from ConfigCat"
       uri = URI.parse((((@_base_url + ("/")) + BASE_PATH) + @_api_key) + BASE_EXTENSION)
       request = Net::HTTP::Get.new(uri.request_uri, @_headers)
       response = @_http.request(request)
       json = JSON.parse(response.body)
-      # log.debug("ConfigCat configuration json fetch response code:[%d] Cached:[%s]", response.status_code, response.from_cache)
+      # TODO: check cached entry
+      ConfigCat.logger.debug "ConfigCat configuration json fetch response code:#{response.code} Cached:#{response['ETag']}"
       return json
     end
 
