@@ -19,14 +19,14 @@ module ConfigCat
       @_is_running = false
       @_start_time = Time.now.utc
       @_lock = Concurrent::ReadWriteLock.new()
+      @_is_started = Concurrent::Event.new()
       @thread = Thread.new{_run()}
+      @_is_started.wait()
     end
 
     def _run()
-      if @_is_running
-        return
-      end
       @_is_running = true
+      @_is_started.set()
       while @_is_running
         force_refresh()
         sleep(@_poll_interval_seconds)
@@ -63,7 +63,7 @@ module ConfigCat
         end
         begin
           if !@_on_configuration_changed_callback.equal?(nil) && configuration != old_configuration
-            @_on_configuration_changed_callback.()
+            @_on_configuration_changed_callback.call()
           end
         rescue
           # TODO: Logger is needed

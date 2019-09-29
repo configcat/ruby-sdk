@@ -20,7 +20,6 @@ class ConfigFetcherMock < ConfigFetcher
     @_configuration = value
   end
   def close()
-    # pass
   end
   def get_call_count()
     return @_call_count

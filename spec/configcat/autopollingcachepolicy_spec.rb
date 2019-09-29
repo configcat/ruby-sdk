@@ -86,24 +86,7 @@ RSpec.describe ConfigCat::AutoPollingCachePolicy do
     call_counter = CallCounter.new()
     config_fetcher = ConfigFetcherMock.new()
     config_cache = InMemoryConfigCache.new()
-    cache_policy = AutoPollingCachePolicy.new(config_fetcher, config_cache, 2, 5, call_counter.callback)
-    sleep(1)
-    expect(config_fetcher.get_call_count).to eq 1
-    expect(call_counter.get_call_count).to eq 1
-    sleep(1.2)
-    expect(config_fetcher.get_call_count).to eq 2
-    expect(call_counter.get_call_count).to eq 1
-    config_fetcher.set_configuration_json(TEST_JSON2)
-    sleep(2.2)
-    expect(config_fetcher.get_call_count).to eq 3
-    expect(call_counter.get_call_count).to eq 2
-    cache_policy.stop()
-  end
-  it "test_callback_exception" do
-    call_counter = CallCounter.new()
-    config_fetcher = ConfigFetcherMock.new()
-    config_cache = InMemoryConfigCache.new()
-    cache_policy = AutoPollingCachePolicy.new(config_fetcher, config_cache, 2, 5, call_counter.callback_exception)
+    cache_policy = AutoPollingCachePolicy.new(config_fetcher, config_cache, 2, 5, call_counter.method(:callback))
     sleep(1)
     expect(config_fetcher.get_call_count).to eq 1
     expect(call_counter.get_call_count).to eq 1
