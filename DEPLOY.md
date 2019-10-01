@@ -6,7 +6,7 @@
    ```
 2. Increase the version in the `lib/configcat/version.rb` file.
 ## Publish
-Use the **same version** for the git tag as in the podspec.
+Use the **same version** for the git tag as in the `version.rb`.
 - Via git tag
     1. Create a new version tag.
        ```bash
