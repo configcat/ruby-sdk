@@ -2,6 +2,7 @@
 ## Preparation
 1. Run tests
    ```bash
+   bundle install --binstubs
    bin/rspec --format doc
    ```
 2. Increase the version in the `lib/configcat/version.rb` file.
