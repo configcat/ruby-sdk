@@ -9,5 +9,6 @@ deploy:
   provider: rubygems
   api_key: "$GEM_API_KEY"
   gemspec: "configcat.gemspec"
+  gem: "configcat"
   on:
     tags: true
