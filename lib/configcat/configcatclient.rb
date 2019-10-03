@@ -9,12 +9,12 @@ require 'configcat/rolloutevaluator'
 module ConfigCat
   class ConfigCatClient
     def initialize(api_key,
-                   poll_interval_seconds=60,
-                   max_init_wait_time_seconds=5,
-                   on_configuration_changed_callback=nil,
-                   cache_time_to_live_seconds=60,
-                   config_cache_class=nil,
-                   base_url=nil)
+                   poll_interval_seconds:60,
+                   max_init_wait_time_seconds:5,
+                   on_configuration_changed_callback:nil,
+                   cache_time_to_live_seconds:60,
+                   config_cache_class:nil,
+                   base_url:nil)
       if api_key === nil
         raise ConfigCatClientException, "API Key is required."
       end

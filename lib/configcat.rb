@@ -40,7 +40,13 @@ module ConfigCat
     if max_init_wait_time_seconds < 0
       max_init_wait_time_seconds = 0
     end
-    return ConfigCatClient.new(api_key, poll_interval_seconds, max_init_wait_time_seconds, on_configuration_changed_callback, 0, config_cache_class, base_url)
+    return ConfigCatClient.new(api_key,
+                               poll_interval_seconds: poll_interval_seconds,
+                               max_init_wait_time_seconds: max_init_wait_time_seconds,
+                               on_configuration_changed_callback: on_configuration_changed_callback,
+                               cache_time_to_live_seconds: 0,
+                               config_cache_class: config_cache_class,
+                               base_url: base_url)
   end
 
   def ConfigCat.create_client_with_lazy_load(api_key, cache_time_to_live_seconds: 60, config_cache_class: nil, base_url: nil)
@@ -59,7 +65,13 @@ module ConfigCat
     if cache_time_to_live_seconds < 1
       cache_time_to_live_seconds = 1
     end
-    return ConfigCatClient.new(api_key, 0, 0, nil, cache_time_to_live_seconds, config_cache_class, base_url)
+    return ConfigCatClient.new(api_key,
+                               poll_interval_seconds: 0,
+                               max_init_wait_time_seconds: 0,
+                               on_configuration_changed_callback: nil,
+                               cache_time_to_live_seconds: cache_time_to_live_seconds,
+                               config_cache_class: config_cache_class,
+                               base_url: base_url)
   end
 
   def ConfigCat.create_client_with_manual_poll(api_key, config_cache_class: nil, base_url: nil)
@@ -74,7 +86,13 @@ module ConfigCat
     if api_key === nil
       raise ConfigCatClientException, "API Key is required."
     end
-    return ConfigCatClient.new(api_key, 0, 0, nil, 0, config_cache_class, base_url)
+    return ConfigCatClient.new(api_key,
+                               poll_interval_seconds: 0,
+                               max_init_wait_time_seconds: 0,
+                               on_configuration_changed_callback: nil,
+                               cache_time_to_live_seconds: 0,
+                               config_cache_class: config_cache_class,
+                               base_url: base_url)
   end
 
 end
