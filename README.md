@@ -9,6 +9,7 @@ ConfigCat is a <a href="https://configcat.com" target="_blank">hosted feature fl
 [![Build Status](https://travis-ci.com/configcat/ruby-sdk.svg?branch=master)](https://travis-ci.com/configcat/ruby-sdk)
 [![Coverage Status](https://coveralls.io/repos/github/configcat/ruby-sdk/badge.svg?branch=master)](https://coveralls.io/github/configcat/ruby-sdk?branch=master)
 [![Gem version](https://badge.fury.io/rb/configcat.svg)](https://rubygems.org/gems/configcat)
+![License](https://img.shields.io/github/license/configcat/ruby-sdk.svg)
 
 ## Getting started
 
