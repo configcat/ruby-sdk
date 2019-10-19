@@ -1,3 +1,4 @@
+require 'spec_helper'
 require 'configcat/manualpollingcachepolicy'
 require 'configcat/configcache'
 require_relative 'mocks'

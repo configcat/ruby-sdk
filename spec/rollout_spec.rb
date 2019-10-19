@@ -1,4 +1,4 @@
-require 'configcat'
+require 'spec_helper'
 
 RSpec.describe 'Rollout test', type: :feature do
   it "test matrix" do

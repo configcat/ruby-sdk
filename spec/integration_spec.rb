@@ -1,4 +1,4 @@
-require 'configcat'
+require 'spec_helper'
 
 _API_KEY = "PKDVCLf-Hq-h-kCzMp-L7Q/PaDVCFk9EpmD6sLpGLltTA"
 RSpec.describe 'Integration test: DefaultTests', type: :feature do
