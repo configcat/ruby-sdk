@@ -7,7 +7,7 @@ require 'json'
 module ConfigCat
   BASE_URL = "https://cdn.configcat.com"
   BASE_PATH = "configuration-files/"
-  BASE_EXTENSION = "/config_v2.json"
+  BASE_EXTENSION = "/config_v3.json"
 
   class CacheControlConfigFetcher < ConfigFetcher
     def initialize(api_key, mode, base_url=nil)
