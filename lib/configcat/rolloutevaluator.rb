@@ -44,36 +44,43 @@ module ConfigCat
       # Evaluate targeting rules
       for rollout_rule in rollout_rules
         comparison_attribute = rollout_rule.fetch(COMPARISON_ATTRIBUTE)
-        user_value = user.get_attribute(comparison_attribute)
-        if user_value === nil || !user_value
-          next
-        end
         comparison_value = rollout_rule.fetch(COMPARISON_VALUE, nil)
         comparator = rollout_rule.fetch(COMPARATOR, nil)
+
+        user_value = user.get_attribute(comparison_attribute)
+        if user_value === nil || !user_value
+          ConfigCat.logger.info(format_no_match_rule(comparison_attribute, comparator, comparison_value))
+          next
+        end
+
         value = rollout_rule.fetch(VALUE, nil)
 
         # IS ONE OF
         if comparator == 0
           if comparison_value.to_s.split(",").map { |x| x.strip() }.include?(user_value.to_s)
+            ConfigCat.logger.info(format_match_rule(comparison_attribute, comparator, comparison_value, value))
             return value
           end
         # IS NOT ONE OF
         elsif comparator == 1
           if !comparison_value.to_s.split(",").map { |x| x.strip() }.include?(user_value.to_s)
+            ConfigCat.logger.info(format_match_rule(comparison_attribute, comparator, comparison_value, value))
             return value
           end
         # CONTAINS
         elsif comparator == 2
           if user_value.to_s.include?(comparison_value.to_s)
+            ConfigCat.logger.info(format_match_rule(comparison_attribute, comparator, comparison_value, value))
             return value
           end
         # DOES NOT CONTAIN
         elsif comparator == 3
           if !user_value.to_s.include?(comparison_value.to_s)
+            ConfigCat.logger.info(format_match_rule(comparison_attribute, comparator, comparison_value, value))
             return value
           end
         # IS ONE OF, IS NOT ONE OF (Semantic version)
-        elsif (4 <= comparator) and (comparator <= 5)
+        elsif (4 <= comparator) && (comparator <= 5)
           begin
             match = false
             user_value_version = Semantic::Version.new(user_value.to_s.strip())
@@ -90,14 +97,14 @@ module ConfigCat
             next
           end
         # LESS THAN, LESS THAN OR EQUALS TO, GREATER THAN, GREATER THAN OR EQUALS TO (Semantic version)
-        elsif (6 <= comparator) and (comparator <= 9)
+        elsif (6 <= comparator) && (comparator <= 9)
           begin
             user_value_version = Semantic::Version.new(user_value.to_s.strip())
             comparison_value_version = Semantic::Version.new(comparison_value.to_s.strip())
-            if (comparator == 6 and user_value_version < comparison_value_version) or
-               (comparator == 7 and user_value_version <= comparison_value_version) or
-               (comparator == 8 and user_value_version > comparison_value_version) or
-               (comparator == 9 and user_value_version >= comparison_value_version)
+            if (comparator == 6 && user_value_version < comparison_value_version) ||
+               (comparator == 7 && user_value_version <= comparison_value_version) ||
+               (comparator == 8 && user_value_version > comparison_value_version) ||
+               (comparator == 9 && user_value_version >= comparison_value_version)
               ConfigCat.logger.info(format_match_rule(comparison_attribute, comparator, comparison_value, value))
               return value
             end
@@ -105,16 +112,16 @@ module ConfigCat
             ConfigCat.logger.warn(format_validation_error_rule(comparison_attribute, comparator, comparison_value, e.to_s))
             next
           end
-        elsif (10 <= comparator) and (comparator <= 15)
+        elsif (10 <= comparator) && (comparator <= 15)
           begin
             user_value_float = Float(user_value.to_s.gsub(",", "."))
             comparison_value_float = Float(comparison_value.to_s.gsub(",", "."))
-            if (comparator == 10 and user_value_float == comparison_value_float) or
-               (comparator == 11 and user_value_float != comparison_value_float) or
-               (comparator == 12 and user_value_float < comparison_value_float) or
-               (comparator == 13 and user_value_float <= comparison_value_float) or
-               (comparator == 14 and user_value_float > comparison_value_float) or
-               (comparator == 15 and user_value_float >= comparison_value_float)
+            if (comparator == 10 && user_value_float == comparison_value_float) ||
+               (comparator == 11 && user_value_float != comparison_value_float) ||
+               (comparator == 12 && user_value_float < comparison_value_float) ||
+               (comparator == 13 && user_value_float <= comparison_value_float) ||
+               (comparator == 14 && user_value_float > comparison_value_float) ||
+               (comparator == 15 && user_value_float >= comparison_value_float)
               ConfigCat.logger.info(format_match_rule(comparison_attribute, comparator, comparison_value, value))
               return value
             end
@@ -123,6 +130,8 @@ module ConfigCat
             next
           end
         end
+
+        ConfigCat.logger.info(format_no_match_rule(comparison_attribute, comparator, comparison_value))
       end
 
       if rollout_percentage_items.size > 0
@@ -139,7 +148,9 @@ module ConfigCat
           end
         end
       end
-      return setting_descriptor.fetch(VALUE, default_value)
+      def_value = setting_descriptor.fetch(VALUE, default_value)
+      ConfigCat.logger.info("Returning %s" % def_value)
+      return def_value
     end
 
     private

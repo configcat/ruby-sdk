@@ -48,29 +48,37 @@ module ConfigCat
 
     def force_refresh()
       begin
-        @_lock.acquire_read_lock()
-        old_configuration = @_config_cache.get()
-      ensure
-        @_lock.release_read_lock()
-      end
-      begin
         configuration = @_config_fetcher.get_configuration_json()
+
         begin
-          @_lock.acquire_write_lock()
-          @_config_cache.set(configuration)
-          @_initialized = true
+          @_lock.acquire_read_lock()
+          old_configuration = @_config_cache.get()
         ensure
-          @_lock.release_write_lock()
+          @_lock.release_read_lock()
         end
-        begin
-          if !@_on_configuration_changed_callback.equal?(nil) && configuration != old_configuration
-            @_on_configuration_changed_callback.call()
+
+        if configuration != old_configuration
+          begin
+            @_lock.acquire_write_lock()
+            @_config_cache.set(configuration)
+            @_initialized = true
+          ensure
+            @_lock.release_write_lock()
           end
-        rescue Exception => e
-          ConfigCat.logger.error "threw exception #{e.class}:'#{e}'"
-          ConfigCat.logger.error "stacktrace: #{e.backtrace}"
+          begin
+            if !@_on_configuration_changed_callback.equal?(nil)
+              @_on_configuration_changed_callback.()
+            end
+          rescue Exception => e
+            ConfigCat.logger.error("Exception in on_configuration_changed_callback: #{e.class}:'#{e}'")
+          end
         end
-      rescue StandardError => e
+
+        if !@_initialized && !old_configuration.equal?(nil)
+          @_initialized = true
+        end
+      rescue Exception => e
+        ConfigCat.logger.error("Double-check your API KEY at https://app.configcat.com/apikey.")
         ConfigCat.logger.error "threw exception #{e.class}:'#{e}'"
         ConfigCat.logger.error "stacktrace: #{e.backtrace}"
       end
