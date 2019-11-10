@@ -39,6 +39,10 @@ module ConfigCat
     #   :param config_cache_class: If you want to use custom caching instead of the client's default InMemoryConfigCache,
     #   You can provide an implementation of ConfigCache.
     #   :param base_url: You can set a base_url if you want to use a proxy server between your application and ConfigCat
+    #   :param proxy_address: Proxy address
+    #   :param proxy_port: Proxy port
+    #   :param proxy_user: username for proxy authentication
+    #   :param proxy_pass: password for proxy authentication
     #
     if api_key === nil
       raise ConfigCatClientException, "API Key is required."
@@ -78,6 +82,10 @@ module ConfigCat
     #   :param config_cache_class: If you want to use custom caching instead of the client's default InMemoryConfigCache,
     #   You can provide an implementation of ConfigCache.
     #   :param base_url: You can set a base_url if you want to use a proxy server between your application and ConfigCat
+    #   :param proxy_address: Proxy address
+    #   :param proxy_port: Proxy port
+    #   :param proxy_user: username for proxy authentication
+    #   :param proxy_pass: password for proxy authentication
     #
     if api_key === nil
       raise ConfigCatClientException, "API Key is required."
@@ -112,6 +120,10 @@ module ConfigCat
     #   :param config_cache_class: If you want to use custom caching instead of the client's default InMemoryConfigCache,
     #   You can provide an implementation of ConfigCache.
     #   :param base_url: You can set a base_url if you want to use a proxy server between your application and ConfigCat
+    #   :param proxy_address: Proxy address
+    #   :param proxy_port: Proxy port
+    #   :param proxy_user: username for proxy authentication
+    #   :param proxy_pass: password for proxy authentication
     #
     if api_key === nil
       raise ConfigCatClientException, "API Key is required."
