@@ -19,7 +19,16 @@ module ConfigCat
     return create_client_with_auto_poll(api_key)
   end
 
-  def ConfigCat.create_client_with_auto_poll(api_key, poll_interval_seconds: 60, max_init_wait_time_seconds: 5, on_configuration_changed_callback: nil, config_cache_class: nil, base_url: nil)
+  def ConfigCat.create_client_with_auto_poll(api_key,
+                                             poll_interval_seconds: 60,
+                                             max_init_wait_time_seconds: 5,
+                                             on_configuration_changed_callback: nil,
+                                             config_cache_class: nil,
+                                             base_url: nil,
+                                             proxy_address:nil,
+                                             proxy_port:nil,
+                                             proxy_user:nil,
+                                             proxy_pass:nil)
     #
     #   Create an instance of ConfigCatClient and setup Auto Poll mode with custom options
     #
@@ -46,10 +55,21 @@ module ConfigCat
                                on_configuration_changed_callback: on_configuration_changed_callback,
                                cache_time_to_live_seconds: 0,
                                config_cache_class: config_cache_class,
-                               base_url: base_url)
+                               base_url: base_url,
+                               proxy_address: proxy_address,
+                               proxy_port: proxy_port,
+                               proxy_user: proxy_user,
+                               proxy_pass: proxy_pass)
   end
 
-  def ConfigCat.create_client_with_lazy_load(api_key, cache_time_to_live_seconds: 60, config_cache_class: nil, base_url: nil)
+  def ConfigCat.create_client_with_lazy_load(api_key,
+                                             cache_time_to_live_seconds: 60,
+                                             config_cache_class: nil,
+                                             base_url: nil,
+                                             proxy_address:nil,
+                                             proxy_port:nil,
+                                             proxy_user:nil,
+                                             proxy_pass:nil)
     #
     #   Create an instance of ConfigCatClient and setup Lazy Load mode with custom options
     #
@@ -71,10 +91,20 @@ module ConfigCat
                                on_configuration_changed_callback: nil,
                                cache_time_to_live_seconds: cache_time_to_live_seconds,
                                config_cache_class: config_cache_class,
-                               base_url: base_url)
+                               base_url: base_url,
+                               proxy_address: proxy_address,
+                               proxy_port: proxy_port,
+                               proxy_user: proxy_user,
+                               proxy_pass: proxy_pass)
   end
 
-  def ConfigCat.create_client_with_manual_poll(api_key, config_cache_class: nil, base_url: nil)
+  def ConfigCat.create_client_with_manual_poll(api_key,
+                                               config_cache_class: nil,
+                                               base_url: nil,
+                                               proxy_address:nil,
+                                               proxy_port:nil,
+                                               proxy_user:nil,
+                                               proxy_pass:nil)
     #
     #   Create an instance of ConfigCatClient and setup Manual Poll mode with custom options
     #
@@ -92,7 +122,11 @@ module ConfigCat
                                on_configuration_changed_callback: nil,
                                cache_time_to_live_seconds: 0,
                                config_cache_class: config_cache_class,
-                               base_url: base_url)
+                               base_url: base_url,
+                               proxy_address: proxy_address,
+                               proxy_port: proxy_port,
+                               proxy_user: proxy_user,
+                               proxy_pass: proxy_pass)
   end
 
 end

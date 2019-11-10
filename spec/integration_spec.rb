@@ -53,6 +53,15 @@ RSpec.describe 'Integration test: AutoPollTests', type: :feature do
     expect(client.get_value("keySampleText", "default value")).to eq "default value"
     client.stop()
   end
+  it "test_client_works_invalid_proxy" do
+    client = ConfigCat::create_client_with_auto_poll(_API_KEY,
+                                                     proxy_address: "0.0.0.0",
+                                                     proxy_port: 0,
+                                                     proxy_user: "test",
+                                                     proxy_pass: "test")
+    expect(client.get_value("keySampleText", "default value")).to eq "default value"
+    client.stop()
+  end
   it "test_force_refresh" do
     client = ConfigCat::create_client_with_auto_poll(_API_KEY)
     expect(client.get_value("keySampleText", "default value")).to eq "This text came from ConfigCat"

@@ -10,7 +10,7 @@ module ConfigCat
   BASE_EXTENSION = "/config_v3.json"
 
   class CacheControlConfigFetcher < ConfigFetcher
-    def initialize(api_key, mode, base_url=nil)
+    def initialize(api_key, mode, base_url=nil, proxy_address=nil, proxy_port=nil, proxy_user=nil, proxy_pass=nil)
       @_api_key = api_key
       @_etag = nil
       @_headers = {"User-Agent" => ((("ConfigCat-Ruby/") + mode) + ("-")) + VERSION, "X-ConfigCat-UserAgent" => ((("ConfigCat-Ruby/") + mode) + ("-")) + VERSION, "Content-Type" => "application/json"}
@@ -20,7 +20,7 @@ module ConfigCat
         @_base_url = BASE_URL
       end
       uri = URI.parse(@_base_url)
-      @_http = Net::HTTP.new(uri.host, uri.port)
+      @_http = Net::HTTP.new(uri.host, uri.port, proxy_address, proxy_port, proxy_user, proxy_pass)
       @_http.use_ssl = true if uri.scheme == 'https'
       @_http.open_timeout = 10 # in seconds
       @_http.read_timeout = 30 # in seconds
