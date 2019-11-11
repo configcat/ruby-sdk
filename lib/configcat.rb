@@ -5,7 +5,7 @@ require 'logger'
 
 module ConfigCat
 
-  @logger = Logger.new(STDOUT, level: Logger::INFO)
+  @logger = Logger.new(STDOUT, level: Logger::WARN)
   class << self
     attr_accessor :logger
   end
