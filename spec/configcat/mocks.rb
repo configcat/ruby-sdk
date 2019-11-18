@@ -1,9 +1,9 @@
 require 'configcat/interfaces'
 require 'json'
 
-TEST_JSON = "{\"testKey\": { \"Value\": \"testValue\", \"SettingType\": 1, \"PercentageRolloutItems\": [], \"TargetedRolloutRules\": [] }}"
-TEST_JSON2 = "{\"testKey\": { \"Value\": \"testValue\", \"SettingType\": 1, \"PercentageRolloutItems\": [], \"TargetedRolloutRules\": [] }, \"testKey2\": { \"Value\": \"testValue2\", \"SettingType\": 1, \"PercentageRolloutItems\": [], \"TargetedRolloutRules\": [] }}"
-TEST_OBJECT = JSON.parse("{\"testBoolKey\": {\"Value\": true,\"SettingType\": 0, \"PercentageRolloutItems\": [],\"TargetedRolloutRules\": []},\"testStringKey\": {\"Value\": \"testValue\",\"SettingType\": 1, \"PercentageRolloutItems\": [],\"TargetedRolloutRules\": []},\"testIntKey\": {\"Value\": 1,\"SettingType\": 2, \"PercentageRolloutItems\": [],\"TargetedRolloutRules\": []},\"testDoubleKey\": {\"Value\": 1.1,\"SettingType\": 3,\"PercentageRolloutItems\": [],\"TargetedRolloutRules\": []}}")
+TEST_JSON = "{\"testKey\": { \"v\": \"testValue\", \"t\": 1, \"p\": [], \"r\": [] }}"
+TEST_JSON2 = "{\"testKey\": { \"v\": \"testValue\", \"t\": 1, \"p\": [], \"r\": [] }, \"testKey2\": { \"v\": \"testValue2\", \"t\": 1, \"p\": [], \"r\": [] }}"
+TEST_OBJECT = JSON.parse("{\"testBoolKey\": {\"v\": true,\"t\": 0, \"p\": [],\"r\": []},\"testStringKey\": {\"v\": \"testValue\",\"t\": 1, \"p\": [],\"r\": []},\"testIntKey\": {\"v\": 1,\"t\": 2, \"p\": [],\"r\": []},\"testDoubleKey\": {\"v\": 1.1,\"t\": 3,\"p\": [],\"r\": []}}")
 
 include ConfigCat
 

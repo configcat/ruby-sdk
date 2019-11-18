@@ -2,8 +2,20 @@ require 'spec_helper'
 
 RSpec.describe 'Rollout test', type: :feature do
   it "test matrix" do
+    test_matrix("./testmatrix.csv", "PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A")
+  end
+
+  it "test matrix semantic" do
+    test_matrix("./testmatrix_semantic.csv", "PKDVCLf-Hq-h-kCzMp-L7Q/BAr3KgLTP0ObzKnBTo5nhA")
+  end
+
+  it "test matrix number" do
+    test_matrix("./testmatrix_number.csv", "PKDVCLf-Hq-h-kCzMp-L7Q/uGyK3q9_ckmdxRyI7vjwCw")
+  end
+
+  def test_matrix(file_path, api_key)
     script_dir = File.dirname(__FILE__)
-    file_path = File.join(script_dir,"./testmatrix.csv")
+    file_path = File.join(script_dir, file_path)
     content = ""
     open(file_path, "r") {|f|
       content = f.readlines()
@@ -11,7 +23,7 @@ RSpec.describe 'Rollout test', type: :feature do
     header = content[0].rstrip()
     setting_keys = header.split(";")[4..-1]
     content.shift()
-    client = ConfigCat.create_client("PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A")
+    client = ConfigCat.create_client(api_key)
     errors = ""
     for line in content
       user_descriptor = line.rstrip().split(";")
