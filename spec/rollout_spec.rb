@@ -9,6 +9,10 @@ RSpec.describe 'Rollout test', type: :feature do
     test_matrix("./testmatrix_semantic.csv", "PKDVCLf-Hq-h-kCzMp-L7Q/BAr3KgLTP0ObzKnBTo5nhA")
   end
 
+  it "test matrix semantic 2" do
+    test_matrix("./testmatrix_semantic_2.csv", "PKDVCLf-Hq-h-kCzMp-L7Q/q6jMCFIp-EmuAfnmZhPY7w")
+  end
+
   it "test matrix number" do
     test_matrix("./testmatrix_number.csv", "PKDVCLf-Hq-h-kCzMp-L7Q/uGyK3q9_ckmdxRyI7vjwCw")
   end
@@ -22,6 +26,7 @@ RSpec.describe 'Rollout test', type: :feature do
     }
     header = content[0].rstrip()
     setting_keys = header.split(";")[4..-1]
+    custom_key = header.split(";")[3]
     content.shift()
     client = ConfigCat.create_client(api_key)
     errors = ""
@@ -40,7 +45,7 @@ RSpec.describe 'Rollout test', type: :feature do
           country = user_descriptor[2]
         end
         if !user_descriptor[3].equal?(nil) && user_descriptor[3] != "" && user_descriptor[3] != "##null##"
-          custom = {"Custom1" => user_descriptor[3]}
+          custom = {custom_key => user_descriptor[3]}
         end
         user_object = ConfigCat::User.new(identifier, email: email, country: country, custom: custom)
       end
