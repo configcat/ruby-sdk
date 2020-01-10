@@ -1,4 +1,4 @@
-### Install the package with `RubyGems`
+### Install the ConfigCat package with `RubyGems`
 
 ```bash
 gem install configcat
