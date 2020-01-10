@@ -1,8 +1,8 @@
 # ConfigCat Ruby Sample Console App
 
-To run this sample you need [Ruby](https://www.ruby-lang.org) intsalled.
+To run this sample you need [Ruby](https://www.ruby-lang.org) installed.
 
-1. Install the ConfigCat SDK dependency
+1. Install the ConfigCat SDK with `RubyGems`
 ```bash
 gem install configcat
 ```
@@ -10,3 +10,4 @@ gem install configcat
 ```gem
 ruby consolesample.rb
 ```
+
