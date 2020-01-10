@@ -19,7 +19,7 @@ module ConfigCat
 
       setting_descriptor = config.fetch(key, nil)
       if setting_descriptor === nil
-        ConfigCat.logger.error("Evaluating get_value('%s') failed. Value not found for key '%s' Returning default_value: [%s]. Here are the available keys: %s" % [key, key, default_value.to_s, config.to_a.join(", ")])
+        ConfigCat.logger.error("Evaluating get_value('%s') failed. Value not found for key '%s' Returning default_value: [%s]. Here are the available keys: %s" % [key, key, default_value.to_s, config.keys.join(", ")])
         return default_value
       end
 
