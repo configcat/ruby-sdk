@@ -7,8 +7,8 @@ client = ConfigCat.create_client("PKDVCLf-Hq-h-kCzMp-L7Q/HhOWfwVtZ0mb30i9wi17GQ"
 ConfigCat.logger.level = Logger::INFO
 
 # Creating a user object to identify your user (optional).
-userObject = ConfigCat::User.new("Some UserID", email: "configcat@examle.com", custom: {
-    'ver': '1.0.0'
+userObject = ConfigCat::User.new("Some UserID", email: "configcat@example.com", custom: {
+    'version': '1.0.0'
 })
 
 value = client.get_value("isPOCFeatureEnabled", "default value", userObject)
