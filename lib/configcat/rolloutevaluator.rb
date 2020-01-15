@@ -49,7 +49,7 @@ module ConfigCat
 
         user_value = user.get_attribute(comparison_attribute)
         if user_value === nil || !user_value
-          ConfigCat.logger.info(format_no_match_rule(comparison_attribute, comparator, comparison_value))
+          ConfigCat.logger.info(format_no_match_rule(comparison_attribute, user_value, comparator, comparison_value))
           next
         end
 
@@ -58,25 +58,25 @@ module ConfigCat
         # IS ONE OF
         if comparator == 0
           if comparison_value.to_s.split(",").map { |x| x.strip() }.include?(user_value.to_s)
-            ConfigCat.logger.info(format_match_rule(comparison_attribute, comparator, comparison_value, value))
+            ConfigCat.logger.info(format_match_rule(comparison_attribute, user_value, comparator, comparison_value, value))
             return value
           end
         # IS NOT ONE OF
         elsif comparator == 1
           if !comparison_value.to_s.split(",").map { |x| x.strip() }.include?(user_value.to_s)
-            ConfigCat.logger.info(format_match_rule(comparison_attribute, comparator, comparison_value, value))
+            ConfigCat.logger.info(format_match_rule(comparison_attribute, user_value, comparator, comparison_value, value))
             return value
           end
         # CONTAINS
         elsif comparator == 2
           if user_value.to_s.include?(comparison_value.to_s)
-            ConfigCat.logger.info(format_match_rule(comparison_attribute, comparator, comparison_value, value))
+            ConfigCat.logger.info(format_match_rule(comparison_attribute, user_value, comparator, comparison_value, value))
             return value
           end
         # DOES NOT CONTAIN
         elsif comparator == 3
           if !user_value.to_s.include?(comparison_value.to_s)
-            ConfigCat.logger.info(format_match_rule(comparison_attribute, comparator, comparison_value, value))
+            ConfigCat.logger.info(format_match_rule(comparison_attribute, user_value, comparator, comparison_value, value))
             return value
           end
         # IS ONE OF, IS NOT ONE OF (Semantic version)
@@ -89,11 +89,11 @@ module ConfigCat
               match = (user_value_version == version) || match
             }
             if match && comparator == 4 || !match && comparator == 5
-              ConfigCat.logger.info(format_match_rule(comparison_attribute, comparator, comparison_value, value))
+              ConfigCat.logger.info(format_match_rule(comparison_attribute, user_value, comparator, comparison_value, value))
               return value
             end
           rescue ArgumentError => e
-            ConfigCat.logger.warn(format_validation_error_rule(comparison_attribute, comparator, comparison_value, e.to_s))
+            ConfigCat.logger.warn(format_validation_error_rule(comparison_attribute, user_value, comparator, comparison_value, e.to_s))
             next
           end
         # LESS THAN, LESS THAN OR EQUALS TO, GREATER THAN, GREATER THAN OR EQUALS TO (Semantic version)
@@ -105,11 +105,11 @@ module ConfigCat
                (comparator == 7 && user_value_version <= comparison_value_version) ||
                (comparator == 8 && user_value_version > comparison_value_version) ||
                (comparator == 9 && user_value_version >= comparison_value_version)
-              ConfigCat.logger.info(format_match_rule(comparison_attribute, comparator, comparison_value, value))
+              ConfigCat.logger.info(format_match_rule(comparison_attribute, user_value, comparator, comparison_value, value))
               return value
             end
           rescue ArgumentError => e
-            ConfigCat.logger.warn(format_validation_error_rule(comparison_attribute, comparator, comparison_value, e.to_s))
+            ConfigCat.logger.warn(format_validation_error_rule(comparison_attribute, user_value, comparator, comparison_value, e.to_s))
             next
           end
         elsif (10 <= comparator) && (comparator <= 15)
@@ -122,16 +122,16 @@ module ConfigCat
                (comparator == 13 && user_value_float <= comparison_value_float) ||
                (comparator == 14 && user_value_float > comparison_value_float) ||
                (comparator == 15 && user_value_float >= comparison_value_float)
-              ConfigCat.logger.info(format_match_rule(comparison_attribute, comparator, comparison_value, value))
+              ConfigCat.logger.info(format_match_rule(comparison_attribute, user_value, comparator, comparison_value, value))
               return value
             end
           rescue Exception => e
-            ConfigCat.logger.warn(format_validation_error_rule(comparison_attribute, comparator, comparison_value, e.to_s))
+            ConfigCat.logger.warn(format_validation_error_rule(comparison_attribute, user_value, comparator, comparison_value, e.to_s))
             next
           end
         end
 
-        ConfigCat.logger.info(format_no_match_rule(comparison_attribute, comparator, comparison_value))
+        ConfigCat.logger.info(format_no_match_rule(comparison_attribute, user_value, comparator, comparison_value))
       end
 
       if rollout_percentage_items.size > 0
@@ -155,16 +155,16 @@ module ConfigCat
 
     private
 
-    def self.format_match_rule(comparison_attribute, comparator, comparison_value, value)
-      return "Evaluating rule: [%s] [%s] [%s] => match, returning: %s" % [comparison_attribute, COMPARATOR_TEXTS[comparator], comparison_value, value]
+    def self.format_match_rule(comparison_attribute, user_value, comparator, comparison_value, value)
+      return "Evaluating rule: [%s:%s] [%s] [%s] => match, returning: %s" % [comparison_attribute, user_value, COMPARATOR_TEXTS[comparator], comparison_value, value]
     end
 
-    def self.format_no_match_rule(comparison_attribute, comparator, comparison_value)
-      return "Evaluating rule: [%s] [%s] [%s] => no match" % [comparison_attribute, COMPARATOR_TEXTS[comparator], comparison_value]
+    def self.format_no_match_rule(comparison_attribute, user_value, comparator, comparison_value)
+      return "Evaluating rule: [%s:%s] [%s] [%s] => no match" % [comparison_attribute, user_value, COMPARATOR_TEXTS[comparator], comparison_value]
     end
 
-    def self.format_validation_error_rule(comparison_attribute, comparator, comparison_value, error)
-      return "Evaluating rule: [%s] [%s] [%s] => SKIP rule. Validation error: %s" % [comparison_attribute, COMPARATOR_TEXTS[comparator], comparison_value, error]
+    def self.format_validation_error_rule(comparison_attribute, user_value, comparator, comparison_value, error)
+      return "Evaluating rule: [%s:%s] [%s] [%s] => SKIP rule. Validation error: %s" % [comparison_attribute, user_value, COMPARATOR_TEXTS[comparator], comparison_value, error]
     end
 
   end
