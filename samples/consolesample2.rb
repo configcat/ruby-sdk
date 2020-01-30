@@ -13,3 +13,6 @@ userObject = ConfigCat::User.new("Some UserID", email: "configcat@example.com", 
 
 value = client.get_value("isPOCFeatureEnabled", "default value", userObject)
 puts("'isPOCFeatureEnabled' value from ConfigCat: " + value.to_s)
+
+value = client.get_value("isAwesomeFeatureEnabled", "default value")
+puts("'isAwesomeFeatureEnabled' value from ConfigCat: " + value.to_s)

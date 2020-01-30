@@ -7,7 +7,7 @@ To run this sample you need [Ruby](https://www.ruby-lang.org) installed.
 gem install configcat
 ```
 2. Run sample app
-```gem
+```bash
 ruby consolesample.rb
 ```
 
