@@ -1,5 +1,5 @@
 .idea/*
 vendor/*
-bin/*
 .bundle
+bin
 coverage
