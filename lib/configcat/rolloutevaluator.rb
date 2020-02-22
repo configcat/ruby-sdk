@@ -130,6 +130,18 @@ module ConfigCat
             next
           end
         end
+        # IS ONE OF
+        if comparator == 16
+          if comparison_value.to_s.split(",").map { |x| x.strip() }.include?(Digest::SHA1.hexdigest(user_value).to_s)
+            ConfigCat.logger.info(format_match_rule(comparison_attribute, user_value, comparator, comparison_value, value))
+            return value
+          end
+        # IS NOT ONE OF
+        elsif comparator == 17
+          if !comparison_value.to_s.split(",").map { |x| x.strip() }.include?(Digest::SHA1.hexdigest(user_value).to_s)
+            ConfigCat.logger.info(format_match_rule(comparison_attribute, user_value, comparator, comparison_value, value))
+            return value
+          end
 
         ConfigCat.logger.info(format_no_match_rule(comparison_attribute, user_value, comparator, comparison_value))
       end

@@ -17,6 +17,10 @@ RSpec.describe 'Rollout test', type: :feature do
     test_matrix("./testmatrix_number.csv", "PKDVCLf-Hq-h-kCzMp-L7Q/uGyK3q9_ckmdxRyI7vjwCw")
   end
 
+  it "test matrix sensitive" do
+    test_matrix("./testmatrix_sensitive.csv", "PKDVCLf-Hq-h-kCzMp-L7Q/qX3TP2dTj06ZpCCT1h_SPA")
+  end
+
   def test_matrix(file_path, api_key)
     script_dir = File.dirname(__FILE__)
     file_path = File.join(script_dir, file_path)
