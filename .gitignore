@@ -1,4 +1,5 @@
 .idea/*
+vendor/*
+.bundle
 bin
 coverage
-.bundle
