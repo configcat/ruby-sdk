@@ -24,3 +24,6 @@ Use the **same version** for the git tag as in the `version.rb`.
 
 ## RubyGems
 Make sure the new version is available on [RubyGems](https://rubygems.org/gems/configcat).
+
+## Update samples
+Update and test sample apps with the new SDK version.
