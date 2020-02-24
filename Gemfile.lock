@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    configcat (1.2.3)
+    configcat (2.0.1)
       concurrent-ruby
       semantic
 
