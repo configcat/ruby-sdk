@@ -32,3 +32,6 @@ Make sure the new version is available on [RubyGems](https://rubygems.org/gems/c
 
 ## Update samples
 Update and test sample apps with the new SDK version.
+```bash
+gem update configcat
+```
