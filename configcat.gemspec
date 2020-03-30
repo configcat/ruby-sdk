@@ -16,7 +16,7 @@ Gem::Specification.new do |spec|
 
   spec.files         = Dir['lib/*'] + Dir['lib/**/*.rb']
   spec.require_paths = ["lib"]
-  spec.required_ruby_version = "~> 2.4"
+  spec.required_ruby_version = ">= 2.2"
 
   spec.add_dependency "concurrent-ruby", "~> 1.1"
   spec.add_dependency "semantic", "~> 1.6"
