@@ -20,3 +20,5 @@ deploy:
   gem: "configcat"
   on:
     tags: true
+    branch: master
+    rvm: 2.2
