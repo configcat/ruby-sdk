@@ -40,13 +40,16 @@ module ConfigCat
 
     def force_refresh()
       begin
-        configuration = @_config_fetcher.get_configuration_json()
-        begin
-          @_lock.acquire_write_lock()
-          @_config_cache.set(configuration)
-          @_last_updated = Time.now.utc
-        ensure
-          @_lock.release_write_lock()
+        configuration_response = @_config_fetcher.get_configuration_json()
+        if configuration_response.is_fetched()
+          configuration = configuration_response.json()
+          begin
+            @_lock.acquire_write_lock()
+            @_config_cache.set(configuration)
+            @_last_updated = Time.now.utc
+          ensure
+            @_lock.release_write_lock()
+          end
         end
       rescue StandardError => e
         ConfigCat.logger.error("Double-check your API KEY at https://app.configcat.com/apikey.")
