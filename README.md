@@ -25,7 +25,7 @@ gem install configcat
 require 'configcat'
 ```
 
-### 3. Go to <a href="https://app.configcat.com/connect" target="_blank">Connect your application</a> tab to get your *SDK Key*:
+### 3. Go to <a href="https://app.configcat.com/sdkkey" target="_blank">Connect your application</a> tab to get your *SDK Key*:
 ![SDK-KEY](https://raw.githubusercontent.com/ConfigCat/ruby-sdk/master/media/readme01.png  "SDK-KEY")
 
 ### 4. Create a *ConfigCat* client instance:
