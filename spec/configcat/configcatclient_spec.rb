@@ -3,7 +3,7 @@ require 'configcat/configcatclient'
 require_relative 'mocks'
 
 RSpec.describe ConfigCat::ConfigCatClient do
-  it "test_without_api_key" do
+  it "test_without_sdk_key" do
     expect {
       ConfigCatClient.new(nil)
     }.to raise_error(ConfigCatClientException)

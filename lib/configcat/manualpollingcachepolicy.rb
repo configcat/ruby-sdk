@@ -29,7 +29,7 @@ module ConfigCat
           @_lock.release_write_lock()
         end
       rescue StandardError => e
-        ConfigCat.logger.error("Double-check your API KEY at https://app.configcat.com/apikey.")
+        ConfigCat.logger.error("Double-check your SDK Key at https://app.configcat.com/sdkkey.")
         ConfigCat.logger.error "threw exception #{e.class}:'#{e}'"
         ConfigCat.logger.error "stacktrace: #{e.backtrace}"
       end

@@ -10,8 +10,8 @@ module ConfigCat
   BASE_EXTENSION = "/config_v4.json"
 
   class CacheControlConfigFetcher < ConfigFetcher
-    def initialize(api_key, mode, base_url=nil, proxy_address=nil, proxy_port=nil, proxy_user=nil, proxy_pass=nil)
-      @_api_key = api_key
+    def initialize(sdk_key, mode, base_url=nil, proxy_address=nil, proxy_port=nil, proxy_user=nil, proxy_pass=nil)
+      @_sdk_key = sdk_key
       @_etag = nil
       @_headers = {"User-Agent" => ((("ConfigCat-Ruby/") + mode) + ("-")) + VERSION, "X-ConfigCat-UserAgent" => ((("ConfigCat-Ruby/") + mode) + ("-")) + VERSION, "Content-Type" => "application/json"}
       if !base_url.equal?(nil)
@@ -28,7 +28,7 @@ module ConfigCat
 
     def get_configuration_json()
       ConfigCat.logger.debug "Fetching configuration from ConfigCat"
-      uri = URI.parse((((@_base_url + ("/")) + BASE_PATH) + @_api_key) + BASE_EXTENSION)
+      uri = URI.parse((((@_base_url + ("/")) + BASE_PATH) + @_sdk_key) + BASE_EXTENSION)
       @_headers["If-None-Match"] = @_etag unless @_etag.nil?
       request = Net::HTTP::Get.new(uri.request_uri, @_headers)
       response = @_http.request(request)
