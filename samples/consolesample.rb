@@ -1,6 +1,6 @@
 require 'configcat'
 
-# Initialize the ConfigCatClient with an API Key.
+# Initialize the ConfigCatClient with an SDK Key.
 client = ConfigCat.create_client("PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A")
 
 # In the project there is a 'keySampleText' setting with the following rules:

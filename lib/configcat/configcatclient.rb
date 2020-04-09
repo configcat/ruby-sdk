@@ -8,7 +8,7 @@ require 'configcat/rolloutevaluator'
 
 module ConfigCat
   class ConfigCatClient
-    def initialize(api_key,
+    def initialize(sdk_key,
                    poll_interval_seconds:60,
                    max_init_wait_time_seconds:5,
                    on_configuration_changed_callback:nil,
@@ -19,10 +19,10 @@ module ConfigCat
                    proxy_port:nil,
                    proxy_user:nil,
                    proxy_pass:nil)
-      if api_key === nil
-        raise ConfigCatClientException, "API Key is required."
+      if sdk_key === nil
+        raise ConfigCatClientException, "SDK Key is required."
       end
-      @_api_key = api_key
+      @_sdk_key = sdk_key
 
       if config_cache_class
         @_config_cache = config_cache_class.new()
@@ -31,14 +31,14 @@ module ConfigCat
       end
 
       if poll_interval_seconds > 0
-        @_config_fetcher = CacheControlConfigFetcher.new(api_key, "p", base_url, proxy_address, proxy_port, proxy_user, proxy_pass)
+        @_config_fetcher = CacheControlConfigFetcher.new(sdk_key, "p", base_url, proxy_address, proxy_port, proxy_user, proxy_pass)
         @_cache_policy = AutoPollingCachePolicy.new(@_config_fetcher, @_config_cache, poll_interval_seconds, max_init_wait_time_seconds, on_configuration_changed_callback)
       else
         if cache_time_to_live_seconds > 0
-          @_config_fetcher = CacheControlConfigFetcher.new(api_key, "l", base_url, proxy_address, proxy_port, proxy_user, proxy_pass)
+          @_config_fetcher = CacheControlConfigFetcher.new(sdk_key, "l", base_url, proxy_address, proxy_port, proxy_user, proxy_pass)
           @_cache_policy = LazyLoadingCachePolicy.new(@_config_fetcher, @_config_cache, cache_time_to_live_seconds)
         else
-          @_config_fetcher = CacheControlConfigFetcher.new(api_key, "m", base_url, proxy_address, proxy_port, proxy_user, proxy_pass)
+          @_config_fetcher = CacheControlConfigFetcher.new(sdk_key, "m", base_url, proxy_address, proxy_port, proxy_user, proxy_pass)
           @_cache_policy = ManualPollingCachePolicy.new(@_config_fetcher, @_config_cache)
         end
       end
