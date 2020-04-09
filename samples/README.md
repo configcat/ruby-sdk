@@ -10,4 +10,8 @@ gem install configcat
 ```bash
 ruby consolesample.rb
 ```
+or 
+```bash
+ruby consolesample2.rb
+```
 
