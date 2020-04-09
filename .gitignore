@@ -3,3 +3,4 @@ vendor/*
 .bundle
 bin
 coverage
+Gemfile.lock
