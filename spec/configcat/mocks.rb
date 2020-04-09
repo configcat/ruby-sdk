@@ -7,6 +7,18 @@ TEST_OBJECT = JSON.parse("{\"testBoolKey\": {\"v\": true,\"t\": 0, \"p\": [],\"r
 
 include ConfigCat
 
+class FetchResponseMock
+  def initialize(json)
+    @json = json
+  end
+  def json()
+    return @json
+  end
+  def is_fetched()
+    return true
+  end
+end
+
 class ConfigFetcherMock < ConfigFetcher
   def initialize()
     @_call_count = 0
@@ -14,7 +26,7 @@ class ConfigFetcherMock < ConfigFetcher
   end
   def get_configuration_json()
     @_call_count = @_call_count + 1
-    return @_configuration
+    return FetchResponseMock.new(@_configuration)
   end
   def set_configuration_json(value)
     @_configuration = value
@@ -43,7 +55,7 @@ class ConfigFetcherWaitMock < ConfigFetcher
   end
   def get_configuration_json()
     sleep(@_wait_seconds)
-    return TEST_JSON
+    return FetchResponseMock.new(TEST_JSON)
   end
   def close()
   end
@@ -55,7 +67,7 @@ class ConfigFetcherCountMock < ConfigFetcher
   end
   def get_configuration_json()
     @_value += 10
-    return @_value
+    return FetchResponseMock.new(@_value)
   end
   def close()
   end

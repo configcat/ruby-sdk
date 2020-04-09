@@ -21,12 +21,15 @@ module ConfigCat
 
     def force_refresh()
       begin
-        configuration = @_config_fetcher.get_configuration_json()
-        begin
-          @_lock.acquire_write_lock()
-          @_config_cache.set(configuration)
-        ensure
-          @_lock.release_write_lock()
+        configuration_response = @_config_fetcher.get_configuration_json()
+        if configuration_response.is_fetched()
+          configuration = configuration_response.json()
+          begin
+            @_lock.acquire_write_lock()
+            @_config_cache.set(configuration)
+          ensure
+            @_lock.release_write_lock()
+          end
         end
       rescue StandardError => e
         ConfigCat.logger.error("Double-check your SDK Key at https://app.configcat.com/sdkkey.")

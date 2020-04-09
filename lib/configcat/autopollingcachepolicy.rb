@@ -48,7 +48,7 @@ module ConfigCat
 
     def force_refresh()
       begin
-        configuration = @_config_fetcher.get_configuration_json()
+        configuration_response = @_config_fetcher.get_configuration_json()
 
         begin
           @_lock.acquire_read_lock()
@@ -57,20 +57,23 @@ module ConfigCat
           @_lock.release_read_lock()
         end
 
-        if configuration != old_configuration
-          begin
-            @_lock.acquire_write_lock()
-            @_config_cache.set(configuration)
-            @_initialized = true
-          ensure
-            @_lock.release_write_lock()
-          end
-          begin
-            if !@_on_configuration_changed_callback.equal?(nil)
-              @_on_configuration_changed_callback.()
+        if configuration_response.is_fetched()
+          configuration = configuration_response.json()
+          if configuration != old_configuration
+            begin
+              @_lock.acquire_write_lock()
+              @_config_cache.set(configuration)
+              @_initialized = true
+            ensure
+              @_lock.release_write_lock()
             end
-          rescue Exception => e
-            ConfigCat.logger.error("Exception in on_configuration_changed_callback: #{e.class}:'#{e}'")
+            begin
+              if !@_on_configuration_changed_callback.equal?(nil)
+                @_on_configuration_changed_callback.()
+              end
+            rescue Exception => e
+              ConfigCat.logger.error("Exception in on_configuration_changed_callback: #{e.class}:'#{e}'")
+            end
           end
         end
 

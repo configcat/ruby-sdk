@@ -6,11 +6,7 @@
    bin/rspec --format doc
    ```
 2. Increase the version in the `lib/configcat/version.rb` file.
-3. Update Gemfile.lock by running:
-   ```bash
-4. bundle install
-   ```
-5. Commit & Push
+3. Commit & Push
 ## Publish
 Use the **same version** for the git tag as in the `version.rb`.
 - Via git tag
