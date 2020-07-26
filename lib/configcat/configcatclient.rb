@@ -7,6 +7,7 @@ require 'configcat/lazyloadingcachepolicy'
 require 'configcat/rolloutevaluator'
 
 module ConfigCat
+  KeyValue = Struct.new(:key, :value)
   class ConfigCatClient
     def initialize(sdk_key,
                    poll_interval_seconds:60,
@@ -49,7 +50,8 @@ module ConfigCat
       if config === nil
         return default_value
       end
-      return RolloutEvaluator.evaluate(key, user, default_value, config)
+      value, variation_id = RolloutEvaluator.evaluate(key, user, default_value, nil, config)
+      return value
     end
 
     def get_all_keys()
@@ -58,6 +60,57 @@ module ConfigCat
         return []
       end
       return config.keys
+    end
+
+    def get_variation_id(key, default_variation_id, user=nil)
+      config = @_cache_policy.get()
+      if config === nil
+        ConfigCat.logger.warn("Evaluating get_variation_id('%s') failed. Cache is empty. "\
+                              "Returning default_variation_id in your get_variation_id call: [%s]." %
+                              [key, default_variation_id.to_s])
+        return default_variation_id
+      end
+      value, variation_id = RolloutEvaluator.evaluate(key, user, nil, default_variation_id, config)
+      return variation_id
+    end
+
+    def get_all_variation_ids(user: nil)
+      keys = get_all_keys()
+      variation_ids = []
+      for key in keys
+        variation_id = get_variation_id(key, nil, user)
+        if !variation_id.equal?(nil)
+          variation_ids.push(variation_id)
+        end
+      end
+      return variation_ids
+    end
+
+    def get_key_and_value(variation_id)
+      config = @_cache_policy.get()
+      if config === nil
+        ConfigCat.logger.warn("Evaluating get_variation_id('%s') failed. Cache is empty. Returning nil." % variation_id)
+        return nil
+      end
+      for key, value in config
+        if variation_id == value.fetch(RolloutEvaluator::VARIATION_ID, nil)
+          return KeyValue.new(key, value[RolloutEvaluator::VALUE])
+        end
+
+        rollout_rules = value.fetch(RolloutEvaluator::ROLLOUT_RULES, [])
+        for rollout_rule in rollout_rules
+          if variation_id == rollout_rule.fetch(RolloutEvaluator::VARIATION_ID, nil)
+            return KeyValue.new(key, rollout_rule[RolloutEvaluator::VALUE])
+          end
+        end
+
+        rollout_percentage_items = value.fetch(RolloutEvaluator::ROLLOUT_PERCENTAGE_ITEMS, [])
+        for rollout_percentage_item in rollout_percentage_items
+          if variation_id == rollout_percentage_item.fetch(RolloutEvaluator::VARIATION_ID, nil)
+            return KeyValue.new(key, rollout_percentage_item[RolloutEvaluator::VALUE])
+          end
+        end
+      end
     end
 
     def force_refresh()

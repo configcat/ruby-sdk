@@ -13,14 +13,15 @@ module ConfigCat
     ROLLOUT_PERCENTAGE_ITEMS = "p"
     PERCENTAGE = "p"
     ROLLOUT_RULES = "r"
+    VARIATION_ID = "i"
 
-    def self.evaluate(key, user, default_value, config)
+    def self.evaluate(key, user, default_value, default_variation_id, config)
       ConfigCat.logger.info("Evaluating get_value('%s')." % key)
 
       setting_descriptor = config.fetch(key, nil)
       if setting_descriptor === nil
         ConfigCat.logger.error("Evaluating get_value('%s') failed. Value not found for key '%s'. Returning default_value: [%s]. Here are the available keys: %s" % [key, key, default_value.to_s, config.keys.join(", ")])
-        return default_value
+        return default_value, default_variation_id
       end
 
       rollout_rules = setting_descriptor.fetch(ROLLOUT_RULES, [])
@@ -35,8 +36,9 @@ module ConfigCat
           ConfigCat.logger.warn("Evaluating get_value('%s'). UserObject missing! You should pass a UserObject to get_value(), in order to make targeting work properly. Read more: https://configcat.com/docs/advanced/user-object/" % key)
         end
         return_value = setting_descriptor.fetch(VALUE, default_value)
+        return_variation_id = setting_descriptor.fetch(VARIATION_ID, default_variation_id)
         ConfigCat.logger.info("Returning [%s]" % return_value.to_s)
-        return return_value
+        return return_value, return_variation_id
       end
 
       ConfigCat.logger.info("User object:\n%s" % user.to_s)
@@ -54,30 +56,31 @@ module ConfigCat
         end
 
         value = rollout_rule.fetch(VALUE, nil)
+        variation_id = rollout_rule.fetch(VARIATION_ID, default_variation_id)
 
         # IS ONE OF
         if comparator == 0
           if comparison_value.to_s.split(",").map { |x| x.strip() }.include?(user_value.to_s)
             ConfigCat.logger.info(format_match_rule(comparison_attribute, user_value, comparator, comparison_value, value))
-            return value
+            return value, variation_id
           end
         # IS NOT ONE OF
         elsif comparator == 1
           if !comparison_value.to_s.split(",").map { |x| x.strip() }.include?(user_value.to_s)
             ConfigCat.logger.info(format_match_rule(comparison_attribute, user_value, comparator, comparison_value, value))
-            return value
+            return value, variation_id
           end
         # CONTAINS
         elsif comparator == 2
           if user_value.to_s.include?(comparison_value.to_s)
             ConfigCat.logger.info(format_match_rule(comparison_attribute, user_value, comparator, comparison_value, value))
-            return value
+            return value, variation_id
           end
         # DOES NOT CONTAIN
         elsif comparator == 3
           if !user_value.to_s.include?(comparison_value.to_s)
             ConfigCat.logger.info(format_match_rule(comparison_attribute, user_value, comparator, comparison_value, value))
-            return value
+            return value, variation_id
           end
         # IS ONE OF, IS NOT ONE OF (Semantic version)
         elsif (4 <= comparator) && (comparator <= 5)
@@ -90,7 +93,7 @@ module ConfigCat
             }
             if match && comparator == 4 || !match && comparator == 5
               ConfigCat.logger.info(format_match_rule(comparison_attribute, user_value, comparator, comparison_value, value))
-              return value
+              return value, variation_id
             end
           rescue ArgumentError => e
             ConfigCat.logger.warn(format_validation_error_rule(comparison_attribute, user_value, comparator, comparison_value, e.to_s))
@@ -106,7 +109,7 @@ module ConfigCat
                (comparator == 8 && user_value_version > comparison_value_version) ||
                (comparator == 9 && user_value_version >= comparison_value_version)
               ConfigCat.logger.info(format_match_rule(comparison_attribute, user_value, comparator, comparison_value, value))
-              return value
+              return value, variation_id
             end
           rescue ArgumentError => e
             ConfigCat.logger.warn(format_validation_error_rule(comparison_attribute, user_value, comparator, comparison_value, e.to_s))
@@ -123,7 +126,7 @@ module ConfigCat
                (comparator == 14 && user_value_float > comparison_value_float) ||
                (comparator == 15 && user_value_float >= comparison_value_float)
               ConfigCat.logger.info(format_match_rule(comparison_attribute, user_value, comparator, comparison_value, value))
-              return value
+              return value, variation_id
             end
           rescue Exception => e
             ConfigCat.logger.warn(format_validation_error_rule(comparison_attribute, user_value, comparator, comparison_value, e.to_s))
@@ -133,13 +136,13 @@ module ConfigCat
         elsif comparator == 16
           if comparison_value.to_s.split(",").map { |x| x.strip() }.include?(Digest::SHA1.hexdigest(user_value).to_s)
             ConfigCat.logger.info(format_match_rule(comparison_attribute, user_value, comparator, comparison_value, value))
-            return value
+            return value, variation_id
           end
         # IS NOT ONE OF (Sensitive)
         elsif comparator == 17
           if !comparison_value.to_s.split(",").map { |x| x.strip() }.include?(Digest::SHA1.hexdigest(user_value).to_s)
             ConfigCat.logger.info(format_match_rule(comparison_attribute, user_value, comparator, comparison_value, value))
-            return value
+            return value, variation_id
           end
         end
         ConfigCat.logger.info(format_no_match_rule(comparison_attribute, user_value, comparator, comparison_value))
@@ -154,14 +157,16 @@ module ConfigCat
           bucket += rollout_percentage_item.fetch(PERCENTAGE, 0)
           if hash_val < bucket
             percentage_value = rollout_percentage_item.fetch(VALUE, nil)
+            variation_id = rollout_percentage_item.fetch(VARIATION_ID, default_variation_id)
             ConfigCat.logger.info("Evaluating %% options. Returning %s" % percentage_value)
-            return percentage_value
+            return percentage_value, variation_id
           end
         end
       end
-      def_value = setting_descriptor.fetch(VALUE, default_value)
-      ConfigCat.logger.info("Returning %s" % def_value)
-      return def_value
+      return_value = setting_descriptor.fetch(VALUE, default_value)
+      return_variation_id = setting_descriptor.fetch(VARIATION_ID, default_variation_id)
+      ConfigCat.logger.info("Returning %s" % return_value)
+      return return_value, return_variation_id
     end
 
     private

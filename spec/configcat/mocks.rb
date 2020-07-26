@@ -1,9 +1,16 @@
 require 'configcat/interfaces'
 require 'json'
 
-TEST_JSON = "{\"testKey\": { \"v\": \"testValue\", \"t\": 1, \"p\": [], \"r\": [] }}"
-TEST_JSON2 = "{\"testKey\": { \"v\": \"testValue\", \"t\": 1, \"p\": [], \"r\": [] }, \"testKey2\": { \"v\": \"testValue2\", \"t\": 1, \"p\": [], \"r\": [] }}"
-TEST_OBJECT = JSON.parse("{\"testBoolKey\": {\"v\": true,\"t\": 0, \"p\": [],\"r\": []},\"testStringKey\": {\"v\": \"testValue\",\"t\": 1, \"p\": [],\"r\": []},\"testIntKey\": {\"v\": 1,\"t\": 2, \"p\": [],\"r\": []},\"testDoubleKey\": {\"v\": 1.1,\"t\": 3,\"p\": [],\"r\": []}}")
+TEST_JSON = '{"testKey": { "v": "testValue", "t": 1, "p": [], "r": [] }}'
+TEST_JSON2 = '{"testKey": { "v": "testValue", "t": 1, "p": [], "r": [] }, "testKey2": { "v": "testValue2", "t": 1, "p": [], "r": [] }}'
+TEST_OBJECT = JSON.parse('{
+  "testBoolKey": {"v": true,"t": 0, "p": [],"r": []},
+  "testStringKey": {"v": "testValue","t": 1, "p": [],"r": []},
+  "testIntKey": {"v": 1,"t": 2, "p": [],"r": []},
+  "testDoubleKey": {"v": 1.1,"t": 3,"p": [],"r": []},
+  "key1": {"v": true, "i": "fakeId1","p": [], "r": []},
+  "key2": {"v": false, "i": "fakeId2","p": [], "r": []}
+}')
 
 include ConfigCat
 
