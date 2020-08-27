@@ -1,27 +1,34 @@
 require 'spec_helper'
 
 RSpec.describe 'Rollout test', type: :feature do
+  VALUE_TEST_TYPE = "value_test"
+  VARIATION_TEST_TYPE = "variation_test"
+
   it "test matrix" do
-    test_matrix("./testmatrix.csv", "PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A")
+    test_matrix("./testmatrix.csv", "PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A", VALUE_TEST_TYPE)
   end
 
   it "test matrix semantic" do
-    test_matrix("./testmatrix_semantic.csv", "PKDVCLf-Hq-h-kCzMp-L7Q/BAr3KgLTP0ObzKnBTo5nhA")
+    test_matrix("./testmatrix_semantic.csv", "PKDVCLf-Hq-h-kCzMp-L7Q/BAr3KgLTP0ObzKnBTo5nhA", VALUE_TEST_TYPE)
   end
 
   it "test matrix semantic 2" do
-    test_matrix("./testmatrix_semantic_2.csv", "PKDVCLf-Hq-h-kCzMp-L7Q/q6jMCFIp-EmuAfnmZhPY7w")
+    test_matrix("./testmatrix_semantic_2.csv", "PKDVCLf-Hq-h-kCzMp-L7Q/q6jMCFIp-EmuAfnmZhPY7w", VALUE_TEST_TYPE)
   end
 
   it "test matrix number" do
-    test_matrix("./testmatrix_number.csv", "PKDVCLf-Hq-h-kCzMp-L7Q/uGyK3q9_ckmdxRyI7vjwCw")
+    test_matrix("./testmatrix_number.csv", "PKDVCLf-Hq-h-kCzMp-L7Q/uGyK3q9_ckmdxRyI7vjwCw", VALUE_TEST_TYPE)
   end
 
   it "test matrix sensitive" do
-    test_matrix("./testmatrix_sensitive.csv", "PKDVCLf-Hq-h-kCzMp-L7Q/qX3TP2dTj06ZpCCT1h_SPA")
+    test_matrix("./testmatrix_sensitive.csv", "PKDVCLf-Hq-h-kCzMp-L7Q/qX3TP2dTj06ZpCCT1h_SPA", VALUE_TEST_TYPE)
   end
 
-  def test_matrix(file_path, sdk_key)
+  it "test matrix variation id" do
+    test_matrix("./testmatrix_variationId.csv", "PKDVCLf-Hq-h-kCzMp-L7Q/nQ5qkhRAUEa6beEyyrVLBA", VARIATION_TEST_TYPE)
+  end
+
+  def test_matrix(file_path, sdk_key, type)
     script_dir = File.dirname(__FILE__)
     file_path = File.join(script_dir, file_path)
     content = ""
@@ -55,7 +62,7 @@ RSpec.describe 'Rollout test', type: :feature do
       end
       i = 0
       for setting_key in setting_keys
-        value = client.get_value(setting_key, nil, user_object)
+        value = (type == VARIATION_TEST_TYPE) ? client.get_variation_id(setting_key, nil, user_object) : client.get_value(setting_key, nil, user_object)
         if value.to_s != (user_descriptor[i + 4]).to_s
           errors += ((((((("Identifier: " + user_descriptor[0]) + ". SettingKey: ") + setting_key) + ". Expected: ") + ((user_descriptor[i + 4]).to_s)) + ". Result: ") + value.to_s) + ".\n"
         end
