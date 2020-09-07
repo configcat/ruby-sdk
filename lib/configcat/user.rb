@@ -8,7 +8,7 @@ module ConfigCat
     PREDEFINED = ["Identifier", "Email", "Country"]
 
     def initialize(identifier, email: nil, country: nil, custom: nil)
-      @__identifier = identifier
+      @__identifier = (!identifier.equal?(nil)) ? identifier : ""
       @__data = {"Identifier" => identifier, "Email" => email, "Country" => country}
       @__custom = custom
     end

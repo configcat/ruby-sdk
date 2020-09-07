@@ -44,7 +44,7 @@ RSpec.describe 'Rollout test', type: :feature do
     for line in content
       user_descriptor = line.rstrip().split(";")
       user_object = nil
-      if !user_descriptor[0].equal?(nil) && user_descriptor[0] != "" && user_descriptor[0] != "##null##"
+      if !user_descriptor[0].equal?(nil) && user_descriptor[0] != "##null##"
         email = nil
         country = nil
         custom = nil
