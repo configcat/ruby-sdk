@@ -3,15 +3,15 @@ require 'configcat/interfaces'
 module ConfigCat
   class InMemoryConfigCache < ConfigCache
     def initialize()
-      @_value = nil
+      @_value = {}
     end
 
-    def get()
-      return @_value
+    def get(key)
+      return @_value.fetch(key, nil)
     end
 
-    def set(value)
-      @_value = value
+    def set(key, value)
+      @_value[key] = value
     end
   end
 end

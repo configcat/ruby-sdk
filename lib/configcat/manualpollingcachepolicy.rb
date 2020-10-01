@@ -1,4 +1,5 @@
 require 'configcat/interfaces'
+require 'configcat/constants'
 require 'concurrent'
 
 module ConfigCat
@@ -12,7 +13,7 @@ module ConfigCat
     def get()
       begin
         @_lock.acquire_read_lock()
-        config = @_config_cache.get()
+        config = @_config_cache.get(CONFIG_FILE_NAME)
         return config
       ensure
         @_lock.release_read_lock()
@@ -26,7 +27,7 @@ module ConfigCat
           configuration = configuration_response.json()
           begin
             @_lock.acquire_write_lock()
-            @_config_cache.set(configuration)
+            @_config_cache.set(CONFIG_FILE_NAME, configuration)
           ensure
             @_lock.release_write_lock()
           end

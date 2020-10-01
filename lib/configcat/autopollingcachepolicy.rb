@@ -1,4 +1,5 @@
 require 'configcat/interfaces'
+require 'configcat/constants'
 require 'concurrent'
 
 module ConfigCat
@@ -40,7 +41,7 @@ module ConfigCat
       end
       begin
         @_lock.acquire_read_lock()
-        return @_config_cache.get()
+        return @_config_cache.get(CONFIG_FILE_NAME)
       ensure
         @_lock.release_read_lock()
       end
@@ -52,7 +53,7 @@ module ConfigCat
 
         begin
           @_lock.acquire_read_lock()
-          old_configuration = @_config_cache.get()
+          old_configuration = @_config_cache.get(CONFIG_FILE_NAME)
         ensure
           @_lock.release_read_lock()
         end
@@ -62,7 +63,7 @@ module ConfigCat
           if configuration != old_configuration
             begin
               @_lock.acquire_write_lock()
-              @_config_cache.set(configuration)
+              @_config_cache.set(CONFIG_FILE_NAME, configuration)
               @_initialized = true
             ensure
               @_lock.release_write_lock()

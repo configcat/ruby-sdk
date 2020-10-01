@@ -1,5 +1,7 @@
 require 'configcat/interfaces'
+require 'configcat/constants'
 require 'concurrent'
+
 
 module ConfigCat
   class LazyLoadingCachePolicy < CachePolicy
@@ -20,7 +22,7 @@ module ConfigCat
         @_lock.acquire_read_lock()
         utc_now = Time.now.utc
         if !@_last_updated.equal?(nil) && (@_last_updated + @_cache_time_to_live > utc_now)
-          config = @_config_cache.get()
+          config = @_config_cache.get(CONFIG_FILE_NAME)
           if !config.equal?(nil)
             return config
           end
@@ -31,7 +33,7 @@ module ConfigCat
       force_refresh()
       begin
         @_lock.acquire_read_lock()
-        config = @_config_cache.get()
+        config = @_config_cache.get(CONFIG_FILE_NAME)
         return config
       ensure
         @_lock.release_read_lock()
@@ -45,7 +47,7 @@ module ConfigCat
           configuration = configuration_response.json()
           begin
             @_lock.acquire_write_lock()
-            @_config_cache.set(configuration)
+            @_config_cache.set(CONFIG_FILE_NAME, configuration)
             @_last_updated = Time.now.utc
           ensure
             @_lock.release_write_lock()
