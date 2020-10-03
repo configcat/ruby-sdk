@@ -12,6 +12,12 @@ module ConfigCat
   BASE_PATH = "configuration-files/"
   BASE_EXTENSION = "/" + CONFIG_FILE_NAME + ".json"
 
+  class RedirectMode
+    NO_REDIRECT = 0
+    SHOULD_REDIRECT = 1
+    FORCE_REDIRECT = 2
+  end
+
   class FetchResponse
     def initialize(response)
       @_response = response
@@ -91,7 +97,7 @@ module ConfigCat
       redirect = preferences.fetch(REDIRECT, nil)
       # If the base_url is overridden, and the redirect parameter is not 2 (force),
       # the SDK should not redirect the calls and it just have to return the response.
-      if @_base_url_overridden && redirect != 2
+      if @_base_url_overridden && redirect != RedirectMode::FORCE_REDIRECT
         return fetch_response
       end
 
@@ -100,14 +106,14 @@ module ConfigCat
       _create_http()
 
       # If the redirect property == 0 (redirect not needed), return the response
-      if redirect == 0
+      if redirect == RedirectMode::NO_REDIRECT
         # Return the response
         return fetch_response
       end
 
       # Try to download again with the new url
 
-      if redirect == 1
+      if redirect == RedirectMode::SHOULD_REDIRECT
         ConfigCat.logger.warn("Your data_governance parameter at ConfigCatClient initialization is not in sync with your preferences on the ConfigCat Dashboard: https://app.configcat.com/organization/data-governance. Only Organization Admins can set this preference.")
       end
 
