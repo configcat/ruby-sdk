@@ -99,22 +99,26 @@ module ConfigCat
       @_base_url = base_url
       _create_http()
 
-      # If the redirect property != 0 (redirect not needed), try to download again with the new url
-      if redirect != 0
-        if redirect == 1
-          ConfigCat.logger.warn("Your data_governance parameter at ConfigCatClient initialization is not in sync with your preferences on the ConfigCat Dashboard: https://app.configcat.com/organization/data-governance. Only Organization Admins can set this preference.")
-        end
-        # To prevent loops we check if we retried at least 3 times with the new base_url
-        if redirect >= 2
-          ConfigCat.logger.error("Redirect loop during config.json fetch. Please contact support@configcat.com.")
-          return fetch_response
-        end
-
-        # Retry the config download with the new base_url
-        return get_configuration_json(retries + 1)
+      # If the redirect property == 0 (redirect not needed), return the response
+      if redirect == 0
+        # Return the response
+        return fetch_response
       end
 
-      return fetch_response
+      # Try to download again with the new url
+
+      if redirect == 1
+        ConfigCat.logger.warn("Your data_governance parameter at ConfigCatClient initialization is not in sync with your preferences on the ConfigCat Dashboard: https://app.configcat.com/organization/data-governance. Only Organization Admins can set this preference.")
+      end
+
+      # To prevent loops we check if we retried at least 3 times with the new base_url
+      if retries >= 2
+        ConfigCat.logger.error("Redirect loop during config.json fetch. Please contact support@configcat.com.")
+        return fetch_response
+      end
+
+      # Retry the config download with the new base_url
+      return get_configuration_json(retries + 1)
     end
 
     def close()
