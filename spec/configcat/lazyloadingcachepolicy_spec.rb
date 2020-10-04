@@ -3,11 +3,13 @@ require 'configcat/lazyloadingcachepolicy'
 require 'configcat/configcache'
 require_relative 'mocks'
 
+CACHE_KEY = "cache_key"
+
 RSpec.describe ConfigCat::LazyLoadingCachePolicy do
   it "test_wrong_params" do
     config_fetcher = ConfigFetcherMock.new()
     config_cache = InMemoryConfigCache.new()
-    cache_policy = LazyLoadingCachePolicy.new(config_fetcher, config_cache, 0)
+    cache_policy = LazyLoadingCachePolicy.new(config_fetcher, config_cache, CACHE_KEY, 0)
     config = cache_policy.get()
     expect(config).to eq TEST_JSON
     cache_policy.stop()
@@ -15,7 +17,7 @@ RSpec.describe ConfigCat::LazyLoadingCachePolicy do
   it "test_cache" do
     config_fetcher = ConfigFetcherMock.new()
     config_cache = InMemoryConfigCache.new()
-    cache_policy = LazyLoadingCachePolicy.new(config_fetcher, config_cache, 1)
+    cache_policy = LazyLoadingCachePolicy.new(config_fetcher, config_cache, CACHE_KEY, 1)
     value = cache_policy.get()
     expect(value).to eq TEST_JSON
     expect(config_fetcher.get_call_count).to eq 1
@@ -31,7 +33,7 @@ RSpec.describe ConfigCat::LazyLoadingCachePolicy do
   it "test_force_refresh" do
     config_fetcher = ConfigFetcherMock.new()
     config_cache = InMemoryConfigCache.new()
-    cache_policy = LazyLoadingCachePolicy.new(config_fetcher, config_cache, 160)
+    cache_policy = LazyLoadingCachePolicy.new(config_fetcher, config_cache, CACHE_KEY, 160)
     value = cache_policy.get()
     expect(value).to eq TEST_JSON
     expect(config_fetcher.get_call_count).to eq 1
@@ -44,7 +46,7 @@ RSpec.describe ConfigCat::LazyLoadingCachePolicy do
   it "test_httperror" do
     config_fetcher = ConfigFetcherWithErrorMock.new(StandardError.new("error"))
     config_cache = InMemoryConfigCache.new()
-    cache_policy = LazyLoadingCachePolicy.new(config_fetcher, config_cache, 160)
+    cache_policy = LazyLoadingCachePolicy.new(config_fetcher, config_cache, CACHE_KEY, 160)
     value = cache_policy.get()
     expect(value).to be nil
     cache_policy.stop()

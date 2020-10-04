@@ -35,14 +35,14 @@ module ConfigCat
 
       if poll_interval_seconds > 0
         @_config_fetcher = CacheControlConfigFetcher.new(sdk_key, "p", base_url, proxy_address, proxy_port, proxy_user, proxy_pass, data_governance)
-        @_cache_policy = AutoPollingCachePolicy.new(@_config_fetcher, @_config_cache, poll_interval_seconds, max_init_wait_time_seconds, on_configuration_changed_callback)
+        @_cache_policy = AutoPollingCachePolicy.new(@_config_fetcher, @_config_cache, _get_cache_key(), poll_interval_seconds, max_init_wait_time_seconds, on_configuration_changed_callback)
       else
         if cache_time_to_live_seconds > 0
           @_config_fetcher = CacheControlConfigFetcher.new(sdk_key, "l", base_url, proxy_address, proxy_port, proxy_user, proxy_pass, data_governance)
-          @_cache_policy = LazyLoadingCachePolicy.new(@_config_fetcher, @_config_cache, cache_time_to_live_seconds)
+          @_cache_policy = LazyLoadingCachePolicy.new(@_config_fetcher, @_config_cache, _get_cache_key(), cache_time_to_live_seconds)
         else
           @_config_fetcher = CacheControlConfigFetcher.new(sdk_key, "m", base_url, proxy_address, proxy_port, proxy_user, proxy_pass, data_governance)
-          @_cache_policy = ManualPollingCachePolicy.new(@_config_fetcher, @_config_cache)
+          @_cache_policy = ManualPollingCachePolicy.new(@_config_fetcher, @_config_cache, _get_cache_key())
         end
       end
     end
@@ -133,6 +133,12 @@ module ConfigCat
     def stop()
       @_cache_policy.stop()
       @_config_fetcher.close()
+    end
+
+    private
+
+    def _get_cache_key()
+      return Digest::SHA1.hexdigest("ruby_" + CONFIG_FILE_NAME + "_" + @_sdk_key)
     end
 
   end
