@@ -61,7 +61,6 @@ module ConfigCat
           @_base_url = BASE_URL_GLOBAL
         end
       end
-      _create_http()
     end
 
     # Returns the FetchResponse object contains configuration json Dictionary
@@ -70,6 +69,7 @@ module ConfigCat
       uri = URI.parse((((@_base_url + ("/")) + BASE_PATH) + @_sdk_key) + BASE_EXTENSION)
       headers = @_headers
       headers["If-None-Match"] = @_etag unless @_etag.empty?
+      _create_http()
       request = Net::HTTP::Get.new(uri.request_uri, headers)
       response = @_http.request(request)
       etag = response["ETag"]
@@ -103,7 +103,6 @@ module ConfigCat
 
       # The next call should use the base_url provided in the config json
       @_base_url = base_url
-      _create_http()
 
       # If the redirect property == 0 (redirect not needed), return the response
       if redirect == RedirectMode::NO_REDIRECT
@@ -133,13 +132,18 @@ module ConfigCat
       end
     end
 
+    private
+
     def _create_http()
-      close()
       uri = URI.parse(@_base_url)
-      @_http = Net::HTTP.new(uri.host, uri.port, @_proxy_address, @_proxy_port, @_proxy_user, @_proxy_pass)
-      @_http.use_ssl = true if uri.scheme == 'https'
-      @_http.open_timeout = 10 # in seconds
-      @_http.read_timeout = 30 # in seconds
+      use_ssl = true if uri.scheme == 'https'
+      if @_http.equal?(nil) || @_http.address != uri.host || @_http.port != uri.port || @_http.use_ssl? != use_ssl
+        close()
+        @_http = Net::HTTP.new(uri.host, uri.port, @_proxy_address, @_proxy_port, @_proxy_user, @_proxy_pass)
+        @_http.use_ssl = use_ssl
+        @_http.open_timeout = 10 # in seconds
+        @_http.read_timeout = 30 # in seconds
+      end
     end
   end
 end
