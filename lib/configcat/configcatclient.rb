@@ -5,6 +5,7 @@ require 'configcat/autopollingcachepolicy'
 require 'configcat/manualpollingcachepolicy'
 require 'configcat/lazyloadingcachepolicy'
 require 'configcat/rolloutevaluator'
+require 'configcat/datagovernance'
 
 module ConfigCat
   KeyValue = Struct.new(:key, :value)
@@ -19,7 +20,8 @@ module ConfigCat
                    proxy_address:nil,
                    proxy_port:nil,
                    proxy_user:nil,
-                   proxy_pass:nil)
+                   proxy_pass:nil,
+                   data_governance: DataGovernance::GLOBAL)
       if sdk_key === nil
         raise ConfigCatClientException, "SDK Key is required."
       end
@@ -32,15 +34,15 @@ module ConfigCat
       end
 
       if poll_interval_seconds > 0
-        @_config_fetcher = CacheControlConfigFetcher.new(sdk_key, "p", base_url, proxy_address, proxy_port, proxy_user, proxy_pass)
-        @_cache_policy = AutoPollingCachePolicy.new(@_config_fetcher, @_config_cache, poll_interval_seconds, max_init_wait_time_seconds, on_configuration_changed_callback)
+        @_config_fetcher = CacheControlConfigFetcher.new(sdk_key, "p", base_url, proxy_address, proxy_port, proxy_user, proxy_pass, data_governance)
+        @_cache_policy = AutoPollingCachePolicy.new(@_config_fetcher, @_config_cache, _get_cache_key(), poll_interval_seconds, max_init_wait_time_seconds, on_configuration_changed_callback)
       else
         if cache_time_to_live_seconds > 0
-          @_config_fetcher = CacheControlConfigFetcher.new(sdk_key, "l", base_url, proxy_address, proxy_port, proxy_user, proxy_pass)
-          @_cache_policy = LazyLoadingCachePolicy.new(@_config_fetcher, @_config_cache, cache_time_to_live_seconds)
+          @_config_fetcher = CacheControlConfigFetcher.new(sdk_key, "l", base_url, proxy_address, proxy_port, proxy_user, proxy_pass, data_governance)
+          @_cache_policy = LazyLoadingCachePolicy.new(@_config_fetcher, @_config_cache, _get_cache_key(), cache_time_to_live_seconds)
         else
-          @_config_fetcher = CacheControlConfigFetcher.new(sdk_key, "m", base_url, proxy_address, proxy_port, proxy_user, proxy_pass)
-          @_cache_policy = ManualPollingCachePolicy.new(@_config_fetcher, @_config_cache)
+          @_config_fetcher = CacheControlConfigFetcher.new(sdk_key, "m", base_url, proxy_address, proxy_port, proxy_user, proxy_pass, data_governance)
+          @_cache_policy = ManualPollingCachePolicy.new(@_config_fetcher, @_config_cache, _get_cache_key())
         end
       end
     end
@@ -59,7 +61,11 @@ module ConfigCat
       if config === nil
         return []
       end
-      return config.keys
+      feature_flags = config.fetch(FEATURE_FLAGS, nil)
+      if feature_flags === nil
+        return []
+      end
+      return feature_flags.keys
     end
 
     def get_variation_id(key, default_variation_id, user=nil)
@@ -92,22 +98,29 @@ module ConfigCat
         ConfigCat.logger.warn("Evaluating get_variation_id('%s') failed. Cache is empty. Returning nil." % variation_id)
         return nil
       end
-      for key, value in config
-        if variation_id == value.fetch(RolloutEvaluator::VARIATION_ID, nil)
-          return KeyValue.new(key, value[RolloutEvaluator::VALUE])
+
+      feature_flags = config.fetch(FEATURE_FLAGS, nil)
+      if feature_flags === nil
+        ConfigCat.logger.warn("Evaluating get_key_and_value('%s') failed. Cache is empty. Returning None." % variation_id)
+        return nil
+      end
+
+      for key, value in feature_flags
+        if variation_id == value.fetch(VARIATION_ID, nil)
+          return KeyValue.new(key, value[VALUE])
         end
 
-        rollout_rules = value.fetch(RolloutEvaluator::ROLLOUT_RULES, [])
+        rollout_rules = value.fetch(ROLLOUT_RULES, [])
         for rollout_rule in rollout_rules
-          if variation_id == rollout_rule.fetch(RolloutEvaluator::VARIATION_ID, nil)
-            return KeyValue.new(key, rollout_rule[RolloutEvaluator::VALUE])
+          if variation_id == rollout_rule.fetch(VARIATION_ID, nil)
+            return KeyValue.new(key, rollout_rule[VALUE])
           end
         end
 
-        rollout_percentage_items = value.fetch(RolloutEvaluator::ROLLOUT_PERCENTAGE_ITEMS, [])
+        rollout_percentage_items = value.fetch(ROLLOUT_PERCENTAGE_ITEMS, [])
         for rollout_percentage_item in rollout_percentage_items
-          if variation_id == rollout_percentage_item.fetch(RolloutEvaluator::VARIATION_ID, nil)
-            return KeyValue.new(key, rollout_percentage_item[RolloutEvaluator::VALUE])
+          if variation_id == rollout_percentage_item.fetch(VARIATION_ID, nil)
+            return KeyValue.new(key, rollout_percentage_item[VALUE])
           end
         end
       end
@@ -120,6 +133,12 @@ module ConfigCat
     def stop()
       @_cache_policy.stop()
       @_config_fetcher.close()
+    end
+
+    private
+
+    def _get_cache_key()
+      return Digest::SHA1.hexdigest("ruby_" + CONFIG_FILE_NAME + "_" + @_sdk_key)
     end
 
   end

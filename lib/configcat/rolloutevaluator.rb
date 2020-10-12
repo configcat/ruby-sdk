@@ -1,4 +1,5 @@
 require 'configcat/user'
+require 'configcat/constants'
 require 'digest'
 require 'semantic'
 
@@ -6,21 +7,18 @@ module ConfigCat
   class RolloutEvaluator
     COMPARATOR_TEXTS = ["IS ONE OF", "IS NOT ONE OF", "CONTAINS", "DOES NOT CONTAIN", "IS ONE OF (SemVer)", "IS NOT ONE OF (SemVer)", "< (SemVer)", "<= (SemVer)", "> (SemVer)", ">= (SemVer)", "= (Number)", "<> (Number)", "< (Number)", "<= (Number)", "> (Number)", ">= (Number)"]
 
-    VALUE = "v"
-    COMPARATOR = "t"
-    COMPARISON_ATTRIBUTE = "a"
-    COMPARISON_VALUE = "c"
-    ROLLOUT_PERCENTAGE_ITEMS = "p"
-    PERCENTAGE = "p"
-    ROLLOUT_RULES = "r"
-    VARIATION_ID = "i"
-
     def self.evaluate(key, user, default_value, default_variation_id, config)
       ConfigCat.logger.info("Evaluating get_value('%s')." % key)
 
-      setting_descriptor = config.fetch(key, nil)
+      feature_flags = config.fetch(FEATURE_FLAGS, nil)
+      if feature_flags === nil
+        ConfigCat.logger.error("Evaluating get_value('%s') failed. Value not found for key '%s' Returning default_value: [%s]." % [key, key, default_value.to_s])
+        return default_value, default_variation_id
+      end
+
+      setting_descriptor = feature_flags.fetch(key, nil)
       if setting_descriptor === nil
-        ConfigCat.logger.error("Evaluating get_value('%s') failed. Value not found for key '%s'. Returning default_value: [%s]. Here are the available keys: %s" % [key, key, default_value.to_s, config.keys.join(", ")])
+        ConfigCat.logger.error("Evaluating get_value('%s') failed. Value not found for key '%s'. Returning default_value: [%s]. Here are the available keys: %s" % [key, key, default_value.to_s, feature_flags.keys.join(", ")])
         return default_value, default_variation_id
       end
 

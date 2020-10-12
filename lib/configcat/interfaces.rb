@@ -23,13 +23,13 @@ module ConfigCat
     #       Config cache interface
     #
 
-    def get()
+    def get(key)
       #
       #     :returns the config json object from the cache
       #
     end
 
-    def set(value)
+    def set(key, value)
       #
       #     Sets the config json cache.
       #

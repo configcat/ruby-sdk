@@ -10,13 +10,17 @@ module ConfigCat
     attr_accessor :logger
   end
 
-  def ConfigCat.create_client(sdk_key)
+  def ConfigCat.create_client(sdk_key, data_governance: DataGovernance::GLOBAL)
     #
     #   Create an instance of ConfigCatClient and setup Auto Poll mode with default options
     #
     #   :param sdk_key: ConfigCat SDK Key to access your configuration.
+    #   :param data_governance:
+    #   Default: Global. Set this parameter to be in sync with the Data Governance preference on the Dashboard:
+    #   https://app.configcat.com/organization/data-governance
+    #   (Only Organization Admins have access)
     #
-    return create_client_with_auto_poll(sdk_key)
+    return create_client_with_auto_poll(sdk_key, data_governance: data_governance)
   end
 
   def ConfigCat.create_client_with_auto_poll(sdk_key,
@@ -25,10 +29,11 @@ module ConfigCat
                                              on_configuration_changed_callback: nil,
                                              config_cache_class: nil,
                                              base_url: nil,
-                                             proxy_address:nil,
-                                             proxy_port:nil,
-                                             proxy_user:nil,
-                                             proxy_pass:nil)
+                                             proxy_address: nil,
+                                             proxy_port: nil,
+                                             proxy_user: nil,
+                                             proxy_pass: nil,
+                                             data_governance: DataGovernance::GLOBAL)
     #
     #   Create an instance of ConfigCatClient and setup Auto Poll mode with custom options
     #
@@ -43,6 +48,10 @@ module ConfigCat
     #   :param proxy_port: Proxy port
     #   :param proxy_user: username for proxy authentication
     #   :param proxy_pass: password for proxy authentication
+    #   :param data_governance:
+    #   Default: Global. Set this parameter to be in sync with the Data Governance preference on the Dashboard:
+    #   https://app.configcat.com/organization/data-governance
+    #   (Only Organization Admins have access)
     #
     if sdk_key === nil
       raise ConfigCatClientException, "SDK Key is required."
@@ -63,17 +72,19 @@ module ConfigCat
                                proxy_address: proxy_address,
                                proxy_port: proxy_port,
                                proxy_user: proxy_user,
-                               proxy_pass: proxy_pass)
+                               proxy_pass: proxy_pass,
+                               data_governance: data_governance)
   end
 
   def ConfigCat.create_client_with_lazy_load(sdk_key,
                                              cache_time_to_live_seconds: 60,
                                              config_cache_class: nil,
                                              base_url: nil,
-                                             proxy_address:nil,
-                                             proxy_port:nil,
-                                             proxy_user:nil,
-                                             proxy_pass:nil)
+                                             proxy_address: nil,
+                                             proxy_port: nil,
+                                             proxy_user: nil,
+                                             proxy_pass: nil,
+                                             data_governance: DataGovernance::GLOBAL)
     #
     #   Create an instance of ConfigCatClient and setup Lazy Load mode with custom options
     #
@@ -86,6 +97,10 @@ module ConfigCat
     #   :param proxy_port: Proxy port
     #   :param proxy_user: username for proxy authentication
     #   :param proxy_pass: password for proxy authentication
+    #   :param data_governance:
+    #   Default: Global. Set this parameter to be in sync with the Data Governance preference on the Dashboard:
+    #   https://app.configcat.com/organization/data-governance
+    #   (Only Organization Admins have access)
     #
     if sdk_key === nil
       raise ConfigCatClientException, "SDK Key is required."
@@ -103,7 +118,8 @@ module ConfigCat
                                proxy_address: proxy_address,
                                proxy_port: proxy_port,
                                proxy_user: proxy_user,
-                               proxy_pass: proxy_pass)
+                               proxy_pass: proxy_pass,
+                               data_governance: data_governance)
   end
 
   def ConfigCat.create_client_with_manual_poll(sdk_key,
@@ -112,7 +128,8 @@ module ConfigCat
                                                proxy_address:nil,
                                                proxy_port:nil,
                                                proxy_user:nil,
-                                               proxy_pass:nil)
+                                               proxy_pass:nil,
+                                               data_governance: DataGovernance::GLOBAL)
     #
     #   Create an instance of ConfigCatClient and setup Manual Poll mode with custom options
     #
@@ -124,6 +141,10 @@ module ConfigCat
     #   :param proxy_port: Proxy port
     #   :param proxy_user: username for proxy authentication
     #   :param proxy_pass: password for proxy authentication
+    #   :param data_governance:
+    #   Default: Global. Set this parameter to be in sync with the Data Governance preference on the Dashboard:
+    #   https://app.configcat.com/organization/data-governance
+    #   (Only Organization Admins have access)
     #
     if sdk_key === nil
       raise ConfigCatClientException, "SDK Key is required."
@@ -138,7 +159,8 @@ module ConfigCat
                                proxy_address: proxy_address,
                                proxy_port: proxy_port,
                                proxy_user: proxy_user,
-                               proxy_pass: proxy_pass)
+                               proxy_pass: proxy_pass,
+                               data_governance: data_governance)
   end
 
 end

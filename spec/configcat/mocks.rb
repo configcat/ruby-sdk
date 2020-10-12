@@ -1,15 +1,37 @@
 require 'configcat/interfaces'
 require 'json'
 
-TEST_JSON = '{"testKey": { "v": "testValue", "t": 1, "p": [], "r": [] }}'
-TEST_JSON2 = '{"testKey": { "v": "testValue", "t": 1, "p": [], "r": [] }, "testKey2": { "v": "testValue2", "t": 1, "p": [], "r": [] }}'
+TEST_JSON = '{' \
+            '   "p": {' \
+            '       "u": "https://cdn-global.configcat.com",' \
+            '       "r": 0' \
+            '   },' \
+            '   "f": {' \
+            '       "testKey": { "v": "testValue", "t": 1, "p": [], "r": [] }' \
+            '   }' \
+            '}'
+
+TEST_JSON2 = '{' \
+             '  "p": {' \
+             '       "u": "https://cdn-global.configcat.com",' \
+             '       "r": 0' \
+             '  },' \
+             '  "f": {' \
+             '      "testKey": { "v": "testValue", "t": 1, "p": [], "r": [] }, ' \
+             '      "testKey2": { "v": "testValue2", "t": 1, "p": [], "r": [] }' \
+             '  }' \
+             '}'
+
 TEST_OBJECT = JSON.parse('{
-  "testBoolKey": {"v": true,"t": 0, "p": [],"r": []},
-  "testStringKey": {"v": "testValue","t": 1, "p": [],"r": []},
-  "testIntKey": {"v": 1,"t": 2, "p": [],"r": []},
-  "testDoubleKey": {"v": 1.1,"t": 3,"p": [],"r": []},
-  "key1": {"v": true, "i": "fakeId1","p": [], "r": []},
-  "key2": {"v": false, "i": "fakeId2","p": [], "r": []}
+  "p": {"u": "https://cdn-global.configcat.com", "r": 0},
+  "f": {
+    "testBoolKey": {"v": true,"t": 0, "p": [],"r": []},
+    "testStringKey": {"v": "testValue","t": 1, "p": [],"r": []},
+    "testIntKey": {"v": 1,"t": 2, "p": [],"r": []},
+    "testDoubleKey": {"v": 1.1,"t": 3,"p": [],"r": []},
+    "key1": {"v": true, "i": "fakeId1","p": [], "r": []},
+    "key2": {"v": false, "i": "fakeId2","p": [], "r": []}
+  }
 }')
 
 include ConfigCat
@@ -81,10 +103,10 @@ class ConfigFetcherCountMock < ConfigFetcher
 end
 
 class ConfigCacheMock < ConfigCache
-  def get()
+  def get(key)
     return TEST_OBJECT
   end
-  def set(value)
+  def set(key, value)
   end
 end
 
