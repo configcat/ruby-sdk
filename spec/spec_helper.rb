@@ -1,6 +1,8 @@
 require 'configcat'
-require 'coveralls'
+require 'simplecov'
+require 'codecov'
 require 'webmock/rspec'
 WebMock.allow_net_connect!
 ConfigCat.logger.level = Logger::WARN
-Coveralls.wear!
+SimpleCov.start
+SimpleCov.formatter = SimpleCov::Formatter::Codecov
