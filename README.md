@@ -12,15 +12,12 @@ ConfigCat is a <a href="https://configcat.com" target="_blank">hosted feature fl
 ![License](https://img.shields.io/github/license/configcat/ruby-sdk.svg)
 
 ## Getting started
-
 ### 1. Install the package with `RubyGems`
-
 ```bash
 gem install configcat
 ```
 
 ### 2. Import `configcat` to your application
-
 ```ruby
 require 'configcat'
 ```
@@ -29,7 +26,6 @@ require 'configcat'
 ![SDK-KEY](https://raw.githubusercontent.com/ConfigCat/ruby-sdk/master/media/readme02-3.png  "SDK-KEY")
 
 ### 4. Create a *ConfigCat* client instance:
-
 ```ruby
 configcat_client = ConfigCat.create_client("#YOUR-SDK-KEY#")
 ```
