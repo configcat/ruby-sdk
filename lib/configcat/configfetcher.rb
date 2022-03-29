@@ -41,13 +41,16 @@ module ConfigCat
   end
 
   class CacheControlConfigFetcher < ConfigFetcher
-    def initialize(sdk_key, mode, base_url=nil, proxy_address=nil, proxy_port=nil, proxy_user=nil, proxy_pass=nil,
-                   data_governance=DataGovernance::GLOBAL)
+    def initialize(sdk_key, mode, base_url:nil, proxy_address:nil, proxy_port:nil, proxy_user:nil, proxy_pass:nil,
+                   open_timeout:10, read_timeout:30,
+                   data_governance:DataGovernance::GLOBAL)
       @_sdk_key = sdk_key
       @_proxy_address = proxy_address
       @_proxy_port = proxy_port
       @_proxy_user = proxy_user
       @_proxy_pass = proxy_pass
+      @_open_timeout = open_timeout
+      @_read_timeout = read_timeout
       @_etag = ""
       @_headers = {"User-Agent" => ((("ConfigCat-Ruby/") + mode) + ("-")) + VERSION, "X-ConfigCat-UserAgent" => ((("ConfigCat-Ruby/") + mode) + ("-")) + VERSION, "Content-Type" => "application/json"}
       if !base_url.equal?(nil)
@@ -141,8 +144,8 @@ module ConfigCat
         close()
         @_http = Net::HTTP.new(uri.host, uri.port, @_proxy_address, @_proxy_port, @_proxy_user, @_proxy_pass)
         @_http.use_ssl = use_ssl
-        @_http.open_timeout = 10 # in seconds
-        @_http.read_timeout = 30 # in seconds
+        @_http.open_timeout = @_open_timeout
+        @_http.read_timeout = @_read_timeout
       end
     end
   end

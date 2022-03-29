@@ -33,6 +33,8 @@ module ConfigCat
                                              proxy_port: nil,
                                              proxy_user: nil,
                                              proxy_pass: nil,
+                                             open_timeout: 10,
+                                             read_timeout: 30,
                                              data_governance: DataGovernance::GLOBAL)
     #
     #   Create an instance of ConfigCatClient and setup Auto Poll mode with custom options
@@ -48,6 +50,8 @@ module ConfigCat
     #   :param proxy_port: Proxy port
     #   :param proxy_user: username for proxy authentication
     #   :param proxy_pass: password for proxy authentication
+    #   :param open_timeout: The number of seconds to wait for the server to make the initial connection. Default: 10 seconds.
+    #   :param read_timeout: The number of seconds to wait for the server to respond before giving up. Default: 30 seconds.
     #   :param data_governance:
     #   Default: Global. Set this parameter to be in sync with the Data Governance preference on the Dashboard:
     #   https://app.configcat.com/organization/data-governance
@@ -73,6 +77,8 @@ module ConfigCat
                                proxy_port: proxy_port,
                                proxy_user: proxy_user,
                                proxy_pass: proxy_pass,
+                               open_timeout: open_timeout,
+                               read_timeout: read_timeout,
                                data_governance: data_governance)
   end
 
@@ -84,6 +90,8 @@ module ConfigCat
                                              proxy_port: nil,
                                              proxy_user: nil,
                                              proxy_pass: nil,
+                                             open_timeout: 10,
+                                             read_timeout: 30,
                                              data_governance: DataGovernance::GLOBAL)
     #
     #   Create an instance of ConfigCatClient and setup Lazy Load mode with custom options
@@ -97,6 +105,8 @@ module ConfigCat
     #   :param proxy_port: Proxy port
     #   :param proxy_user: username for proxy authentication
     #   :param proxy_pass: password for proxy authentication
+    #   :param open_timeout: The number of seconds to wait for the server to make the initial connection. Default: 10 seconds.
+    #   :param read_timeout: The number of seconds to wait for the server to respond before giving up. Default: 30 seconds.
     #   :param data_governance:
     #   Default: Global. Set this parameter to be in sync with the Data Governance preference on the Dashboard:
     #   https://app.configcat.com/organization/data-governance
@@ -119,16 +129,20 @@ module ConfigCat
                                proxy_port: proxy_port,
                                proxy_user: proxy_user,
                                proxy_pass: proxy_pass,
+                               open_timeout: open_timeout,
+                               read_timeout: read_timeout,
                                data_governance: data_governance)
   end
 
   def ConfigCat.create_client_with_manual_poll(sdk_key,
                                                config_cache_class: nil,
                                                base_url: nil,
-                                               proxy_address:nil,
-                                               proxy_port:nil,
-                                               proxy_user:nil,
-                                               proxy_pass:nil,
+                                               proxy_address: nil,
+                                               proxy_port: nil,
+                                               proxy_user: nil,
+                                               proxy_pass: nil,
+                                               open_timeout: 10,
+                                               read_timeout: 30,
                                                data_governance: DataGovernance::GLOBAL)
     #
     #   Create an instance of ConfigCatClient and setup Manual Poll mode with custom options
@@ -141,6 +155,8 @@ module ConfigCat
     #   :param proxy_port: Proxy port
     #   :param proxy_user: username for proxy authentication
     #   :param proxy_pass: password for proxy authentication
+    #   :param open_timeout: The number of seconds to wait for the server to make the initial connection. Default: 10 seconds.
+    #   :param read_timeout: The number of seconds to wait for the server to respond before giving up. Default: 30 seconds.
     #   :param data_governance:
     #   Default: Global. Set this parameter to be in sync with the Data Governance preference on the Dashboard:
     #   https://app.configcat.com/organization/data-governance
@@ -160,6 +176,8 @@ module ConfigCat
                                proxy_port: proxy_port,
                                proxy_user: proxy_user,
                                proxy_pass: proxy_pass,
+                               open_timeout: open_timeout,
+                               read_timeout: read_timeout,
                                data_governance: data_governance)
   end
 

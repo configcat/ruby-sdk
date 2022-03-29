@@ -21,6 +21,8 @@ module ConfigCat
                    proxy_port:nil,
                    proxy_user:nil,
                    proxy_pass:nil,
+                   open_timeout:10,
+                   read_timeout:30,
                    data_governance: DataGovernance::GLOBAL)
       if sdk_key === nil
         raise ConfigCatClientException, "SDK Key is required."
@@ -34,14 +36,23 @@ module ConfigCat
       end
 
       if poll_interval_seconds > 0
-        @_config_fetcher = CacheControlConfigFetcher.new(sdk_key, "p", base_url, proxy_address, proxy_port, proxy_user, proxy_pass, data_governance)
+        @_config_fetcher = CacheControlConfigFetcher.new(sdk_key, "p", base_url: base_url,
+                                                         proxy_address: proxy_address, proxy_port: proxy_port, proxy_user: proxy_user, proxy_pass: proxy_pass,
+                                                         open_timeout: open_timeout, read_timeout: read_timeout,
+                                                         data_governance: data_governance)
         @_cache_policy = AutoPollingCachePolicy.new(@_config_fetcher, @_config_cache, _get_cache_key(), poll_interval_seconds, max_init_wait_time_seconds, on_configuration_changed_callback)
       else
         if cache_time_to_live_seconds > 0
-          @_config_fetcher = CacheControlConfigFetcher.new(sdk_key, "l", base_url, proxy_address, proxy_port, proxy_user, proxy_pass, data_governance)
+          @_config_fetcher = CacheControlConfigFetcher.new(sdk_key, "l", base_url: base_url,
+                                                           proxy_address: proxy_address, proxy_port: proxy_port, proxy_user: proxy_user, proxy_pass: proxy_pass,
+                                                           open_timeout: open_timeout, read_timeout: read_timeout,
+                                                           data_governance: data_governance)
           @_cache_policy = LazyLoadingCachePolicy.new(@_config_fetcher, @_config_cache, _get_cache_key(), cache_time_to_live_seconds)
         else
-          @_config_fetcher = CacheControlConfigFetcher.new(sdk_key, "m", base_url, proxy_address, proxy_port, proxy_user, proxy_pass, data_governance)
+          @_config_fetcher = CacheControlConfigFetcher.new(sdk_key, "m", base_url: base_url,
+                                                           proxy_address: proxy_address, proxy_port: proxy_port, proxy_user: proxy_user, proxy_pass: proxy_pass,
+                                                           open_timeout: open_timeout, read_timeout: read_timeout,
+                                                           data_governance: data_governance)
           @_cache_policy = ManualPollingCachePolicy.new(@_config_fetcher, @_config_cache, _get_cache_key())
         end
       end

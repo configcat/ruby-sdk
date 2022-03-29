@@ -34,8 +34,7 @@ RSpec.describe 'Data governance tests', type: :feature do
     eu_only_stub = stub_request(URI_EU_ONLY, ConfigCat::BASE_URL_EU_ONLY, 0)
 
     fetcher = ConfigCat::CacheControlConfigFetcher.new("", "m",
-                                                       nil, nil, nil, nil, nil,
-                                                       ConfigCat::DataGovernance::GLOBAL)
+                                                       data_governance: ConfigCat::DataGovernance::GLOBAL)
 
     # First fetch
     fetch_response = fetcher.get_configuration_json()
@@ -62,8 +61,7 @@ RSpec.describe 'Data governance tests', type: :feature do
     eu_only_stub = stub_request(URI_EU_ONLY, ConfigCat::BASE_URL_EU_ONLY, 0)
 
     fetcher = ConfigCat::CacheControlConfigFetcher.new("", "m",
-                                                       nil, nil, nil, nil, nil,
-                                                       ConfigCat::DataGovernance::EU_ONLY)
+                                                       data_governance: ConfigCat::DataGovernance::EU_ONLY)
 
     # First fetch
     fetch_response = fetcher.get_configuration_json()
@@ -90,8 +88,7 @@ RSpec.describe 'Data governance tests', type: :feature do
     eu_only_stub = stub_request(URI_EU_ONLY, ConfigCat::BASE_URL_EU_ONLY, 0)
 
     fetcher = ConfigCat::CacheControlConfigFetcher.new("", "m",
-                                                       nil, nil, nil, nil, nil,
-                                                       ConfigCat::DataGovernance::GLOBAL)
+                                                       data_governance: ConfigCat::DataGovernance::GLOBAL)
     # First fetch
     fetch_response = fetcher.get_configuration_json()
     expect(fetch_response.is_fetched()).to be true
@@ -117,8 +114,7 @@ RSpec.describe 'Data governance tests', type: :feature do
     eu_only_stub = stub_request(URI_EU_ONLY, ConfigCat::BASE_URL_EU_ONLY, 0)
 
     fetcher = ConfigCat::CacheControlConfigFetcher.new("", "m",
-                                                       nil, nil, nil, nil, nil,
-                                                       ConfigCat::DataGovernance::EU_ONLY)
+                                                       data_governance: ConfigCat::DataGovernance::EU_ONLY)
 
     # First fetch
     fetch_response = fetcher.get_configuration_json()
@@ -146,8 +142,8 @@ RSpec.describe 'Data governance tests', type: :feature do
     custom_stub = stub_request(URI_CUSTOM, ConfigCat::BASE_URL_GLOBAL, 0)
 
     fetcher = ConfigCat::CacheControlConfigFetcher.new("", "m",
-                                                       "https://custom.configcat.com", nil, nil, nil, nil,
-                                                       ConfigCat::DataGovernance::GLOBAL)
+                                                       base_url: "https://custom.configcat.com",
+                                                       data_governance: ConfigCat::DataGovernance::GLOBAL)
 
     # First fetch
     fetch_response = fetcher.get_configuration_json()
@@ -177,8 +173,8 @@ RSpec.describe 'Data governance tests', type: :feature do
     custom_stub = stub_request(URI_CUSTOM, ConfigCat::BASE_URL_GLOBAL, 0)
 
     fetcher = ConfigCat::CacheControlConfigFetcher.new("", "m",
-                                                       "https://custom.configcat.com", nil, nil, nil, nil,
-                                                       ConfigCat::DataGovernance::EU_ONLY)
+                                                       base_url: "https://custom.configcat.com",
+                                                       data_governance: ConfigCat::DataGovernance::EU_ONLY)
 
     # First fetch
     fetch_response = fetcher.get_configuration_json()
@@ -208,8 +204,7 @@ RSpec.describe 'Data governance tests', type: :feature do
     forced_to_forced_stub = stub_request(URI_FORCED, BASE_URL_FORCED, 2)
 
     fetcher = ConfigCat::CacheControlConfigFetcher.new("", "m",
-                                                       nil, nil, nil, nil, nil,
-                                                       ConfigCat::DataGovernance::GLOBAL)
+                                                       data_governance: ConfigCat::DataGovernance::GLOBAL)
 
     # First fetch
     fetch_response = fetcher.get_configuration_json()
@@ -239,8 +234,7 @@ RSpec.describe 'Data governance tests', type: :feature do
     forced_to_forced_stub = stub_request(URI_FORCED, BASE_URL_FORCED, 2)
 
     fetcher = ConfigCat::CacheControlConfigFetcher.new("", "m",
-                                                       nil, nil, nil, nil, nil,
-                                                       ConfigCat::DataGovernance::EU_ONLY)
+                                                       data_governance: ConfigCat::DataGovernance::EU_ONLY)
 
     # First fetch
     fetch_response = fetcher.get_configuration_json()
@@ -271,8 +265,8 @@ RSpec.describe 'Data governance tests', type: :feature do
     custom_to_forced_stub = stub_request(URI_CUSTOM, BASE_URL_FORCED, 2)
 
     fetcher = ConfigCat::CacheControlConfigFetcher.new("", "m",
-                                                       "https://custom.configcat.com", nil, nil, nil, nil,
-                                                       ConfigCat::DataGovernance::GLOBAL)
+                                                       base_url: "https://custom.configcat.com",
+                                                       data_governance: ConfigCat::DataGovernance::GLOBAL)
 
     # First fetch
     fetch_response = fetcher.get_configuration_json()
@@ -306,8 +300,7 @@ RSpec.describe 'Data governance tests', type: :feature do
     eu_only_to_global_stub = stub_request(URI_EU_ONLY, ConfigCat::BASE_URL_GLOBAL, 1)
 
     fetcher = ConfigCat::CacheControlConfigFetcher.new("", "m",
-                                                       nil, nil, nil, nil, nil,
-                                                       ConfigCat::DataGovernance::GLOBAL)
+                                                       data_governance: ConfigCat::DataGovernance::GLOBAL)
 
     # First fetch
     fetch_response = fetcher.get_configuration_json()
