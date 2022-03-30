@@ -17,3 +17,5 @@ puts("'isPOCFeatureEnabled' value from ConfigCat: " + value.to_s)
 
 value = client.get_value("isAwesomeFeatureEnabled", "default value")
 puts("'isAwesomeFeatureEnabled' value from ConfigCat: " + value.to_s)
+
+client.stop()

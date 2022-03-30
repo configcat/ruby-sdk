@@ -10,6 +10,8 @@ require 'configcat/datagovernance'
 module ConfigCat
   KeyValue = Struct.new(:key, :value)
   class ConfigCatClient
+    @@sdk_keys = []
+
     def initialize(sdk_key,
                    poll_interval_seconds:60,
                    max_init_wait_time_seconds:5,
@@ -27,6 +29,15 @@ module ConfigCat
       if sdk_key === nil
         raise ConfigCatClientException, "SDK Key is required."
       end
+
+      if @@sdk_keys.include?(sdk_key)
+        ConfigCat.logger.warn("A ConfigCat Client is already initialized with sdk_key %s. "\
+                              "We strongly recommend you to use the ConfigCat Client as "\
+                              "a Singleton object in your application." % sdk_key)
+      else
+        @@sdk_keys.push(sdk_key)
+      end
+
       @_sdk_key = sdk_key
 
       if config_cache_class
@@ -144,6 +155,7 @@ module ConfigCat
     def stop()
       @_cache_policy.stop()
       @_config_fetcher.close()
+      @@sdk_keys.delete(@_sdk_key)
     end
 
     private
