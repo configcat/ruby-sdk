@@ -35,6 +35,7 @@ module ConfigCat
                                              proxy_pass: nil,
                                              open_timeout: 10,
                                              read_timeout: 30,
+                                             flag_overrides: nil,
                                              data_governance: DataGovernance::GLOBAL)
     #
     #   Create an instance of ConfigCatClient and setup Auto Poll mode with custom options
@@ -52,6 +53,7 @@ module ConfigCat
     #   :param proxy_pass: password for proxy authentication
     #   :param open_timeout: The number of seconds to wait for the server to make the initial connection. Default: 10 seconds.
     #   :param read_timeout: The number of seconds to wait for the server to respond before giving up. Default: 30 seconds.
+    #   :param flag_overrides: An OverrideDataSource implementation used to override feature flags & settings.
     #   :param data_governance:
     #   Default: Global. Set this parameter to be in sync with the Data Governance preference on the Dashboard:
     #   https://app.configcat.com/organization/data-governance
@@ -79,6 +81,7 @@ module ConfigCat
                                proxy_pass: proxy_pass,
                                open_timeout: open_timeout,
                                read_timeout: read_timeout,
+                               flag_overrides: flag_overrides,
                                data_governance: data_governance)
   end
 
@@ -92,6 +95,7 @@ module ConfigCat
                                              proxy_pass: nil,
                                              open_timeout: 10,
                                              read_timeout: 30,
+                                             flag_overrides: nil,
                                              data_governance: DataGovernance::GLOBAL)
     #
     #   Create an instance of ConfigCatClient and setup Lazy Load mode with custom options
@@ -107,6 +111,7 @@ module ConfigCat
     #   :param proxy_pass: password for proxy authentication
     #   :param open_timeout: The number of seconds to wait for the server to make the initial connection. Default: 10 seconds.
     #   :param read_timeout: The number of seconds to wait for the server to respond before giving up. Default: 30 seconds.
+    #   :param flag_overrides: An OverrideDataSource implementation used to override feature flags & settings.
     #   :param data_governance:
     #   Default: Global. Set this parameter to be in sync with the Data Governance preference on the Dashboard:
     #   https://app.configcat.com/organization/data-governance
@@ -131,6 +136,7 @@ module ConfigCat
                                proxy_pass: proxy_pass,
                                open_timeout: open_timeout,
                                read_timeout: read_timeout,
+                               flag_overrides: flag_overrides,
                                data_governance: data_governance)
   end
 
@@ -143,6 +149,7 @@ module ConfigCat
                                                proxy_pass: nil,
                                                open_timeout: 10,
                                                read_timeout: 30,
+                                               flag_overrides: nil,
                                                data_governance: DataGovernance::GLOBAL)
     #
     #   Create an instance of ConfigCatClient and setup Manual Poll mode with custom options
@@ -157,6 +164,7 @@ module ConfigCat
     #   :param proxy_pass: password for proxy authentication
     #   :param open_timeout: The number of seconds to wait for the server to make the initial connection. Default: 10 seconds.
     #   :param read_timeout: The number of seconds to wait for the server to respond before giving up. Default: 30 seconds.
+    #   :param flag_overrides: An OverrideDataSource implementation used to override feature flags & settings.
     #   :param data_governance:
     #   Default: Global. Set this parameter to be in sync with the Data Governance preference on the Dashboard:
     #   https://app.configcat.com/organization/data-governance
@@ -178,6 +186,7 @@ module ConfigCat
                                proxy_pass: proxy_pass,
                                open_timeout: open_timeout,
                                read_timeout: read_timeout,
+                               flag_overrides: flag_overrides,
                                data_governance: data_governance)
   end
 
