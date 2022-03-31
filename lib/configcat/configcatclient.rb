@@ -158,6 +158,18 @@ module ConfigCat
       end
     end
 
+    def get_all_values(user: nil)
+      keys = get_all_keys()
+      all_values = {}
+      for key in keys
+        value = get_value(key, nil, user)
+        if !value.equal?(nil)
+          all_values[key] = value
+        end
+      end
+      return all_values
+    end
+
     def force_refresh()
       @_cache_policy.force_refresh()
     end
