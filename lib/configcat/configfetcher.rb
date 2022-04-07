@@ -66,6 +66,14 @@ module ConfigCat
       end
     end
 
+    def get_open_timeout()
+      return @_open_timeout
+    end
+
+    def get_read_timeout()
+      return @_read_timeout
+    end
+
     # Returns the FetchResponse object contains configuration json Dictionary
     def get_configuration_json(retries=0)
       ConfigCat.logger.debug "Fetching configuration from ConfigCat"

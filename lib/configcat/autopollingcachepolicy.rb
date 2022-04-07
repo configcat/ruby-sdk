@@ -82,6 +82,9 @@ module ConfigCat
         if !@_initialized && !old_configuration.equal?(nil)
           @_initialized = true
         end
+      rescue Timeout::Error => e
+        ConfigCat.logger.error("Request timed out. Timeout values: [open: %ss, read: %ss]" %
+                               [@_config_fetcher.get_open_timeout(), @_config_fetcher.get_read_timeout()])
       rescue Exception => e
         ConfigCat.logger.error("Double-check your SDK Key at https://app.configcat.com/sdkkey.")
         ConfigCat.logger.error "threw exception #{e.class}:'#{e}'"
