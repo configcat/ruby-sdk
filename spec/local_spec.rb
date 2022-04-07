@@ -1,8 +1,10 @@
 require 'spec_helper'
 require 'configcat/localdictionarydatasource'
+require 'configcat/localfiledatasource'
 
 
 RSpec.describe 'Local test', type: :feature do
+  script_dir = File.dirname(__FILE__)
 
   def stub_request()
     uri_template = Addressable::Template.new "https://{base_url}/{base_path}/{api_key}/{base_ext}"
@@ -17,6 +19,44 @@ RSpec.describe 'Local test', type: :feature do
             }
         )
         .to_return(status: 200, body: json, headers: {})
+  end
+
+  it "test file" do
+    client = ConfigCat::ConfigCatClient.new("test",
+                                            poll_interval_seconds: 0,
+                                            max_init_wait_time_seconds: 0,
+                                            flag_overrides: ConfigCat::LocalFileDataSource.new(File.join(script_dir, 'test.json'),
+                                                                                               ConfigCat::OverrideBehaviour::LOCAL_ONLY))
+    expect(client.get_value("enabledFeature", false)).to eq true
+    expect(client.get_value("disabledFeature", true)).to eq false
+    expect(client.get_value("intSetting", 0)).to eq 5
+    expect(client.get_value("doubleSetting", 0.0)).to eq 3.14
+    expect(client.get_value("stringSetting", "")).to eq "test"
+    client.stop()
+  end
+
+  it "test simple file" do
+    client = ConfigCat::ConfigCatClient.new("test",
+                                            poll_interval_seconds: 0,
+                                            max_init_wait_time_seconds: 0,
+                                            flag_overrides: ConfigCat::LocalFileDataSource.new(File.join(script_dir, 'test-simple.json'),
+                                                                                               ConfigCat::OverrideBehaviour::LOCAL_ONLY))
+    expect(client.get_value("enabledFeature", false)).to eq true
+    expect(client.get_value("disabledFeature", true)).to eq false
+    expect(client.get_value("intSetting", 0)).to eq 5
+    expect(client.get_value("doubleSetting", 0.0)).to eq 3.14
+    expect(client.get_value("stringSetting", "")).to eq "test"
+    client.stop()
+  end
+
+  it "test non existent file" do
+    client = ConfigCat::ConfigCatClient.new("test",
+                                            poll_interval_seconds: 0,
+                                            max_init_wait_time_seconds: 0,
+                                            flag_overrides: ConfigCat::LocalFileDataSource.new('non_existent.json',
+                                                                                               ConfigCat::OverrideBehaviour::LOCAL_ONLY))
+    expect(client.get_value("enabledFeature", false)).to eq false
+    client.stop()
   end
 
   it "test dictionary" do
