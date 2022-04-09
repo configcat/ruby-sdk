@@ -1,7 +1,8 @@
 require 'spec_helper'
 require 'configcat/localdictionarydatasource'
 require 'configcat/localfiledatasource'
-
+require 'tempfile'
+require 'json'
 
 RSpec.describe 'Local test', type: :feature do
   script_dir = File.dirname(__FILE__)
@@ -57,6 +58,57 @@ RSpec.describe 'Local test', type: :feature do
                                                                                                ConfigCat::OverrideBehaviour::LOCAL_ONLY))
     expect(client.get_value("enabledFeature", false)).to eq false
     client.stop()
+  end
+
+  it "test reload file" do
+    temp = Tempfile.new("test-simple")
+    dictionary = {"flags" => {"enabledFeature" => false}}
+    begin
+      temp.write(dictionary.to_json())
+      temp.flush()
+
+      client = ConfigCat::ConfigCatClient.new("test",
+                                              poll_interval_seconds: 0,
+                                              max_init_wait_time_seconds: 0,
+                                              flag_overrides: ConfigCat::LocalFileDataSource.new(temp.path(),
+                                                                                                 ConfigCat::OverrideBehaviour::LOCAL_ONLY))
+      expect(client.get_value("enabledFeature", true)).to eq false
+
+      sleep(0.5)
+
+      # clear the content of the temp file
+      temp.seek(0)
+      temp.truncate(0)
+
+      # change the temporary file
+      dictionary["flags"]["enabledFeature"] = true
+      temp.write(dictionary.to_json())
+      temp.flush()
+
+      expect(client.get_value("enabledFeature", false)).to eq true
+
+      client.stop()
+    ensure
+      temp.unlink()
+    end
+  end
+
+  it "test invalid file" do
+    temp = Tempfile.new("invalid")
+    begin
+      temp.write('{"flags": {"enabledFeature": true}')
+      temp.close()
+
+      client = ConfigCat::ConfigCatClient.new("test",
+                                              poll_interval_seconds: 0,
+                                              max_init_wait_time_seconds: 0,
+                                              flag_overrides: ConfigCat::LocalFileDataSource.new(temp.path(),
+                                                                                                 ConfigCat::OverrideBehaviour::LOCAL_ONLY))
+      expect(client.get_value("enabledFeature", false)).to eq false
+      client.stop()
+    ensure
+      temp.unlink()
+    end
   end
 
   it "test dictionary" do
