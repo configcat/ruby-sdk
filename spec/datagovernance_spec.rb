@@ -4,9 +4,10 @@ require 'configcat/configfetcher'
 
 RSpec.describe 'Data governance tests', type: :feature do
   BASE_URL_FORCED = "https://forced.configcat.com"
+  BASE_URL_CUSTOM = "https://custom.configcat.com"
   URI_GLOBAL = ConfigCat::BASE_URL_GLOBAL + "/" + ConfigCat::BASE_PATH + ConfigCat::BASE_EXTENSION
   URI_EU_ONLY = ConfigCat::BASE_URL_EU_ONLY + "/" + ConfigCat::BASE_PATH + ConfigCat::BASE_EXTENSION
-  URI_CUSTOM = "https://custom.configcat.com/" + ConfigCat::BASE_PATH + ConfigCat::BASE_EXTENSION
+  URI_CUSTOM = BASE_URL_CUSTOM + "/" + ConfigCat::BASE_PATH + ConfigCat::BASE_EXTENSION
   URI_FORCED = BASE_URL_FORCED + "/" + ConfigCat::BASE_PATH + ConfigCat::BASE_EXTENSION
   TEST_JSON = '{"test": "json"}'
 
@@ -142,7 +143,7 @@ RSpec.describe 'Data governance tests', type: :feature do
     custom_stub = stub_request(URI_CUSTOM, ConfigCat::BASE_URL_GLOBAL, 0)
 
     fetcher = ConfigCat::CacheControlConfigFetcher.new("", "m",
-                                                       base_url: "https://custom.configcat.com",
+                                                       base_url: BASE_URL_CUSTOM,
                                                        data_governance: ConfigCat::DataGovernance::GLOBAL)
 
     # First fetch
@@ -173,7 +174,7 @@ RSpec.describe 'Data governance tests', type: :feature do
     custom_stub = stub_request(URI_CUSTOM, ConfigCat::BASE_URL_GLOBAL, 0)
 
     fetcher = ConfigCat::CacheControlConfigFetcher.new("", "m",
-                                                       base_url: "https://custom.configcat.com",
+                                                       base_url: BASE_URL_CUSTOM,
                                                        data_governance: ConfigCat::DataGovernance::EU_ONLY)
 
     # First fetch
@@ -265,7 +266,7 @@ RSpec.describe 'Data governance tests', type: :feature do
     custom_to_forced_stub = stub_request(URI_CUSTOM, BASE_URL_FORCED, 2)
 
     fetcher = ConfigCat::CacheControlConfigFetcher.new("", "m",
-                                                       base_url: "https://custom.configcat.com",
+                                                       base_url: BASE_URL_CUSTOM,
                                                        data_governance: ConfigCat::DataGovernance::GLOBAL)
 
     # First fetch
