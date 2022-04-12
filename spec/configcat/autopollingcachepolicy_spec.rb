@@ -15,6 +15,7 @@ RSpec.describe ConfigCat::AutoPollingCachePolicy do
     expect(config).to eq TEST_JSON
     cache_policy.stop()
   end
+
   it "test_init_wait_time_ok" do
     config_fetcher = ConfigFetcherWaitMock.new(0)
     config_cache = InMemoryConfigCache.new()
@@ -23,6 +24,7 @@ RSpec.describe ConfigCat::AutoPollingCachePolicy do
     expect(config).to eq TEST_JSON
     cache_policy.stop()
   end
+
   it "test_init_wait_time_timeout" do
     config_fetcher = ConfigFetcherWaitMock.new(5)
     config_cache = InMemoryConfigCache.new()
@@ -36,6 +38,7 @@ RSpec.describe ConfigCat::AutoPollingCachePolicy do
     expect(elapsed_time).to be < 2
     cache_policy.stop()
   end
+
   it "test_fetch_call_count" do
     config_fetcher = ConfigFetcherMock.new()
     config_cache = InMemoryConfigCache.new()
@@ -46,6 +49,7 @@ RSpec.describe ConfigCat::AutoPollingCachePolicy do
     expect(config).to eq TEST_JSON
     cache_policy.stop()
   end
+
   it "test_updated_values" do
     config_fetcher = ConfigFetcherCountMock.new()
     config_cache = InMemoryConfigCache.new()
@@ -57,6 +61,7 @@ RSpec.describe ConfigCat::AutoPollingCachePolicy do
     expect(config).to eq 20
     cache_policy.stop()
   end
+
   it "test_http_error" do
     config_fetcher = ConfigFetcherWithErrorMock.new(StandardError.new("error"))
     config_cache = InMemoryConfigCache.new()
@@ -65,6 +70,7 @@ RSpec.describe ConfigCat::AutoPollingCachePolicy do
     expect(value).to be nil
     cache_policy.stop()
   end
+
   it "test_stop" do
     config_fetcher = ConfigFetcherCountMock.new()
     config_cache = InMemoryConfigCache.new()
@@ -77,6 +83,7 @@ RSpec.describe ConfigCat::AutoPollingCachePolicy do
     expect(config).to eq 10
     cache_policy.stop()
   end
+
   it "test_rerun" do
     config_fetcher = ConfigFetcherMock.new()
     config_cache = InMemoryConfigCache.new()
@@ -85,6 +92,7 @@ RSpec.describe ConfigCat::AutoPollingCachePolicy do
     expect(config_fetcher.get_call_count).to eq 2
     cache_policy.stop()
   end
+
   it "test_callback" do
     call_counter = CallCounter.new()
     config_fetcher = ConfigFetcherMock.new()

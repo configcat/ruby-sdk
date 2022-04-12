@@ -32,6 +32,25 @@ module ConfigCat
       end
       return nil
     end
+
+    def to_s()
+      r = %Q({\n    "Identifier": "#{@__identifier}")
+      if !@__data["Email"].equal?(nil)
+        r += %Q(,\n    "Email": "#{@__data["Email"]}")
+      end
+      if !@__data["Country"].equal?(nil)
+        r += %Q(,\n    "Country": "#{@__data["Country"]}")
+      end
+      if !@__custom.equal?(nil)
+        r += %Q(,\n    "Custom": {)
+        for customField in @__custom
+          r += %Q(\n        "#{customField}": "#{@__custom[customField]}",)
+        end
+        r += "\n    }"
+      end
+      r += "\n}"
+      return r
+    end
   end
 
 end

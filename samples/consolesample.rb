@@ -1,5 +1,9 @@
 require 'configcat'
 
+# Info level logging helps to inspect the feature flag evaluation process.
+# Use the default warning level to avoid too detailed logging in your application.
+ConfigCat.logger.level = Logger::INFO
+
 # Initialize the ConfigCatClient with an SDK Key.
 client = ConfigCat.create_client("PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A")
 
