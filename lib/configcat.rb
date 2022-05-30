@@ -1,4 +1,6 @@
 require 'configcat/interfaces'
+require 'configcat/localdictionarydatasource'
+require 'configcat/localfiledatasource'
 require 'configcat/configcatclient'
 require 'configcat/user'
 require 'logger'
