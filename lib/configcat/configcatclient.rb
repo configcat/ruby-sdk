@@ -53,7 +53,7 @@ module ConfigCat
         @_config_fetcher = nil
         @_cache_policy = nil
       elsif poll_interval_seconds > 0
-        @_config_fetcher = CacheControlConfigFetcher.new(sdk_key, "p", base_url: base_url,
+        @_config_fetcher = CacheControlConfigFetcher.new(sdk_key, "a", base_url: base_url,
                                                          proxy_address: proxy_address, proxy_port: proxy_port, proxy_user: proxy_user, proxy_pass: proxy_pass,
                                                          open_timeout: open_timeout, read_timeout: read_timeout,
                                                          data_governance: data_governance)
