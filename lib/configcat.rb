@@ -12,6 +12,24 @@ module ConfigCat
     attr_accessor :logger
   end
 
+  def ConfigCat.get(sdk_key, options: nil)
+    #
+    #   Creates a new or gets an already existing `ConfigCatClient` for the given `sdk_key`.
+    #
+    #   :param sdk_key: ConfigCat SDK Key to access your configuration.
+    #   :param options: Configuration `ConfigCatOptions` for `ConfigCatClient`.
+    #   :return: the `ConfigCatClient` instance.
+    #
+    return ConfigCatClient.get(sdk_key: sdk_key, options: options)
+  end
+
+  def close_all
+    #
+    #   Closes all ConfigCatClient instances.
+    #
+    ConfigCatClient.close_all()
+  end
+
   def ConfigCat.create_client(sdk_key, data_governance: DataGovernance::GLOBAL)
     #
     #   Create an instance of ConfigCatClient and setup Auto Poll mode with default options
@@ -29,14 +47,14 @@ module ConfigCat
                                              poll_interval_seconds: 60,
                                              max_init_wait_time_seconds: 5,
                                              on_configuration_changed_callback: nil,
-                                             config_cache_class: nil,
+                                             config_cache: nil,
                                              base_url: nil,
                                              proxy_address: nil,
                                              proxy_port: nil,
                                              proxy_user: nil,
                                              proxy_pass: nil,
-                                             open_timeout: 10,
-                                             read_timeout: 30,
+                                             open_timeout_seconds: 10,
+                                             read_timeout_seconds: 30,
                                              flag_overrides: nil,
                                              data_governance: DataGovernance::GLOBAL)
     #
@@ -46,16 +64,16 @@ module ConfigCat
     #   :param poll_interval_seconds: The client's poll interval in seconds. Default: 60 seconds.
     #   :param on_configuration_changed_callback: You can subscribe to configuration changes with this callback
     #   :param max_init_wait_time_seconds: maximum waiting time for first configuration fetch in polling mode.
-    #   :param config_cache_class: If you want to use custom caching instead of the client's default InMemoryConfigCache,
+    #   :param config_cache: If you want to use custom caching instead of the client's default,
     #   You can provide an implementation of ConfigCache.
     #   :param base_url: You can set a base_url if you want to use a proxy server between your application and ConfigCat
     #   :param proxy_address: Proxy address
     #   :param proxy_port: Proxy port
     #   :param proxy_user: username for proxy authentication
     #   :param proxy_pass: password for proxy authentication
-    #   :param open_timeout: The number of seconds to wait for the server to make the initial connection. Default: 10 seconds.
-    #   :param read_timeout: The number of seconds to wait for the server to respond before giving up. Default: 30 seconds.
-    #   :param flag_overrides: An OverrideDataSource implementation used to override feature flags & settings.
+    #   :param open_timeout_seconds: The number of seconds to wait for the server to make the initial connection. Default: 10 seconds.
+    #   :param read_timeout_seconds: The number of seconds to wait for the server to respond before giving up. Default: 30 seconds.
+    #   :param flag_overrides: A FlagOverrides implementation used to override feature flags & settings.
     #   :param data_governance:
     #   Default: Global. Set this parameter to be in sync with the Data Governance preference on the Dashboard:
     #   https://app.configcat.com/organization/data-governance
@@ -75,28 +93,28 @@ module ConfigCat
                                max_init_wait_time_seconds: max_init_wait_time_seconds,
                                on_configuration_changed_callback: on_configuration_changed_callback,
                                cache_time_to_live_seconds: 0,
-                               config_cache_class: config_cache_class,
+                               config_cache: config_cache,
                                base_url: base_url,
                                proxy_address: proxy_address,
                                proxy_port: proxy_port,
                                proxy_user: proxy_user,
                                proxy_pass: proxy_pass,
-                               open_timeout: open_timeout,
-                               read_timeout: read_timeout,
+                               open_timeout_seconds: open_timeout_seconds,
+                               read_timeout_seconds: read_timeout_seconds,
                                flag_overrides: flag_overrides,
                                data_governance: data_governance)
   end
 
   def ConfigCat.create_client_with_lazy_load(sdk_key,
                                              cache_time_to_live_seconds: 60,
-                                             config_cache_class: nil,
+                                             config_cache: nil,
                                              base_url: nil,
                                              proxy_address: nil,
                                              proxy_port: nil,
                                              proxy_user: nil,
                                              proxy_pass: nil,
-                                             open_timeout: 10,
-                                             read_timeout: 30,
+                                             open_timeout_seconds: 10,
+                                             read_timeout_seconds: 30,
                                              flag_overrides: nil,
                                              data_governance: DataGovernance::GLOBAL)
     #
@@ -104,16 +122,16 @@ module ConfigCat
     #
     #   :param sdk_key: ConfigCat SDK Key to access your configuration.
     #   :param cache_time_to_live_seconds: The cache TTL.
-    #   :param config_cache_class: If you want to use custom caching instead of the client's default InMemoryConfigCache,
+    #   :param config_cache: If you want to use custom caching instead of the client's default,
     #   You can provide an implementation of ConfigCache.
     #   :param base_url: You can set a base_url if you want to use a proxy server between your application and ConfigCat
     #   :param proxy_address: Proxy address
     #   :param proxy_port: Proxy port
     #   :param proxy_user: username for proxy authentication
     #   :param proxy_pass: password for proxy authentication
-    #   :param open_timeout: The number of seconds to wait for the server to make the initial connection. Default: 10 seconds.
-    #   :param read_timeout: The number of seconds to wait for the server to respond before giving up. Default: 30 seconds.
-    #   :param flag_overrides: An OverrideDataSource implementation used to override feature flags & settings.
+    #   :param open_timeout_seconds: The number of seconds to wait for the server to make the initial connection. Default: 10 seconds.
+    #   :param read_timeout_seconds: The number of seconds to wait for the server to respond before giving up. Default: 30 seconds.
+    #   :param flag_overrides: A FlagOverrides implementation used to override feature flags & settings.
     #   :param data_governance:
     #   Default: Global. Set this parameter to be in sync with the Data Governance preference on the Dashboard:
     #   https://app.configcat.com/organization/data-governance
@@ -130,43 +148,43 @@ module ConfigCat
                                max_init_wait_time_seconds: 0,
                                on_configuration_changed_callback: nil,
                                cache_time_to_live_seconds: cache_time_to_live_seconds,
-                               config_cache_class: config_cache_class,
+                               config_cache: config_cache,
                                base_url: base_url,
                                proxy_address: proxy_address,
                                proxy_port: proxy_port,
                                proxy_user: proxy_user,
                                proxy_pass: proxy_pass,
-                               open_timeout: open_timeout,
-                               read_timeout: read_timeout,
+                               open_timeout_seconds: open_timeout_seconds,
+                               read_timeout_seconds: read_timeout_seconds,
                                flag_overrides: flag_overrides,
                                data_governance: data_governance)
   end
 
   def ConfigCat.create_client_with_manual_poll(sdk_key,
-                                               config_cache_class: nil,
+                                               config_cache: nil,
                                                base_url: nil,
                                                proxy_address: nil,
                                                proxy_port: nil,
                                                proxy_user: nil,
                                                proxy_pass: nil,
-                                               open_timeout: 10,
-                                               read_timeout: 30,
+                                               open_timeout_seconds: 10,
+                                               read_timeout_seconds: 30,
                                                flag_overrides: nil,
                                                data_governance: DataGovernance::GLOBAL)
     #
     #   Create an instance of ConfigCatClient and setup Manual Poll mode with custom options
     #
     #   :param sdk_key: ConfigCat SDK Key to access your configuration.
-    #   :param config_cache_class: If you want to use custom caching instead of the client's default InMemoryConfigCache,
+    #   :param config_cache: If you want to use custom caching instead of the client's default,
     #   You can provide an implementation of ConfigCache.
     #   :param base_url: You can set a base_url if you want to use a proxy server between your application and ConfigCat
     #   :param proxy_address: Proxy address
     #   :param proxy_port: Proxy port
     #   :param proxy_user: username for proxy authentication
     #   :param proxy_pass: password for proxy authentication
-    #   :param open_timeout: The number of seconds to wait for the server to make the initial connection. Default: 10 seconds.
-    #   :param read_timeout: The number of seconds to wait for the server to respond before giving up. Default: 30 seconds.
-    #   :param flag_overrides: An OverrideDataSource implementation used to override feature flags & settings.
+    #   :param open_timeout_seconds: The number of seconds to wait for the server to make the initial connection. Default: 10 seconds.
+    #   :param read_timeout_seconds: The number of seconds to wait for the server to respond before giving up. Default: 30 seconds.
+    #   :param flag_overrides: A FlagOverrides implementation used to override feature flags & settings.
     #   :param data_governance:
     #   Default: Global. Set this parameter to be in sync with the Data Governance preference on the Dashboard:
     #   https://app.configcat.com/organization/data-governance
@@ -180,14 +198,14 @@ module ConfigCat
                                max_init_wait_time_seconds: 0,
                                on_configuration_changed_callback: nil,
                                cache_time_to_live_seconds: 0,
-                               config_cache_class: config_cache_class,
+                               config_cache: config_cache,
                                base_url: base_url,
                                proxy_address: proxy_address,
                                proxy_port: proxy_port,
                                proxy_user: proxy_user,
                                proxy_pass: proxy_pass,
-                               open_timeout: open_timeout,
-                               read_timeout: read_timeout,
+                               open_timeout_seconds: open_timeout_seconds,
+                               read_timeout_seconds: read_timeout_seconds,
                                flag_overrides: flag_overrides,
                                data_governance: data_governance)
   end

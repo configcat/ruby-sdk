@@ -104,7 +104,7 @@ end
 
 class ConfigCacheMock < ConfigCache
   def get(key)
-    return TEST_OBJECT
+    return JSON.dump({ConfigEntry::CONFIG => TEST_OBJECT, ConfigEntry::ETAG  => 'test-etag' })
   end
   def set(key, value)
   end

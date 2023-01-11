@@ -1,23 +1,5 @@
 module ConfigCat
 
-  class ConfigFetcher
-    #
-    #       Config fetcher interface
-    #
-
-    def get_configuration_json()
-      #
-      #     :return: Returns the configuration json Dictionary
-      #
-    end
-
-    def close()
-      #
-      #         Closes the ConfigFetcher's resources
-      #
-    end
-  end
-
   class ConfigCache
     #
     #       Config cache interface

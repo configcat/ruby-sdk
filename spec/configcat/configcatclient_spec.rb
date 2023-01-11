@@ -10,14 +10,10 @@ RSpec.describe ConfigCat::ConfigCatClient do
   end
 
   it "test_bool" do
-    client = ConfigCatClient.new("test",
-                                 poll_interval_seconds: 0,
-                                 max_init_wait_time_seconds: 0,
-                                 on_configuration_changed_callback: nil,
-                                 cache_time_to_live_seconds: 0,
-                                 config_cache_class: ConfigCacheMock)
+    client = ConfigCatClient.get("test", options: ConfigCatOptions.new(polling_mode: PollingMode.manual_poll,
+                                                                       config_cache: ConfigCacheMock.new))
     expect(client.get_value("testBoolKey", false)).to eq true
-    client.stop()
+    client.close()
   end
 
   it "test_string" do

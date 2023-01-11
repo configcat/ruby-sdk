@@ -7,18 +7,14 @@ module ConfigCat
   class RolloutEvaluator
     COMPARATOR_TEXTS = ["IS ONE OF", "IS NOT ONE OF", "CONTAINS", "DOES NOT CONTAIN", "IS ONE OF (SemVer)", "IS NOT ONE OF (SemVer)", "< (SemVer)", "<= (SemVer)", "> (SemVer)", ">= (SemVer)", "= (Number)", "<> (Number)", "< (Number)", "<= (Number)", "> (Number)", ">= (Number)"]
 
-    def self.evaluate(key, user, default_value, default_variation_id, config)
-      ConfigCat.logger.info("Evaluating get_value('%s')." % key)
+    def initialize(log)
+      @log = log
+    end
 
-      feature_flags = config.fetch(FEATURE_FLAGS, nil)
-      if feature_flags === nil
-        ConfigCat.logger.error("Evaluating get_value('%s') failed. Value not found for key '%s' Returning default_value: [%s]." % [key, key, default_value.to_s])
-        return default_value, default_variation_id
-      end
-
-      setting_descriptor = feature_flags.fetch(key, nil)
+    def evaluate(key:, user:, default_value:, default_variation_id:, settings:)
+      setting_descriptor = settings[key]
       if setting_descriptor === nil
-        ConfigCat.logger.error("Evaluating get_value('%s') failed. Value not found for key '%s'. Returning default_value: [%s]. Here are the available keys: %s" % [key, key, default_value.to_s, feature_flags.keys.join(", ")])
+        @log.error("Evaluating get_value('%s') failed. Value not found for key '%s'. Returning default_value: [%s]. Here are the available keys: %s" % [key, key, default_value.to_s, feature_flags.keys.join(", ")])
         return default_value, default_variation_id
       end
 
@@ -26,16 +22,16 @@ module ConfigCat
       rollout_percentage_items = setting_descriptor.fetch(ROLLOUT_PERCENTAGE_ITEMS, [])
 
       if !user.equal?(nil) && !user.class.equal?(User)
-        ConfigCat.logger.warn("Evaluating get_value('%s'). User Object is not an instance of User type." % key)
+        @log.warn("Evaluating get_value('%s'). User Object is not an instance of User type." % key)
         user = nil
       end
       if user === nil
         if rollout_rules.size > 0 || rollout_percentage_items.size > 0
-          ConfigCat.logger.warn("Evaluating get_value('%s'). UserObject missing! You should pass a UserObject to get_value(), in order to make targeting work properly. Read more: https://configcat.com/docs/advanced/user-object/" % key)
+          @log.warn("Evaluating get_value('%s'). UserObject missing! You should pass a UserObject to get_value(), in order to make targeting work properly. Read more: https://configcat.com/docs/advanced/user-object/" % key)
         end
         return_value = setting_descriptor.fetch(VALUE, default_value)
         return_variation_id = setting_descriptor.fetch(VARIATION_ID, default_variation_id)
-        ConfigCat.logger.info("Returning [%s]" % return_value.to_s)
+        @log.info("Returning [%s]" % return_value.to_s)
         return return_value, return_variation_id
       end
 
@@ -96,7 +92,7 @@ module ConfigCat
               end
             rescue ArgumentError => e
               message = format_validation_error_rule(comparison_attribute, user_value, comparator, comparison_value, e.to_s)
-              ConfigCat.logger.warn(message)
+              @log.warn(message)
               log_entries.push(message)
               next
             end
@@ -114,7 +110,7 @@ module ConfigCat
               end
             rescue ArgumentError => e
               message = format_validation_error_rule(comparison_attribute, user_value, comparator, comparison_value, e.to_s)
-              ConfigCat.logger.warn(message)
+              @log.warn(message)
               log_entries.push(message)
               next
             end
@@ -133,7 +129,7 @@ module ConfigCat
               end
             rescue Exception => e
               message = format_validation_error_rule(comparison_attribute, user_value, comparator, comparison_value, e.to_s)
-              ConfigCat.logger.warn(message)
+              @log.warn(message)
               log_entries.push(message)
               next
             end
@@ -173,21 +169,21 @@ module ConfigCat
         log_entries.push("Returning %s" % return_value)
         return return_value, return_variation_id
       ensure
-        ConfigCat.logger.info(log_entries.join("\n"))
+        @log.info(log_entries.join("\n"))
       end
     end
 
     private
 
-    def self.format_match_rule(comparison_attribute, user_value, comparator, comparison_value, value)
+    def format_match_rule(comparison_attribute, user_value, comparator, comparison_value, value)
       return "Evaluating rule: [%s:%s] [%s] [%s] => match, returning: %s" % [comparison_attribute, user_value, COMPARATOR_TEXTS[comparator], comparison_value, value]
     end
 
-    def self.format_no_match_rule(comparison_attribute, user_value, comparator, comparison_value)
+    def format_no_match_rule(comparison_attribute, user_value, comparator, comparison_value)
       return "Evaluating rule: [%s:%s] [%s] [%s] => no match" % [comparison_attribute, user_value, COMPARATOR_TEXTS[comparator], comparison_value]
     end
 
-    def self.format_validation_error_rule(comparison_attribute, user_value, comparator, comparison_value, error)
+    def format_validation_error_rule(comparison_attribute, user_value, comparator, comparison_value, error)
       return "Evaluating rule: [%s:%s] [%s] [%s] => SKIP rule. Validation error: %s" % [comparison_attribute, user_value, COMPARATOR_TEXTS[comparator], comparison_value, error]
     end
 

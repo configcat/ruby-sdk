@@ -1,87 +1,110 @@
 require 'configcat/interfaces'
 require 'configcat/configcache'
+require 'configcat/configcatoptions'
 require 'configcat/configfetcher'
 require 'configcat/autopollingcachepolicy'
 require 'configcat/manualpollingcachepolicy'
 require 'configcat/lazyloadingcachepolicy'
 require 'configcat/rolloutevaluator'
-require 'configcat/datagovernance'
+require 'configcat/utils'
+require 'configcat/configcatlogger'
+require 'configcat/overridedatasource'
+require 'configcat/configservice'
+require 'configcat/evaluationdetails'
 
 
 module ConfigCat
   KeyValue = Struct.new(:key, :value)
   class ConfigCatClient
-    @@sdk_keys = []
+    attr_reader :log
 
-    def initialize(sdk_key,
-                   poll_interval_seconds: 60,
-                   max_init_wait_time_seconds: 5,
-                   on_configuration_changed_callback: nil,
-                   cache_time_to_live_seconds: 60,
-                   config_cache_class: nil,
-                   base_url: nil,
-                   proxy_address: nil,
-                   proxy_port: nil,
-                   proxy_user: nil,
-                   proxy_pass: nil,
-                   open_timeout: 10,
-                   read_timeout: 30,
-                   flag_overrides: nil,
-                   data_governance: DataGovernance::GLOBAL)
+    @@lock = Mutex.new
+    @@instances = {}
+
+    def self.get(sdk_key, options: nil)
+      @@lock.synchronize do
+        client = @@instances[sdk_key]
+        if client
+          if options
+            client.log.warn("Client for sdk_key `#{sdk_key}` is already created and will be reused; " +
+                                  "options passed are being ignored.")
+          end
+          return client
+        end
+
+        options ||= ConfigCatOptions.new
+        client = ConfigCatClient.new(sdk_key, options: options)
+        @@instances[sdk_key] = client
+        return client
+      end
+    end
+
+    def close_all
+      @@lock.synchronize do
+        @@instances.each do |key, value|
+          value._close_resources
+        end
+        @@instances.clear
+      end
+    end
+
+    private def initialize(sdk_key, options: ConfigCatOptions.new)
+      @_hooks = options.hooks || Hooks.new
+      @log = ConfigCatLogger.new(@_hooks)
+
       if sdk_key === nil
         raise ConfigCatClientException, "SDK Key is required."
       end
 
-      if @@sdk_keys.include?(sdk_key)
-        ConfigCat.logger.warn("A ConfigCat Client is already initialized with sdk_key %s. "\
-                              "We strongly recommend you to use the ConfigCat Client as "\
-                              "a Singleton object in your application." % sdk_key)
-      else
-        @@sdk_keys.push(sdk_key)
-      end
-
       @_sdk_key = sdk_key
-      @_override_data_source = flag_overrides
-
-      if config_cache_class
-        @_config_cache = config_cache_class.new()
+      @_default_user = options.default_user
+      @_rollout_evaluator = RolloutEvaluator.new(@log)
+      if options.flag_overrides
+        @_override_data_source = options.flag_overrides.create_data_source(@log)
       else
-        @_config_cache = InMemoryConfigCache.new()
+        @_override_data_source = nil
       end
 
-      if !@_override_data_source.equal?(nil) && @_override_data_source.get_behaviour() == OverrideBehaviour::LOCAL_ONLY
+      @config_cache = options.config_cache.nil? ? NullConfigCache.new : options.config_cache
+
+      if @_override_data_source && @_override_data_source.get_behaviour() == OverrideBehaviour::LOCAL_ONLY
         @_config_fetcher = nil
-        @_cache_policy = nil
-      elsif poll_interval_seconds > 0
-        @_config_fetcher = CacheControlConfigFetcher.new(sdk_key, "a", base_url: base_url,
-                                                         proxy_address: proxy_address, proxy_port: proxy_port, proxy_user: proxy_user, proxy_pass: proxy_pass,
-                                                         open_timeout: open_timeout, read_timeout: read_timeout,
-                                                         data_governance: data_governance)
-        @_cache_policy = AutoPollingCachePolicy.new(@_config_fetcher, @_config_cache, _get_cache_key(), poll_interval_seconds, max_init_wait_time_seconds, on_configuration_changed_callback)
-      elsif cache_time_to_live_seconds > 0
-        @_config_fetcher = CacheControlConfigFetcher.new(sdk_key, "l", base_url: base_url,
-                                                         proxy_address: proxy_address, proxy_port: proxy_port, proxy_user: proxy_user, proxy_pass: proxy_pass,
-                                                         open_timeout: open_timeout, read_timeout: read_timeout,
-                                                         data_governance: data_governance)
-        @_cache_policy = LazyLoadingCachePolicy.new(@_config_fetcher, @_config_cache, _get_cache_key(), cache_time_to_live_seconds)
+        @_config_service = nil
       else
-        @_config_fetcher = CacheControlConfigFetcher.new(sdk_key, "m", base_url: base_url,
-                                                         proxy_address: proxy_address, proxy_port: proxy_port, proxy_user: proxy_user, proxy_pass: proxy_pass,
-                                                         open_timeout: open_timeout, read_timeout: read_timeout,
-                                                         data_governance: data_governance)
-        @_cache_policy = ManualPollingCachePolicy.new(@_config_fetcher, @_config_cache, _get_cache_key())
+        @_config_fetcher = ConfigFetcher.new(@_sdk_key,
+                                            @log,
+                                            options.polling_mode.identifier,
+                                            base_url: options.base_url,
+                                            proxy_address: options.proxy_address,
+                                            proxy_port: options.proxy_port,
+                                            proxy_user: options.proxy_user,
+                                            proxy_pass: options.proxy_pass,
+                                            open_timeout: options.open_timeout_seconds,
+                                            read_timeout: options.read_timeout_seconds,
+                                            data_governance: options.data_governance)
+
+        @_config_service = ConfigService.new(@sdk_key,
+                                            options.polling_mode,
+                                            @_hooks,
+                                            @_config_fetcher,
+                                            @log,
+                                            @config_cache,
+                                            options.offline)
       end
     end
 
+    # Gets the value of a feature flag or setting identified by the given `key`.
     def get_value(key, default_value, user=nil)
-      config = _get_settings()
-      if config === nil
-        ConfigCat.logger.warn("Evaluating get_value('%s') failed. Cache is empty. "\
-                              "Returning default_value in your get_value call: [%s]." % [key, default_value.to_s])
+      settings, fetch_time = _get_settings()
+      if settings.nil?
+        message = "Evaluating get_value('%s') failed. Cache is empty. " \
+                  "Returning default_value in your get_value call: [%s]." % [key, default_value.to_s]
+        @log.error(message)
+        @_hooks.invoke_on_flag_evaluated(EvaluationDetails.from_error(key, default_value, error: message))
         return default_value
       end
-      value, variation_id = RolloutEvaluator.evaluate(key, user, default_value, nil, config)
-      return value
+      details = _evaluate(key, user, default_value, nil, settings, fetch_time)
+      return details.value
     end
 
     def get_all_keys()
@@ -166,46 +189,76 @@ module ConfigCat
       return all_values
     end
 
-    def force_refresh()
-      @_cache_policy.force_refresh()
+    def force_refresh
+      @_config_service.force_refresh()
     end
 
-    def stop()
-      @_cache_policy.stop() if @_cache_policy
-      @_config_fetcher.close() if @_config_fetcher
-      @@sdk_keys.delete(@_sdk_key)
+    def close
+      # Closes the underlying resources.
+      @@lock.synchronize do
+        _close_resources()
+        @@instances.delete(@sdk_key)
+      end
     end
 
     private
 
-    def _get_settings()
+    def _close_resources
+      @_config_service.close() if @_config_service
+      @_config_fetcher.close() if @_config_fetcher
+      @_hooks.clear
+    end
+
+    def _get_settings
       if !@_override_data_source.nil?
         behaviour = @_override_data_source.get_behaviour()
         if behaviour == OverrideBehaviour::LOCAL_ONLY
-          return @_override_data_source.get_overrides()
+          return @_override_data_source.get_overrides(), DISTANT_PAST
         elsif behaviour == OverrideBehaviour::REMOTE_OVER_LOCAL
-          remote_settings = @_cache_policy.get()
+          remote_settings, fetch_time = @_config_service.get_settings()
           local_settings = @_override_data_source.get_overrides()
           result = local_settings.clone()
           if remote_settings.key?(FEATURE_FLAGS) && local_settings.key?(FEATURE_FLAGS)
             result[FEATURE_FLAGS] = result[FEATURE_FLAGS].merge(remote_settings[FEATURE_FLAGS])
           end
-          return result
+          return result, fetch_time
         elsif behaviour == OverrideBehaviour::LOCAL_OVER_REMOTE
-          remote_settings = @_cache_policy.get()
+          remote_settings, fetch_time = @_config_service.get_settings()
           local_settings = @_override_data_source.get_overrides()
           result = remote_settings.clone()
           if remote_settings.key?(FEATURE_FLAGS) && local_settings.key?(FEATURE_FLAGS)
             result[FEATURE_FLAGS] = result[FEATURE_FLAGS].merge(local_settings[FEATURE_FLAGS])
           end
-          return result
+          return result, fetch_time
         end
       end
-      return @_cache_policy.get()
+      return @_config_service.get_settings()
     end
 
-    def _get_cache_key()
+    def _get_cache_key
       return Digest::SHA1.hexdigest("ruby_" + CONFIG_FILE_NAME + "_" + @_sdk_key)
+    end
+
+    def _evaluate(key, user, default_value, default_variation_id, settings, fetch_time)
+      user = user || @_default_user
+      value, variation_id, rule, percentage_rule, error = @_rollout_evaluator.evaluate(
+          key: key,
+          user: user,
+          default_value: default_value,
+          default_variation_id: default_variation_id,
+          settings: settings)
+
+      details = EvaluationDetails.new(key: key,
+                                      value: value,
+                                      variation_id: variation_id,
+                                      fetch_time: fetch_time,
+                                      user: user,
+                                      is_default_value: true || false,
+                                      error: error,
+                                      matched_evaluation_rule: rule,
+                                      matched_evaluation_percentage_rule: percentage_rule)
+      @_hooks.invoke_on_flag_evaluated(details)
+      return details
     end
 
   end
