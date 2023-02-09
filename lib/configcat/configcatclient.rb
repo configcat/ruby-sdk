@@ -39,10 +39,10 @@ module ConfigCat
       end
     end
 
-    def close_all
+    def self.close_all
       @@lock.synchronize do
         @@instances.each do |key, value|
-          value._close_resources
+          value.send(:_close_resources)
         end
         @@instances.clear
       end
@@ -107,31 +107,39 @@ module ConfigCat
       return details.value
     end
 
+    # Gets all setting keys.
     def get_all_keys()
-      config = _get_settings()
-      if config === nil
+      settings, _ = _get_settings()
+      if settings === nil
         return []
       end
-      feature_flags = config.fetch(FEATURE_FLAGS, nil)
-      if feature_flags === nil
-        return []
-      end
-      return feature_flags.keys
+      return settings.keys
     end
 
+    # Gets the Variation ID (analytics) of a feature flag or setting based on it's key.
     def get_variation_id(key, default_variation_id, user=nil)
-      config = _get_settings()
-      if config === nil
-        ConfigCat.logger.warn("Evaluating get_variation_id('%s') failed. Cache is empty. "\
-                              "Returning default_variation_id in your get_variation_id call: [%s]." %
-                              [key, default_variation_id.to_s])
+      @log.warn("get_variation_id is deprecated and will be removed in a future major version. "\
+                "Please use [get_value_details] instead.")
+
+      settings, fetch_time = _get_settings()
+      if settings === nil
+        message = "Evaluating get_variation_id('%s') failed. Cache is empty. "\
+                  "Returning default_variation_id in your get_variation_id call: [%s]." %
+                  [key, default_variation_id.to_s]
+        @log.error(message)
+        @_hooks.invoke_on_flag_evaluated(EvaluationDetails.from_error(key, nil, error: message,
+                                                                      variation_id: default_variation_id))
         return default_variation_id
       end
-      value, variation_id = RolloutEvaluator.evaluate(key, user, nil, default_variation_id, config)
-      return variation_id
+      details = _evaluate(key, user, nil, default_variation_id, settings, fetch_time)
+      return details.variation_id
     end
 
+    # Gets the Variation IDs (analytics) of all feature flags or settings.
     def get_all_variation_ids(user: nil)
+      @log.warn("get_all_variation_ids is deprecated and will be removed in a future major version. "\
+                "Please use [get_value_details] instead.")
+
       keys = get_all_keys()
       variation_ids = []
       for key in keys
@@ -143,20 +151,15 @@ module ConfigCat
       return variation_ids
     end
 
+    # Gets the key of a setting, and it's value identified by the given Variation ID (analytics)
     def get_key_and_value(variation_id)
-      config = _get_settings()
-      if config === nil
-        ConfigCat.logger.warn("Evaluating get_variation_id('%s') failed. Cache is empty. Returning nil." % variation_id)
+      settings, _ = _get_settings()
+      if settings === nil
+        @log.warn("Evaluating get_key_and_value('%s') failed. Cache is empty. Returning nil." % variation_id)
         return nil
       end
 
-      feature_flags = config.fetch(FEATURE_FLAGS, nil)
-      if feature_flags === nil
-        ConfigCat.logger.warn("Evaluating get_key_and_value('%s') failed. Cache is empty. Returning None." % variation_id)
-        return nil
-      end
-
-      for key, value in feature_flags
+      for key, value in settings
         if variation_id == value.fetch(VARIATION_ID, nil)
           return KeyValue.new(key, value[VALUE])
         end
@@ -196,7 +199,7 @@ module ConfigCat
     def close
       # Closes the underlying resources.
       @@lock.synchronize do
-        _close_resources()
+        _close_resources
         @@instances.delete(@sdk_key)
       end
     end
@@ -213,7 +216,7 @@ module ConfigCat
       if !@_override_data_source.nil?
         behaviour = @_override_data_source.get_behaviour()
         if behaviour == OverrideBehaviour::LOCAL_ONLY
-          return @_override_data_source.get_overrides(), DISTANT_PAST
+          return @_override_data_source.get_overrides(), Utils::DISTANT_PAST
         elsif behaviour == OverrideBehaviour::REMOTE_OVER_LOCAL
           remote_settings, fetch_time = @_config_service.get_settings()
           local_settings = @_override_data_source.get_overrides()

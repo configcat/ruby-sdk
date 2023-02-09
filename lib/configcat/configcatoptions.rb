@@ -34,7 +34,7 @@ module ConfigCat
     def invoke_on_client_ready
       @_on_client_ready_callbacks.each { |callback|
         begin
-          callback()
+          callback.()
         rescue Exception => e
           error = "Exception occurred during invoke_on_client_ready callback: #{e}"
           invoke_on_error(error)
@@ -46,7 +46,7 @@ module ConfigCat
     def invoke_on_config_changed(config)
       @_on_config_changed_callbacks.each { |callback|
         begin
-          callback(config)
+          callback.(config)
         rescue Exception => e
           error = "Exception occurred during invoke_on_config_changed callback: #{e}"
           invoke_on_error(error)
@@ -58,7 +58,7 @@ module ConfigCat
     def invoke_on_flag_evaluated(evaluation_details)
       @_on_flag_evaluated_callbacks.each { |callback|
         begin
-          callback(evaluation_details)
+          callback.(evaluation_details)
         rescue Exception => e
           error = "Exception occurred during invoke_on_flag_evaluated callback: #{e}"
           invoke_on_error(error)
@@ -70,7 +70,7 @@ module ConfigCat
     def invoke_on_error(error)
       @_on_error_callbacks.each { |callback|
         begin
-          callback(error)
+          callback.(error)
         rescue Exception => e
           ConfigCat.logger.error("Exception occurred during invoke_on_error callback: #{e}")
         end

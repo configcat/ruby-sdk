@@ -9,19 +9,18 @@ class ConfigEntry
 
   attr_accessor :config, :etag, :fetch_time
 
-  def initialize(config = {}, etag = '', fetch_time = DISTANT_PAST)
+  def initialize(config = {}, etag = '', fetch_time = Utils::DISTANT_PAST)
     @config = config
     @etag = etag
     @fetch_time = fetch_time
   end
 
   def self.create_from_json(json)
-    return ConfigEntry.empty if json.nil?
-
-    ConfigEntry.new(
-      config: json.fetch(CONFIG, {}),
-      etag: json.fetch(ETAG, ''),
-      fetch_time: json.fetch(FETCH_TIME, DISTANT_PAST)
+    return ConfigEntry::EMPTY if json.nil?
+    return ConfigEntry.new(
+      config = json.fetch(CONFIG, {}),
+      etag = json.fetch(ETAG, ''),
+      fetch_time = json.fetch(FETCH_TIME, Utils::DISTANT_PAST)
     )
   end
 
@@ -31,9 +30,9 @@ class ConfigEntry
 
   def to_json
     {
-      ETAG: etag,
-      FETCH_TIME: fetch_time,
-      CONFIG: config
+      CONFIG => config,
+      ETAG => etag,
+      FETCH_TIME => fetch_time
     }
   end
 

@@ -157,7 +157,7 @@ module ConfigCat
 
     def _fetch(etag)
       begin
-        ConfigCat.logger.debug "Fetching configuration from ConfigCat"
+        @log.debug("Fetching configuration from ConfigCat")
         uri = URI.parse((((@_base_url + ("/")) + BASE_PATH) + @_sdk_key) + BASE_EXTENSION)
         headers = @_headers
         headers["If-None-Match"] = etag.empty? ? nil : etag
@@ -166,13 +166,13 @@ module ConfigCat
         response = @_http.request(request)
         case response
         when Net::HTTPSuccess
-          ConfigCat.logger.debug "ConfigCat configuration json fetch response code:#{response.code} Cached:#{response['ETag']}"
+          @log.debug("ConfigCat configuration json fetch response code:#{response.code} Cached:#{response['ETag']}")
           response_etag = response["ETag"]
           if response_etag.nil?
             response_etag = ""
           end
           config = JSON.parse(response.body)
-          return FetchResponse.success(ConfigEntry.new(config, response_etag, Time.now.utc))
+          return FetchResponse.success(ConfigEntry.new(config, response_etag, Utils.get_utc_now_seconds_since_epoch))
         when Net::HTTPNotModified
           return FetchResponse.not_modified
         when Net::HTTPNotFound, Net::HTTPForbidden

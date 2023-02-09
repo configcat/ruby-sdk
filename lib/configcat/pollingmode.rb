@@ -20,6 +20,8 @@ module ConfigCat
   end
 
   class AutoPollingMode < PollingMode
+    attr_reader :poll_interval_seconds, :max_init_wait_time_seconds
+
     def initialize(poll_interval_seconds, max_init_wait_time_seconds)
       @poll_interval_seconds = poll_interval_seconds
       @max_init_wait_time_seconds = max_init_wait_time_seconds
@@ -31,6 +33,8 @@ module ConfigCat
   end
 
   class LazyLoadingMode < PollingMode
+    attr_reader :cache_refresh_interval_seconds
+
     def initialize(cache_refresh_interval_seconds)
       @cache_refresh_interval_seconds = cache_refresh_interval_seconds
     end

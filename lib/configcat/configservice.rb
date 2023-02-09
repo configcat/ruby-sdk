@@ -23,7 +23,7 @@ module ConfigCat
       @lock = Mutex.new
       @ongoing_fetch = false
       @fetch_finished = Concurrent::Event.new
-      @start_time = Time.now.utc
+      @start_time = Utils.get_utc_now_seconds_since_epoch
 
       if @polling_mode.is_a?(AutoPollingMode)
         start_poll
@@ -34,28 +34,28 @@ module ConfigCat
 
     def get_settings
       if @polling_mode.is_a?(LazyLoadingMode)
-        entry, _ = fetch_if_older(Time.now.utc - @polling_mode.cache_refresh_interval_seconds)
+        entry, _ = fetch_if_older(Utils.get_utc_now_seconds_since_epoch - @polling_mode.cache_refresh_interval_seconds)
         return entry.config[FEATURE_FLAGS], entry.fetch_time
-      elsif @polling_mode.is_a?(AutoPollingMode) && !@initialized.is_set?
-        elapsed_time = Time.now.utc - @start_time.to_f # Elapsed time in seconds
+      elsif @polling_mode.is_a?(AutoPollingMode) && !@initialized.set?
+        elapsed_time = Utils.get_utc_now_seconds_since_epoch - @start_time # Elapsed time in seconds
         if elapsed_time < @polling_mode.max_init_wait_time_seconds
           @initialized.wait(@polling_mode.max_init_wait_time_seconds - elapsed_time)
 
           # Max wait time expired without result, notify subscribers with the cached config.
-          if !@initialized.is_set?
+          if !@initialized.set?
             set_initialized
             return @cached_entry.config[FEATURE_FLAGS], @cached_entry.fetch_time
           end
         end
       end
 
-      entry, _ = fetch_if_older(DISTANT_PAST, prefer_cache: true)
+      entry, _ = fetch_if_older(Utils::DISTANT_PAST, prefer_cache: true)
       return entry.config[FEATURE_FLAGS], entry.fetch_time
     end
 
     def refresh
-      _, error = fetch_if_older(DISTANT_FUTURE)
-      return RefreshResult.new(is_success: error.nil?, error: error)
+      _, error = fetch_if_older(Utils::DISTANT_FUTURE)
+      return RefreshResult.new(is_success = error.nil?, error = error)
     end
 
     def set_online
@@ -101,88 +101,104 @@ module ConfigCat
     private
 
     def fetch_if_older(time, prefer_cache: false)
+      # Returns the ConfigEntry object and error message in case of any error.
+
       # Sync up with the cache and use it when it's not expired.
-      if @cached_entry.empty? || @cached_entry.fetch_time > time
-        entry = read_cache
-        if !entry.empty? && entry.etag != @cached_entry.etag
-          @cached_entry = entry
-          @hooks.invoke_on_config_changed(entry.config[FEATURE_FLAGS])
+      @lock.synchronize do
+        if @cached_entry.empty? || @cached_entry.fetch_time > time
+          entry = read_cache
+          if !entry.empty? && entry.etag != @cached_entry.etag
+            @cached_entry = entry
+            @hooks.invoke_on_config_changed(entry.config[FEATURE_FLAGS])
+          end
+
+          # Cache isn't expired
+          if @cached_entry.fetch_time > time
+            set_initialized
+            return @cached_entry, nil
+          end
         end
-        # Cache isn't expired
-        if @cached_entry.fetch_time > time
-          set_initialized
+
+        # Use cache anyway (get calls on auto & manual poll must not initiate fetch).
+        # The initialized check ensures that we subscribe for the ongoing fetch during the
+        # max init wait time window in case of auto poll.
+        if prefer_cache && @initialized.set?
           return @cached_entry, nil
         end
-      end
 
-      # Use cache anyway (get calls on auto & manual poll must not initiate fetch).
-      # The initialized check ensures that we subscribe for the ongoing fetch during the
-      # max init wait time window in case of auto poll.
-      if prefer_cache && @initialized.set?
-        return @cached_entry, nil
-      end
-
-      # If we are in offline mode we are not allowed to initiate fetch.
-      if @is_offline
-        offline_warning = 'The SDK is in offline mode, it can not initiate HTTP calls.'
-        log.warning(offline_warning)
-        return @cached_entry, offline_warning
+        # If we are in offline mode we are not allowed to initiate fetch.
+        if @is_offline
+          offline_warning = 'The SDK is in offline mode, it can not initiate HTTP calls.'
+          @log.warn(offline_warning)
+          return @cached_entry, offline_warning
+        end
       end
 
       # No fetch is running, initiate a new one.
       # Ensure only one fetch request is running at a time.
       # If there's an ongoing fetch running, we will wait for the ongoing fetch.
       if @ongoing_fetch
-        fetch_finished.wait
+        @fetch_finished.wait
       else
         @ongoing_fetch = true
-        fetch_finished.clear
+        @fetch_finished.reset
         response = @config_fetcher.get_configuration(@cached_entry.etag)
-        if response.fetched?
-          @cached_entry = response.entry
-          write_cache(response.entry)
-          invoke_on_config_changed(response.entry.config[FEATURE_FLAGS])
-        elsif (response.not_modified? || !response.transient_error?) && !@cached_entry.empty?
-          @cached_entry.fetch_time = Utils.utc_now_seconds_since_epoch
-          write_cache(@cached_entry)
+
+        @lock.synchronize do
+          if response.is_fetched
+            @cached_entry = response.entry
+            write_cache(response.entry)
+            @hooks.invoke_on_config_changed(response.entry.config[FEATURE_FLAGS])
+          elsif (response.is_not_modified || !response.is_transient_error) && !@cached_entry.empty?
+            @cached_entry.fetch_time = Utils.get_utc_now_seconds_since_epoch
+            write_cache(@cached_entry)
+          end
+
+          set_initialized
         end
-        set_initialized
+
         @ongoing_fetch = false
-        fetch_finished.set
+        @fetch_finished.set
       end
 
       return @cached_entry, nil
     end
 
     def start_poll
+      @started = Concurrent::Event.new
+      @thread = Thread.new{run()}
+      @started.wait()
+    end
+
+    def run
       @stopped = Concurrent::Event.new
-      @thread = Thread.new do
-        while !@stopped.is_set?
-          if @cached_entry.is_stale
-            fetch_and_update_config
-          end
-          @stopped.wait(@polling_mode.interval_seconds)
-        end
+      @started.set
+      loop do
+        fetch_if_older(Utils.get_utc_now_seconds_since_epoch - @polling_mode.poll_interval_seconds)
+        @stopped.wait(@polling_mode.poll_interval_seconds)
+        break if @stopped.set?
       end
     end
 
     def set_initialized
-      @initialized.set
+      if !@initialized.set?
+        @initialized.set
+        @hooks.invoke_on_client_ready
+      end
     end
-
 
     def read_cache
       begin
         json_string = @config_cache.get(@cache_key)
         if !json_string || json_string == @cached_entry_string
-          return ConfigEntry.empty
+          return ConfigEntry::EMPTY
         end
 
         @cached_entry_string = json_string
         return ConfigEntry.create_from_json(JSON.parse(json_string))
       rescue Exception => e
         @log.error("An error occurred during the cache read. #{e}")
-        return ConfigEntry.empty
+        return ConfigEntry::EMPTY
       end
     end
 

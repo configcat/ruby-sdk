@@ -14,7 +14,7 @@ module ConfigCat
     def evaluate(key:, user:, default_value:, default_variation_id:, settings:)
       setting_descriptor = settings[key]
       if setting_descriptor === nil
-        @log.error("Evaluating get_value('%s') failed. Value not found for key '%s'. Returning default_value: [%s]. Here are the available keys: %s" % [key, key, default_value.to_s, feature_flags.keys.join(", ")])
+        @log.error("Evaluating get_value('%s') failed. Value not found for key '%s'. Returning default_value: [%s]. Here are the available keys: %s" % [key, key, default_value.to_s, settings.keys.join(", ")])
         return default_value, default_variation_id
       end
 

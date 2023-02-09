@@ -20,10 +20,10 @@ module ConfigCat
     #   :param options: Configuration `ConfigCatOptions` for `ConfigCatClient`.
     #   :return: the `ConfigCatClient` instance.
     #
-    return ConfigCatClient.get(sdk_key: sdk_key, options: options)
+    return ConfigCatClient.get(sdk_key, options: options)
   end
 
-  def close_all
+  def ConfigCat.close_all
     #
     #   Closes all ConfigCatClient instances.
     #

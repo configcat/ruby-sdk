@@ -16,16 +16,17 @@ module ConfigCat
   end
 
   class InMemoryConfigCache < ConfigCache
-    def initialize()
-      @_value = {}
+    attr_reader :value
+    def initialize
+      @value = {}
     end
 
     def get(key)
-      return @_value.fetch(key, nil)
+      return @value.fetch(key, nil)
     end
 
     def set(key, value)
-      @_value[key] = value
+      @value[key] = value
     end
   end
 end

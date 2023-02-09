@@ -3,111 +3,339 @@ require 'configcat/autopollingcachepolicy'
 require 'configcat/configcache'
 require_relative 'mocks'
 
-CACHE_KEY = "cache_key"
 
 RSpec.describe ConfigCat::AutoPollingCachePolicy do
   it "test_wrong_params" do
-    config_fetcher = ConfigFetcherMock.new()
-    config_cache = InMemoryConfigCache.new()
-    cache_policy = AutoPollingCachePolicy.new(config_fetcher, config_cache, CACHE_KEY, 0, -1, nil)
+    polling_mode = PollingMode.auto_poll(poll_interval_seconds: 0,
+                                         max_init_wait_time_seconds: -1)
+    config_fetcher = ConfigFetcherMock.new
+    config_cache = NullConfigCache.new
+    cache_policy = ConfigService.new("", polling_mode, Hooks.new, config_fetcher, ConfigCat.logger, config_cache, false)
     sleep(2)
-    config = cache_policy.get()
-    expect(config).to eq TEST_JSON
-    cache_policy.stop()
+    settings, _ = cache_policy.get_settings
+    expect(settings.fetch("testKey").fetch(VALUE)).to eq "testValue"
+    cache_policy.close
   end
 
   it "test_init_wait_time_ok" do
+    polling_mode = PollingMode.auto_poll(poll_interval_seconds: 60,
+                                         max_init_wait_time_seconds: 5)
     config_fetcher = ConfigFetcherWaitMock.new(0)
-    config_cache = InMemoryConfigCache.new()
-    cache_policy = AutoPollingCachePolicy.new(config_fetcher, config_cache, CACHE_KEY, 60, 5, nil)
-    config = cache_policy.get()
-    expect(config).to eq TEST_JSON
-    cache_policy.stop()
+    config_cache = NullConfigCache.new
+    cache_policy = ConfigService.new("", polling_mode, Hooks.new, config_fetcher, ConfigCat.logger, config_cache, false)
+
+    settings, _ = cache_policy.get_settings
+    expect(settings.fetch("testKey").fetch(VALUE)).to eq "testValue"
+    cache_policy.close
   end
 
   it "test_init_wait_time_timeout" do
+    polling_mode = PollingMode.auto_poll(poll_interval_seconds: 60,
+                                         max_init_wait_time_seconds: 1)
     config_fetcher = ConfigFetcherWaitMock.new(5)
-    config_cache = InMemoryConfigCache.new()
+    config_cache = NullConfigCache.new
     start_time = Time.now.utc
-    cache_policy = AutoPollingCachePolicy.new(config_fetcher, config_cache, CACHE_KEY, 60, 1, nil)
-    config = cache_policy.get()
+    cache_policy = ConfigService.new("", polling_mode, Hooks.new, config_fetcher, ConfigCat.logger, config_cache, false)
+    settings, _ = cache_policy.get_settings
     end_time = Time.now.utc
     elapsed_time = end_time - start_time
-    expect(config).to be nil
+    expect(settings).to be nil
     expect(elapsed_time).to be > 1
     expect(elapsed_time).to be < 2
-    cache_policy.stop()
+    cache_policy.close
   end
 
   it "test_fetch_call_count" do
-    config_fetcher = ConfigFetcherMock.new()
-    config_cache = InMemoryConfigCache.new()
-    cache_policy = AutoPollingCachePolicy.new(config_fetcher, config_cache, CACHE_KEY, 2, 1, nil)
+    polling_mode = PollingMode.auto_poll(poll_interval_seconds: 2,
+                                         max_init_wait_time_seconds: 1)
+    config_fetcher = ConfigFetcherMock.new
+    config_cache = NullConfigCache.new
+    cache_policy = ConfigService.new("", polling_mode, Hooks.new, config_fetcher, ConfigCat.logger, config_cache, false)
     sleep(3)
     expect(config_fetcher.get_call_count).to eq 2
-    config = cache_policy.get()
-    expect(config).to eq TEST_JSON
-    cache_policy.stop()
+    settings, _ = cache_policy.get_settings
+    expect(settings.fetch("testKey").fetch(VALUE)).to eq "testValue"
+    cache_policy.close
   end
 
   it "test_updated_values" do
-    config_fetcher = ConfigFetcherCountMock.new()
-    config_cache = InMemoryConfigCache.new()
-    cache_policy = AutoPollingCachePolicy.new(config_fetcher, config_cache, CACHE_KEY, 2, 5, nil)
-    config = cache_policy.get()
-    expect(config).to eq 10
+    polling_mode = PollingMode.auto_poll(poll_interval_seconds: 2,
+                                         max_init_wait_time_seconds: 5)
+    config_fetcher = ConfigFetcherCountMock.new
+    config_cache = NullConfigCache.new
+    cache_policy = ConfigService.new("", polling_mode, Hooks.new, config_fetcher, ConfigCat.logger, config_cache, false)
+
+    settings, _ = cache_policy.get_settings
+    expect(settings.fetch("testKey").fetch(VALUE)).to eq 1
+
     sleep(2.2)
-    config = cache_policy.get()
-    expect(config).to eq 20
-    cache_policy.stop()
+
+    settings, _ = cache_policy.get_settings
+    expect(settings.fetch("testKey").fetch(VALUE)).to eq 2
+
+    cache_policy.close
   end
 
-  it "test_http_error" do
+  it "test_error" do
+    polling_mode = PollingMode.auto_poll(poll_interval_seconds: 60,
+                                         max_init_wait_time_seconds: 1)
     config_fetcher = ConfigFetcherWithErrorMock.new(StandardError.new("error"))
-    config_cache = InMemoryConfigCache.new()
-    cache_policy = AutoPollingCachePolicy.new(config_fetcher, config_cache, CACHE_KEY, 60, 1)
-    value = cache_policy.get()
-    expect(value).to be nil
-    cache_policy.stop()
+    config_cache = NullConfigCache.new
+    cache_policy = ConfigService.new("", polling_mode, Hooks.new, config_fetcher, ConfigCat.logger, config_cache, false)
+
+    # Get value from Config Store, which indicates a config_fetcher call
+    settings, _ = cache_policy.get_settings
+    expect(settings).to be nil
+    cache_policy.close
   end
 
-  it "test_stop" do
-    config_fetcher = ConfigFetcherCountMock.new()
-    config_cache = InMemoryConfigCache.new()
-    cache_policy = AutoPollingCachePolicy.new(config_fetcher, config_cache, CACHE_KEY, 2, 5, nil)
-    cache_policy.stop()
-    config = cache_policy.get()
-    expect(config).to eq 10
+  it "test_close" do
+    polling_mode = PollingMode.auto_poll(poll_interval_seconds: 2,
+                                         max_init_wait_time_seconds: 5)
+    config_fetcher = ConfigFetcherCountMock.new
+    config_cache = NullConfigCache.new
+    cache_policy = ConfigService.new("", polling_mode, Hooks.new, config_fetcher, ConfigCat.logger, config_cache, false)
+    cache_policy.close
+    settings, _ = cache_policy.get_settings
+    expect(settings.fetch("testKey").fetch(VALUE)).to eq 1
     sleep(2.2)
-    config = cache_policy.get()
-    expect(config).to eq 10
-    cache_policy.stop()
+    settings, _ = cache_policy.get_settings
+    expect(settings.fetch("testKey").fetch(VALUE)).to eq 1
+    cache_policy.close
   end
 
   it "test_rerun" do
-    config_fetcher = ConfigFetcherMock.new()
-    config_cache = InMemoryConfigCache.new()
-    cache_policy = AutoPollingCachePolicy.new(config_fetcher, config_cache, CACHE_KEY, 2, 5, nil)
+    polling_mode = PollingMode.auto_poll(poll_interval_seconds: 2,
+                                         max_init_wait_time_seconds: 5)
+    config_fetcher = ConfigFetcherMock.new
+    config_cache = NullConfigCache.new
+    cache_policy = ConfigService.new("", polling_mode, Hooks.new, config_fetcher, ConfigCat.logger, config_cache, false)
     sleep(2.2)
     expect(config_fetcher.get_call_count).to eq 2
-    cache_policy.stop()
+    cache_policy.close
   end
 
   it "test_callback" do
-    call_counter = CallCounter.new()
-    config_fetcher = ConfigFetcherMock.new()
-    config_cache = InMemoryConfigCache.new()
-    cache_policy = AutoPollingCachePolicy.new(config_fetcher, config_cache, CACHE_KEY, 2, 5, call_counter.method(:callback))
+    polling_mode = PollingMode.auto_poll(poll_interval_seconds: 2,
+                                         max_init_wait_time_seconds: 5)
+    config_fetcher = ConfigFetcherMock.new
+    config_cache = NullConfigCache.new
+    hook_callbacks = HookCallbacks.new
+    hooks = Hooks.new
+    hooks.add_on_config_changed(hook_callbacks.method(:on_config_changed))
+
+    cache_policy = ConfigService.new("", polling_mode, hooks, config_fetcher, ConfigCat.logger, config_cache, false)
+
     sleep(1)
     expect(config_fetcher.get_call_count).to eq 1
-    expect(call_counter.get_call_count).to eq 1
+    expect(hook_callbacks.changed_config_call_count).to eq 1
     sleep(1.2)
     expect(config_fetcher.get_call_count).to eq 2
-    expect(call_counter.get_call_count).to eq 1
+    expect(hook_callbacks.changed_config_call_count).to eq 1
     config_fetcher.set_configuration_json(TEST_JSON2)
     sleep(2.2)
     expect(config_fetcher.get_call_count).to eq 3
-    expect(call_counter.get_call_count).to eq 2
-    cache_policy.stop()
+    expect(hook_callbacks.changed_config_call_count).to eq 2
+    cache_policy.close
+  end
+
+  it "test_callback_exception" do
+    polling_mode = PollingMode.auto_poll(poll_interval_seconds: 2,
+                                         max_init_wait_time_seconds: 5)
+    config_fetcher = ConfigFetcherMock.new
+    config_cache = NullConfigCache.new
+    hook_callbacks = HookCallbacks.new
+    hooks = Hooks.new
+    hooks.add_on_config_changed(hook_callbacks.method(:callback_exception))
+
+    cache_policy = ConfigService.new("", polling_mode, hooks, config_fetcher, ConfigCat.logger, config_cache, false)
+
+    sleep(1)
+    expect(config_fetcher.get_call_count).to eq 1
+    expect(hook_callbacks.callback_exception_call_count).to eq 1
+    sleep(1.2)
+    expect(config_fetcher.get_call_count).to eq 2
+    expect(hook_callbacks.callback_exception_call_count).to eq 1
+    config_fetcher.set_configuration_json(TEST_JSON2)
+    sleep(2.2)
+    expect(config_fetcher.get_call_count).to eq 3
+    expect(hook_callbacks.callback_exception_call_count).to eq 2
+    cache_policy.close
+  end
+
+  it "test_with_failed_refresh" do
+    WebMock.stub_request(:get, Regexp.new('https://.*')).to_return(status: 200, body: TEST_OBJECT_JSON, headers: {})
+
+    polling_mode = PollingMode.auto_poll(poll_interval_seconds: 1)
+    config_fetcher = ConfigFetcher.new("", ConfigCat.logger, polling_mode.identifier())
+    config_cache = NullConfigCache.new
+    cache_policy = ConfigService.new("", polling_mode, Hooks.new, config_fetcher, ConfigCat.logger, config_cache, false)
+
+    # first call
+    settings, _ = cache_policy.get_settings
+    expect(settings.fetch("testStringKey").fetch(VALUE)).to eq "testValue"
+
+    WebMock.stub_request(:get, Regexp.new('https://.*')).to_return(status: 500, body: "", headers: {})
+
+    # wait for cache invalidation
+    sleep(1.5)
+
+    # previous value returned because of the refresh failure
+    settings, _ = cache_policy.get_settings
+    expect(settings.fetch("testStringKey").fetch(VALUE)).to eq "testValue"
+
+    cache_policy.close
+  end
+
+  it "test_return_cached_config_when_cache_is_not_expired" do
+    poll_interval_seconds = 2
+    max_init_wait_time_seconds = 1
+    polling_mode = PollingMode.auto_poll(poll_interval_seconds: poll_interval_seconds,
+                                         max_init_wait_time_seconds: max_init_wait_time_seconds)
+    config_fetcher = ConfigFetcherMock.new
+    config_cache = SingleValueConfigCache.new(
+      {
+        ConfigEntry::CONFIG => JSON.parse(TEST_JSON),
+        ConfigEntry::ETAG => 'test-etag',
+        ConfigEntry::FETCH_TIME => Utils.get_utc_now_seconds_since_epoch
+      }.to_json
+    )
+
+    start_time = Time.now.utc
+    cache_policy = ConfigService.new("", polling_mode, Hooks.new, config_fetcher, ConfigCat.logger, config_cache, false)
+    settings, _ = cache_policy.get_settings
+    end_time = Time.now.utc
+    elapsed_time = end_time - start_time
+
+    # max init wait time should be ignored when cache is not expired
+    expect(elapsed_time).to be <= max_init_wait_time_seconds
+
+    expect(settings.fetch("testKey").fetch(VALUE)).to eq "testValue"
+    expect(config_fetcher.get_call_count).to eq 0
+    expect(config_fetcher.get_fetch_count).to eq 0
+
+    sleep(3)
+
+    settings, _ = cache_policy.get_settings
+
+    expect(settings.fetch("testKey").fetch(VALUE)).to eq "testValue"
+    expect(config_fetcher.get_call_count).to eq 1
+    expect(config_fetcher.get_fetch_count).to eq 1
+
+    cache_policy.close
+  end
+
+  it "test_fetch_config_when_cache_is_expired" do
+    poll_interval_seconds = 2
+    max_init_wait_time_seconds = 1
+    polling_mode = PollingMode.auto_poll(poll_interval_seconds: poll_interval_seconds,
+                                         max_init_wait_time_seconds: max_init_wait_time_seconds)
+    config_fetcher = ConfigFetcherMock.new
+    config_cache = SingleValueConfigCache.new(
+      {
+        ConfigEntry::CONFIG => JSON.parse(TEST_JSON),
+        ConfigEntry::ETAG => 'test-etag',
+        ConfigEntry::FETCH_TIME => Utils.get_utc_now_seconds_since_epoch - poll_interval_seconds
+      }.to_json
+    )
+
+    cache_policy = ConfigService.new("", polling_mode, Hooks.new, config_fetcher, ConfigCat.logger, config_cache, false)
+
+    settings, _ = cache_policy.get_settings
+
+    expect(settings.fetch("testKey").fetch(VALUE)).to eq "testValue"
+    expect(config_fetcher.get_call_count).to eq 1
+    expect(config_fetcher.get_fetch_count).to eq 1
+
+    cache_policy.close
+  end
+
+  it "test_init_wait_time_return_cached" do
+    poll_interval_seconds = 60
+    max_init_wait_time_seconds = 1
+    polling_mode = PollingMode.auto_poll(poll_interval_seconds: poll_interval_seconds,
+                                         max_init_wait_time_seconds: max_init_wait_time_seconds)
+    config_fetcher = ConfigFetcherWaitMock.new(5)
+    config_cache = SingleValueConfigCache.new(
+      {
+        ConfigEntry::CONFIG => JSON.parse(TEST_JSON2),
+        ConfigEntry::ETAG => 'test-etag',
+        ConfigEntry::FETCH_TIME => Utils.get_utc_now_seconds_since_epoch - 2 * poll_interval_seconds
+      }.to_json
+    )
+
+    start_time = Time.now.utc
+    cache_policy = ConfigService.new("", polling_mode, Hooks.new, config_fetcher, ConfigCat.logger, config_cache, false)
+    settings, _ = cache_policy.get_settings
+    end_time = Time.now.utc
+    elapsed_time = end_time - start_time
+
+    expect(elapsed_time).to be > max_init_wait_time_seconds
+    expect(elapsed_time).to be < max_init_wait_time_seconds + 1
+    expect(settings.fetch("testKey").fetch(VALUE)).to eq "testValue"
+    expect(settings.fetch("testKey2").fetch(VALUE)).to eq "testValue2"
+
+    cache_policy.close
+  end
+
+  it "test_online_offline" do
+    stub_request = WebMock.stub_request(:get, Regexp.new('https://.*')).to_return(status: 200, body: TEST_OBJECT_JSON, headers: {})
+
+    polling_mode = PollingMode.auto_poll(poll_interval_seconds: 1)
+    config_fetcher = ConfigFetcher.new("", ConfigCat.logger, polling_mode.identifier())
+    config_cache = NullConfigCache.new
+    cache_policy = ConfigService.new("", polling_mode, Hooks.new, config_fetcher, ConfigCat.logger, config_cache, false)
+
+    expect(cache_policy.is_offline).to be false
+
+    sleep(1.5)
+
+    cache_policy.set_offline
+    expect(cache_policy.is_offline).to be true
+    settings, _ = cache_policy.get_settings
+    expect(settings.fetch("testStringKey").fetch(VALUE)).to eq "testValue"
+    expect(stub_request).to have_been_made.times(2)
+
+    sleep(2)
+
+    expect(stub_request).to have_been_made.times(2)
+    cache_policy.set_online
+    expect(cache_policy.is_offline).to be false
+
+    sleep(1)
+
+    expect(stub_request).to have_been_made.at_least_twice
+    cache_policy.close
+  end
+
+  it "test_init_offline" do
+    stub_request = WebMock.stub_request(:get, Regexp.new('https://.*')).to_return(status: 200, body: TEST_OBJECT_JSON, headers: {})
+
+    polling_mode = PollingMode.auto_poll(poll_interval_seconds: 1)
+    config_fetcher = ConfigFetcher.new("", ConfigCat.logger, polling_mode.identifier())
+    config_cache = NullConfigCache.new
+    cache_policy = ConfigService.new("", polling_mode, Hooks.new, config_fetcher, ConfigCat.logger, config_cache, true)
+
+    expect(cache_policy.is_offline).to be true
+    settings, _ = cache_policy.get_settings
+    expect(settings).to be nil
+    expect(stub_request).to have_been_made.times(0)
+
+    sleep(2)
+
+    settings, _ = cache_policy.get_settings
+    expect(settings).to be nil
+    expect(stub_request).to have_been_made.times(0)
+
+    cache_policy.set_online
+    expect(cache_policy.is_offline).to be false
+
+    sleep(2.5)
+
+    settings, _ = cache_policy.get_settings
+    expect(settings.fetch("testStringKey").fetch(VALUE)).to eq "testValue"
+    expect(stub_request).to have_been_made.at_least_twice
+
+    cache_policy.close
   end
 end
