@@ -34,20 +34,22 @@ RSpec.describe 'Data governance tests', type: :feature do
     global_stub = stub_request(URI_GLOBAL, ConfigCat::BASE_URL_GLOBAL, 0)
     eu_only_stub = stub_request(URI_EU_ONLY, ConfigCat::BASE_URL_EU_ONLY, 0)
 
-    fetcher = ConfigCat::CacheControlConfigFetcher.new("", "m",
-                                                       data_governance: ConfigCat::DataGovernance::GLOBAL)
+    fetcher = ConfigCat::ConfigFetcher.new("", ConfigCat.logger, "m",
+                                           data_governance: ConfigCat::DataGovernance::GLOBAL)
 
     # First fetch
-    fetch_response = fetcher.get_configuration_json()
-    expect(fetch_response.is_fetched()).to be true
-    expect(fetch_response.json().fetch("f")).to eq JSON.parse(TEST_JSON)
+    fetch_response = fetcher.get_configuration
+    config = fetch_response.entry.config
+    expect(fetch_response.is_fetched).to be true
+    expect(config.fetch("f")).to eq JSON.parse(TEST_JSON)
     expect(global_stub).to have_been_requested.times(1)
     expect(eu_only_stub).to have_been_requested.times(0)
 
     # Second fetch
-    fetch_response = fetcher.get_configuration_json()
-    expect(fetch_response.is_fetched()).to be true
-    expect(fetch_response.json().fetch("f")).to eq JSON.parse(TEST_JSON)
+    fetch_response = fetcher.get_configuration()
+    config = fetch_response.entry.config
+    expect(fetch_response.is_fetched).to be true
+    expect(config.fetch("f")).to eq JSON.parse(TEST_JSON)
     expect(global_stub).to have_been_requested.times(2)
     expect(eu_only_stub).to have_been_requested.times(0)
   end
@@ -61,20 +63,23 @@ RSpec.describe 'Data governance tests', type: :feature do
     global_stub = stub_request(URI_GLOBAL, ConfigCat::BASE_URL_GLOBAL, 0)
     eu_only_stub = stub_request(URI_EU_ONLY, ConfigCat::BASE_URL_EU_ONLY, 0)
 
-    fetcher = ConfigCat::CacheControlConfigFetcher.new("", "m",
-                                                       data_governance: ConfigCat::DataGovernance::EU_ONLY)
+
+    fetcher = ConfigCat::ConfigFetcher.new("", ConfigCat.logger, "m",
+                                           data_governance: ConfigCat::DataGovernance::EU_ONLY)
 
     # First fetch
-    fetch_response = fetcher.get_configuration_json()
-    expect(fetch_response.is_fetched()).to be true
-    expect(fetch_response.json().fetch("f")).to eq JSON.parse(TEST_JSON)
+    fetch_response = fetcher.get_configuration
+    config = fetch_response.entry.config
+    expect(fetch_response.is_fetched).to be true
+    expect(config.fetch("f")).to eq JSON.parse(TEST_JSON)
     expect(global_stub).to have_been_requested.times(0)
     expect(eu_only_stub).to have_been_requested.times(1)
 
     # Second fetch
-    fetch_response = fetcher.get_configuration_json()
-    expect(fetch_response.is_fetched()).to be true
-    expect(fetch_response.json().fetch("f")).to eq JSON.parse(TEST_JSON)
+    fetch_response = fetcher.get_configuration
+    config = fetch_response.entry.config
+    expect(fetch_response.is_fetched).to be true
+    expect(config.fetch("f")).to eq JSON.parse(TEST_JSON)
     expect(global_stub).to have_been_requested.times(0)
     expect(eu_only_stub).to have_been_requested.times(2)
   end
@@ -88,19 +93,21 @@ RSpec.describe 'Data governance tests', type: :feature do
     global_to_eu_only_stub = stub_request(URI_GLOBAL, ConfigCat::BASE_URL_EU_ONLY, 1)
     eu_only_stub = stub_request(URI_EU_ONLY, ConfigCat::BASE_URL_EU_ONLY, 0)
 
-    fetcher = ConfigCat::CacheControlConfigFetcher.new("", "m",
-                                                       data_governance: ConfigCat::DataGovernance::GLOBAL)
+    fetcher = ConfigCat::ConfigFetcher.new("", ConfigCat.logger,"m",
+                                           data_governance: ConfigCat::DataGovernance::GLOBAL)
     # First fetch
-    fetch_response = fetcher.get_configuration_json()
-    expect(fetch_response.is_fetched()).to be true
-    expect(fetch_response.json().fetch("f")).to eq JSON.parse(TEST_JSON)
+    fetch_response = fetcher.get_configuration
+    config = fetch_response.entry.config
+    expect(fetch_response.is_fetched).to be true
+    expect(config.fetch("f")).to eq JSON.parse(TEST_JSON)
     expect(global_to_eu_only_stub).to have_been_requested.times(1)
     expect(eu_only_stub).to have_been_requested.times(1)
 
     # Second fetch
-    fetch_response = fetcher.get_configuration_json()
-    expect(fetch_response.is_fetched()).to be true
-    expect(fetch_response.json().fetch("f")).to eq JSON.parse(TEST_JSON)
+    fetch_response = fetcher.get_configuration
+    config = fetch_response.entry.config
+    expect(fetch_response.is_fetched).to be true
+    expect(config.fetch("f")).to eq JSON.parse(TEST_JSON)
     expect(global_to_eu_only_stub).to have_been_requested.times(1)
     expect(eu_only_stub).to have_been_requested.times(2)
   end
@@ -114,20 +121,22 @@ RSpec.describe 'Data governance tests', type: :feature do
     global_to_eu_only_stub = stub_request(URI_GLOBAL, ConfigCat::BASE_URL_EU_ONLY, 1)
     eu_only_stub = stub_request(URI_EU_ONLY, ConfigCat::BASE_URL_EU_ONLY, 0)
 
-    fetcher = ConfigCat::CacheControlConfigFetcher.new("", "m",
-                                                       data_governance: ConfigCat::DataGovernance::EU_ONLY)
+    fetcher = ConfigCat::ConfigFetcher.new("", ConfigCat.logger, "m",
+                                           data_governance: ConfigCat::DataGovernance::EU_ONLY)
 
     # First fetch
-    fetch_response = fetcher.get_configuration_json()
-    expect(fetch_response.is_fetched()).to be true
-    expect(fetch_response.json().fetch("f")).to eq JSON.parse(TEST_JSON)
+    fetch_response = fetcher.get_configuration
+    config = fetch_response.entry.config
+    expect(fetch_response.is_fetched).to be true
+    expect(config.fetch("f")).to eq JSON.parse(TEST_JSON)
     expect(global_to_eu_only_stub).to have_been_requested.times(0)
     expect(eu_only_stub).to have_been_requested.times(1)
 
     # Second fetch
-    fetch_response = fetcher.get_configuration_json()
-    expect(fetch_response.is_fetched()).to be true
-    expect(fetch_response.json().fetch("f")).to eq JSON.parse(TEST_JSON)
+    fetch_response = fetcher.get_configuration
+    config = fetch_response.entry.config
+    expect(fetch_response.is_fetched).to be true
+    expect(config.fetch("f")).to eq JSON.parse(TEST_JSON)
     expect(global_to_eu_only_stub).to have_been_requested.times(0)
     expect(eu_only_stub).to have_been_requested.times(2)
   end
@@ -142,22 +151,24 @@ RSpec.describe 'Data governance tests', type: :feature do
     eu_only_stub = stub_request(URI_EU_ONLY, ConfigCat::BASE_URL_EU_ONLY, 0)
     custom_stub = stub_request(URI_CUSTOM, ConfigCat::BASE_URL_GLOBAL, 0)
 
-    fetcher = ConfigCat::CacheControlConfigFetcher.new("", "m",
-                                                       base_url: BASE_URL_CUSTOM,
-                                                       data_governance: ConfigCat::DataGovernance::GLOBAL)
+    fetcher = ConfigCat::ConfigFetcher.new("", ConfigCat.logger, "m",
+                                           base_url: BASE_URL_CUSTOM,
+                                           data_governance: ConfigCat::DataGovernance::GLOBAL)
 
     # First fetch
-    fetch_response = fetcher.get_configuration_json()
-    expect(fetch_response.is_fetched()).to be true
-    expect(fetch_response.json().fetch("f")).to eq JSON.parse(TEST_JSON)
+    fetch_response = fetcher.get_configuration
+    config = fetch_response.entry.config
+    expect(fetch_response.is_fetched).to be true
+    expect(config.fetch("f")).to eq JSON.parse(TEST_JSON)
     expect(global_stub).to have_been_requested.times(0)
     expect(eu_only_stub).to have_been_requested.times(0)
     expect(custom_stub).to have_been_requested.times(1)
 
     # Second fetch
-    fetch_response = fetcher.get_configuration_json()
-    expect(fetch_response.is_fetched()).to be true
-    expect(fetch_response.json().fetch("f")).to eq JSON.parse(TEST_JSON)
+    fetch_response = fetcher.get_configuration
+    config = fetch_response.entry.config
+    expect(fetch_response.is_fetched).to be true
+    expect(config.fetch("f")).to eq JSON.parse(TEST_JSON)
     expect(global_stub).to have_been_requested.times(0)
     expect(eu_only_stub).to have_been_requested.times(0)
     expect(custom_stub).to have_been_requested.times(2)
@@ -173,22 +184,24 @@ RSpec.describe 'Data governance tests', type: :feature do
     eu_only_stub = stub_request(URI_EU_ONLY, ConfigCat::BASE_URL_EU_ONLY, 0)
     custom_stub = stub_request(URI_CUSTOM, ConfigCat::BASE_URL_GLOBAL, 0)
 
-    fetcher = ConfigCat::CacheControlConfigFetcher.new("", "m",
-                                                       base_url: BASE_URL_CUSTOM,
-                                                       data_governance: ConfigCat::DataGovernance::EU_ONLY)
+    fetcher = ConfigCat::ConfigFetcher.new("", ConfigCat.logger, "m",
+                                           base_url: BASE_URL_CUSTOM,
+                                           data_governance: ConfigCat::DataGovernance::EU_ONLY)
 
     # First fetch
-    fetch_response = fetcher.get_configuration_json()
-    expect(fetch_response.is_fetched()).to be true
-    expect(fetch_response.json().fetch("f")).to eq JSON.parse(TEST_JSON)
+    fetch_response = fetcher.get_configuration
+    config = fetch_response.entry.config
+    expect(fetch_response.is_fetched).to be true
+    expect(config.fetch("f")).to eq JSON.parse(TEST_JSON)
     expect(global_stub).to have_been_requested.times(0)
     expect(eu_only_stub).to have_been_requested.times(0)
     expect(custom_stub).to have_been_requested.times(1)
 
     # Second fetch
-    fetch_response = fetcher.get_configuration_json()
-    expect(fetch_response.is_fetched()).to be true
-    expect(fetch_response.json().fetch("f")).to eq JSON.parse(TEST_JSON)
+    fetch_response = fetcher.get_configuration
+    config = fetch_response.entry.config
+    expect(fetch_response.is_fetched).to be true
+    expect(config.fetch("f")).to eq JSON.parse(TEST_JSON)
     expect(global_stub).to have_been_requested.times(0)
     expect(eu_only_stub).to have_been_requested.times(0)
     expect(custom_stub).to have_been_requested.times(2)
@@ -204,21 +217,23 @@ RSpec.describe 'Data governance tests', type: :feature do
     eu_only_to_forced_stub = stub_request(URI_EU_ONLY, BASE_URL_FORCED, 2)
     forced_to_forced_stub = stub_request(URI_FORCED, BASE_URL_FORCED, 2)
 
-    fetcher = ConfigCat::CacheControlConfigFetcher.new("", "m",
-                                                       data_governance: ConfigCat::DataGovernance::GLOBAL)
+    fetcher = ConfigCat::ConfigFetcher.new("", ConfigCat.logger, "m",
+                                           data_governance: ConfigCat::DataGovernance::GLOBAL)
 
     # First fetch
-    fetch_response = fetcher.get_configuration_json()
-    expect(fetch_response.is_fetched()).to be true
-    expect(fetch_response.json().fetch("f")).to eq JSON.parse(TEST_JSON)
+    fetch_response = fetcher.get_configuration
+    config = fetch_response.entry.config
+    expect(fetch_response.is_fetched).to be true
+    expect(config.fetch("f")).to eq JSON.parse(TEST_JSON)
     expect(global_to_forced_stub).to have_been_requested.times(1)
     expect(forced_to_forced_stub).to have_been_requested.times(1)
     expect(eu_only_to_forced_stub).to have_been_requested.times(0)
 
     # Second fetch
-    fetch_response = fetcher.get_configuration_json()
-    expect(fetch_response.is_fetched()).to be true
-    expect(fetch_response.json().fetch("f")).to eq JSON.parse(TEST_JSON)
+    fetch_response = fetcher.get_configuration
+    config = fetch_response.entry.config
+    expect(fetch_response.is_fetched).to be true
+    expect(config.fetch("f")).to eq JSON.parse(TEST_JSON)
     expect(global_to_forced_stub).to have_been_requested.times(1)
     expect(forced_to_forced_stub).to have_been_requested.times(2)
     expect(eu_only_to_forced_stub).to have_been_requested.times(0)
@@ -234,21 +249,23 @@ RSpec.describe 'Data governance tests', type: :feature do
     eu_only_to_forced_stub = stub_request(URI_EU_ONLY, BASE_URL_FORCED, 2)
     forced_to_forced_stub = stub_request(URI_FORCED, BASE_URL_FORCED, 2)
 
-    fetcher = ConfigCat::CacheControlConfigFetcher.new("", "m",
-                                                       data_governance: ConfigCat::DataGovernance::EU_ONLY)
+    fetcher = ConfigCat::ConfigFetcher.new("", ConfigCat.logger, "m",
+                                           data_governance: ConfigCat::DataGovernance::EU_ONLY)
 
     # First fetch
-    fetch_response = fetcher.get_configuration_json()
-    expect(fetch_response.is_fetched()).to be true
-    expect(fetch_response.json().fetch("f")).to eq JSON.parse(TEST_JSON)
+    fetch_response = fetcher.get_configuration
+    config = fetch_response.entry.config
+    expect(fetch_response.is_fetched).to be true
+    expect(config.fetch("f")).to eq JSON.parse(TEST_JSON)
     expect(global_to_forced_stub).to have_been_requested.times(0)
     expect(forced_to_forced_stub).to have_been_requested.times(1)
     expect(eu_only_to_forced_stub).to have_been_requested.times(1)
 
     # Second fetch
-    fetch_response = fetcher.get_configuration_json()
-    expect(fetch_response.is_fetched()).to be true
-    expect(fetch_response.json().fetch("f")).to eq JSON.parse(TEST_JSON)
+    fetch_response = fetcher.get_configuration
+    config = fetch_response.entry.config
+    expect(fetch_response.is_fetched).to be true
+    expect(config.fetch("f")).to eq JSON.parse(TEST_JSON)
     expect(global_to_forced_stub).to have_been_requested.times(0)
     expect(forced_to_forced_stub).to have_been_requested.times(2)
     expect(eu_only_to_forced_stub).to have_been_requested.times(1)
@@ -265,23 +282,25 @@ RSpec.describe 'Data governance tests', type: :feature do
     forced_to_forced_stub = stub_request(URI_FORCED, BASE_URL_FORCED, 2)
     custom_to_forced_stub = stub_request(URI_CUSTOM, BASE_URL_FORCED, 2)
 
-    fetcher = ConfigCat::CacheControlConfigFetcher.new("", "m",
-                                                       base_url: BASE_URL_CUSTOM,
-                                                       data_governance: ConfigCat::DataGovernance::GLOBAL)
+    fetcher = ConfigCat::ConfigFetcher.new("", ConfigCat.logger, "m",
+                                           base_url: BASE_URL_CUSTOM,
+                                           data_governance: ConfigCat::DataGovernance::GLOBAL)
 
     # First fetch
-    fetch_response = fetcher.get_configuration_json()
-    expect(fetch_response.is_fetched()).to be true
-    expect(fetch_response.json().fetch("f")).to eq JSON.parse(TEST_JSON)
+    fetch_response = fetcher.get_configuration
+    config = fetch_response.entry.config
+    expect(fetch_response.is_fetched).to be true
+    expect(config.fetch("f")).to eq JSON.parse(TEST_JSON)
     expect(global_to_forced_stub).to have_been_requested.times(0)
     expect(eu_only_to_forced_stub).to have_been_requested.times(0)
     expect(custom_to_forced_stub).to have_been_requested.times(1)
     expect(forced_to_forced_stub).to have_been_requested.times(1)
 
     # Second fetch
-    fetch_response = fetcher.get_configuration_json()
-    expect(fetch_response.is_fetched()).to be true
-    expect(fetch_response.json().fetch("f")).to eq JSON.parse(TEST_JSON)
+    fetch_response = fetcher.get_configuration
+    config = fetch_response.entry.config
+    expect(fetch_response.is_fetched).to be true
+    expect(config.fetch("f")).to eq JSON.parse(TEST_JSON)
     expect(global_to_forced_stub).to have_been_requested.times(0)
     expect(eu_only_to_forced_stub).to have_been_requested.times(0)
     expect(custom_to_forced_stub).to have_been_requested.times(1)
@@ -300,20 +319,22 @@ RSpec.describe 'Data governance tests', type: :feature do
     global_to_eu_only_stub = stub_request(URI_GLOBAL, ConfigCat::BASE_URL_EU_ONLY, 1)
     eu_only_to_global_stub = stub_request(URI_EU_ONLY, ConfigCat::BASE_URL_GLOBAL, 1)
 
-    fetcher = ConfigCat::CacheControlConfigFetcher.new("", "m",
-                                                       data_governance: ConfigCat::DataGovernance::GLOBAL)
+    fetcher = ConfigCat::ConfigFetcher.new("", ConfigCat.logger, "m",
+                                           data_governance: ConfigCat::DataGovernance::GLOBAL)
 
     # First fetch
-    fetch_response = fetcher.get_configuration_json()
-    expect(fetch_response.is_fetched()).to be true
-    expect(fetch_response.json().fetch("f")).to eq JSON.parse(TEST_JSON)
+    fetch_response = fetcher.get_configuration
+    config = fetch_response.entry.config
+    expect(fetch_response.is_fetched).to be true
+    expect(config.fetch("f")).to eq JSON.parse(TEST_JSON)
     expect(global_to_eu_only_stub).to have_been_requested.times(2)
     expect(eu_only_to_global_stub).to have_been_requested.times(1)
 
     # Second fetch
-    fetch_response = fetcher.get_configuration_json()
-    expect(fetch_response.is_fetched()).to be true
-    expect(fetch_response.json().fetch("f")).to eq JSON.parse(TEST_JSON)
+    fetch_response = fetcher.get_configuration
+    config = fetch_response.entry.config
+    expect(fetch_response.is_fetched).to be true
+    expect(config.fetch("f")).to eq JSON.parse(TEST_JSON)
     expect(global_to_eu_only_stub).to have_been_requested.times(3)
     expect(eu_only_to_global_stub).to have_been_requested.times(3)
   end

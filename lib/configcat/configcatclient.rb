@@ -16,7 +16,7 @@ require 'configcat/evaluationdetails'
 module ConfigCat
   KeyValue = Struct.new(:key, :value)
   class ConfigCatClient
-    attr_reader :log
+    attr_reader :log, :hooks
 
     @@lock = Mutex.new
     @@instances = {}
@@ -49,8 +49,8 @@ module ConfigCat
     end
 
     private def initialize(sdk_key, options: ConfigCatOptions.new)
-      @_hooks = options.hooks || Hooks.new
-      @log = ConfigCatLogger.new(@_hooks)
+      @hooks = options.hooks || Hooks.new
+      @log = ConfigCatLogger.new(@hooks)
 
       if sdk_key === nil
         raise ConfigCatClientException, "SDK Key is required."
@@ -65,7 +65,7 @@ module ConfigCat
         @_override_data_source = nil
       end
 
-      @config_cache = options.config_cache.nil? ? NullConfigCache.new : options.config_cache
+      config_cache = options.config_cache.nil? ? NullConfigCache.new : options.config_cache
 
       if @_override_data_source && @_override_data_source.get_behaviour() == OverrideBehaviour::LOCAL_ONLY
         @_config_fetcher = nil
@@ -84,12 +84,12 @@ module ConfigCat
                                             data_governance: options.data_governance)
 
         @_config_service = ConfigService.new(@sdk_key,
-                                            options.polling_mode,
-                                            @_hooks,
-                                            @_config_fetcher,
-                                            @log,
-                                            @config_cache,
-                                            options.offline)
+                                             options.polling_mode,
+                                             @hooks,
+                                             @_config_fetcher,
+                                             @log,
+                                             config_cache,
+                                             options.offline)
       end
     end
 
@@ -100,7 +100,7 @@ module ConfigCat
         message = "Evaluating get_value('%s') failed. Cache is empty. " \
                   "Returning default_value in your get_value call: [%s]." % [key, default_value.to_s]
         @log.error(message)
-        @_hooks.invoke_on_flag_evaluated(EvaluationDetails.from_error(key, default_value, error: message))
+        @hooks.invoke_on_flag_evaluated(EvaluationDetails.from_error(key, default_value, error: message))
         return default_value
       end
       details = _evaluate(key, user, default_value, nil, settings, fetch_time)
@@ -127,8 +127,8 @@ module ConfigCat
                   "Returning default_variation_id in your get_variation_id call: [%s]." %
                   [key, default_variation_id.to_s]
         @log.error(message)
-        @_hooks.invoke_on_flag_evaluated(EvaluationDetails.from_error(key, nil, error: message,
-                                                                      variation_id: default_variation_id))
+        @hooks.invoke_on_flag_evaluated(EvaluationDetails.from_error(key, nil, error: message,
+                                                                     variation_id: default_variation_id))
         return default_variation_id
       end
       details = _evaluate(key, user, nil, default_variation_id, settings, fetch_time)
@@ -193,14 +193,14 @@ module ConfigCat
     end
 
     def force_refresh
-      @_config_service.force_refresh()
+      @_config_service.refresh
     end
 
     def close
       # Closes the underlying resources.
       @@lock.synchronize do
         _close_resources
-        @@instances.delete(@sdk_key)
+        @@instances.delete(@_sdk_key)
       end
     end
 
@@ -209,7 +209,7 @@ module ConfigCat
     def _close_resources
       @_config_service.close() if @_config_service
       @_config_fetcher.close() if @_config_fetcher
-      @_hooks.clear
+      @hooks.clear
     end
 
     def _get_settings
@@ -260,7 +260,7 @@ module ConfigCat
                                       error: error,
                                       matched_evaluation_rule: rule,
                                       matched_evaluation_percentage_rule: percentage_rule)
-      @_hooks.invoke_on_flag_evaluated(details)
+      @hooks.invoke_on_flag_evaluated(details)
       return details
     end
 

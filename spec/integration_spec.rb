@@ -11,12 +11,12 @@ RSpec.describe 'Integration test: DefaultTests', type: :feature do
   it "test_client_works" do
     client = ConfigCat.create_client(_SDK_KEY)
     expect(client.get_value("keySampleText", "default value")).to eq "This text came from ConfigCat"
-    client.stop()
+    client.close
   end
 
   it "test_get_all_keys" do
     client = ConfigCat.create_client(_SDK_KEY)
-    keys = client.get_all_keys()
+    keys = client.get_all_keys
     expect(keys.size).to eq 5
     expect(keys).to include "keySampleText"
   end
@@ -24,9 +24,9 @@ RSpec.describe 'Integration test: DefaultTests', type: :feature do
   it "test_force_refresh" do
     client = ConfigCat.create_client(_SDK_KEY)
     expect(client.get_value("keySampleText", "default value")).to eq "This text came from ConfigCat"
-    client.force_refresh()
+    client.force_refresh
     expect(client.get_value("keySampleText", "default value")).to eq "This text came from ConfigCat"
-    client.stop()
+    client.close
   end
 end
 
@@ -40,25 +40,25 @@ RSpec.describe 'Integration test: AutoPollTests', type: :feature do
   it "test_client_works" do
     client = ConfigCat::create_client_with_auto_poll(_SDK_KEY)
     expect(client.get_value("keySampleText", "default value")).to eq "This text came from ConfigCat"
-    client.stop()
+    client.close
   end
 
   it "test_client_works_valid_base_url" do
     client = ConfigCat::create_client_with_auto_poll(_SDK_KEY, base_url: "https://cdn.configcat.com")
     expect(client.get_value("keySampleText", "default value")).to eq "This text came from ConfigCat"
-    client.stop()
+    client.close
   end
 
   it "test_client_works_valid_base_url_trailing_slash" do
     client = ConfigCat::create_client_with_auto_poll(_SDK_KEY, base_url: "https://cdn.configcat.com/")
     expect(client.get_value("keySampleText", "default value")).to eq "This text came from ConfigCat"
-    client.stop()
+    client.close
   end
 
   it "test_client_works_invalid_base_url" do
     client = ConfigCat::create_client_with_auto_poll(_SDK_KEY, base_url: "https://invalidcdn.configcat.com")
     expect(client.get_value("keySampleText", "default value")).to eq "default value"
-    client.stop()
+    client.close
   end
 
   it "test_client_works_invalid_proxy" do
@@ -68,7 +68,7 @@ RSpec.describe 'Integration test: AutoPollTests', type: :feature do
                                                      proxy_user: "test",
                                                      proxy_pass: "test")
     expect(client.get_value("keySampleText", "default value")).to eq "default value"
-    client.stop()
+    client.close
   end
 
   it "test_client_works_request_timeout" do
@@ -77,22 +77,22 @@ RSpec.describe 'Integration test: AutoPollTests', type: :feature do
 
     client = ConfigCat::create_client_with_auto_poll(_SDK_KEY)
     expect(client.get_value("keySampleText", "default value")).to eq "default value"
-    client.stop()
+    client.close
   end
 
   it "test_force_refresh" do
     client = ConfigCat::create_client_with_auto_poll(_SDK_KEY)
     expect(client.get_value("keySampleText", "default value")).to eq "This text came from ConfigCat"
-    client.force_refresh()
+    client.force_refresh
     expect(client.get_value("keySampleText", "default value")).to eq "This text came from ConfigCat"
-    client.stop()
+    client.close
   end
 
   it "test_wrong_param" do
     client = ConfigCat::create_client_with_auto_poll(_SDK_KEY, poll_interval_seconds: 0, max_init_wait_time_seconds: -1)
     sleep(2)
     expect(client.get_value("keySampleText", "default value")).to eq "This text came from ConfigCat"
-    client.stop()
+    client.close
   end
 end
 
@@ -106,25 +106,25 @@ RSpec.describe 'Integration test: LazyLoadingTests', type: :feature do
   it "test_client_works" do
     client = ConfigCat::create_client_with_lazy_load(_SDK_KEY)
     expect(client.get_value("keySampleText", "default value")).to eq "This text came from ConfigCat"
-    client.stop()
+    client.close
   end
 
   it "test_client_works_valid_base_url" do
     client = ConfigCat::create_client_with_lazy_load(_SDK_KEY, base_url: "https://cdn.configcat.com")
     expect(client.get_value("keySampleText", "default value")).to eq "This text came from ConfigCat"
-    client.stop()
+    client.close
   end
 
   it "test_client_works_invalid_base_url" do
     client = ConfigCat::create_client_with_lazy_load(_SDK_KEY, base_url: "https://invalidcdn.configcat.com")
     expect(client.get_value("keySampleText", "default value")).to eq "default value"
-    client.stop()
+    client.close
   end
 
   it "test_wrong_param" do
     client = ConfigCat::create_client_with_lazy_load(_SDK_KEY, cache_time_to_live_seconds: 0)
     expect(client.get_value("keySampleText", "default value")).to eq "This text came from ConfigCat"
-    client.stop()
+    client.close
   end
 end
 
@@ -138,22 +138,22 @@ RSpec.describe 'Integration test: ManualPollingTests', type: :feature do
   it "test_client_works" do
     client = ConfigCat::create_client_with_manual_poll(_SDK_KEY)
     expect(client.get_value("keySampleText", "default value")).to eq "default value"
-    client.force_refresh()
+    client.force_refresh
     expect(client.get_value("keySampleText", "default value")).to eq "This text came from ConfigCat"
-    client.stop()
+    client.close
   end
 
   it "test_client_works_valid_base_url" do
     client = ConfigCat::create_client_with_manual_poll(_SDK_KEY, base_url: "https://cdn.configcat.com")
-    client.force_refresh()
+    client.force_refresh
     expect(client.get_value("keySampleText", "default value")).to eq "This text came from ConfigCat"
-    client.stop()
+    client.close
   end
 
   it "test_client_works_invalid_base_url" do
     client = ConfigCat::create_client_with_manual_poll(_SDK_KEY, base_url: "https://invalidcdn.configcat.com")
-    client.force_refresh()
+    client.force_refresh
     expect(client.get_value("keySampleText", "default value")).to eq "default value"
-    client.stop()
+    client.close
   end
 end

@@ -79,30 +79,23 @@ module ConfigCat
     #   https://app.configcat.com/organization/data-governance
     #   (Only Organization Admins have access)
     #
-    if sdk_key === nil
-      raise ConfigCatClientException, "SDK Key is required."
-    end
-    if poll_interval_seconds < 1
-      poll_interval_seconds = 1
-    end
-    if max_init_wait_time_seconds < 0
-      max_init_wait_time_seconds = 0
-    end
-    return ConfigCatClient.new(sdk_key,
-                               poll_interval_seconds: poll_interval_seconds,
-                               max_init_wait_time_seconds: max_init_wait_time_seconds,
-                               on_configuration_changed_callback: on_configuration_changed_callback,
-                               cache_time_to_live_seconds: 0,
-                               config_cache: config_cache,
-                               base_url: base_url,
-                               proxy_address: proxy_address,
-                               proxy_port: proxy_port,
-                               proxy_user: proxy_user,
-                               proxy_pass: proxy_pass,
-                               open_timeout_seconds: open_timeout_seconds,
-                               read_timeout_seconds: read_timeout_seconds,
-                               flag_overrides: flag_overrides,
-                               data_governance: data_governance)
+    options = ConfigCatOptions.new(
+      base_url: base_url,
+      polling_mode: PollingMode.auto_poll(poll_interval_seconds: poll_interval_seconds, max_init_wait_time_seconds: max_init_wait_time_seconds),
+      config_cache: config_cache,
+      proxy_address: proxy_address,
+      proxy_port: proxy_port,
+      proxy_user: proxy_user,
+      proxy_pass: proxy_pass,
+      open_timeout_seconds: open_timeout_seconds,
+      read_timeout_seconds: read_timeout_seconds,
+      flag_overrides: flag_overrides,
+      data_governance: data_governance
+    )
+    client = ConfigCatClient.get(sdk_key, options: options)
+    client.hooks.add_on_config_changed(on_configuration_changed_callback) if on_configuration_changed_callback
+    client.log.warn('create_client_with_auto_poll is deprecated. Create the ConfigCat Client as a Singleton object with `configcatclient.get()` instead')
+    return client
   end
 
   def ConfigCat.create_client_with_lazy_load(sdk_key,
@@ -137,27 +130,22 @@ module ConfigCat
     #   https://app.configcat.com/organization/data-governance
     #   (Only Organization Admins have access)
     #
-    if sdk_key === nil
-      raise ConfigCatClientException, "SDK Key is required."
-    end
-    if cache_time_to_live_seconds < 1
-      cache_time_to_live_seconds = 1
-    end
-    return ConfigCatClient.new(sdk_key,
-                               poll_interval_seconds: 0,
-                               max_init_wait_time_seconds: 0,
-                               on_configuration_changed_callback: nil,
-                               cache_time_to_live_seconds: cache_time_to_live_seconds,
-                               config_cache: config_cache,
-                               base_url: base_url,
-                               proxy_address: proxy_address,
-                               proxy_port: proxy_port,
-                               proxy_user: proxy_user,
-                               proxy_pass: proxy_pass,
-                               open_timeout_seconds: open_timeout_seconds,
-                               read_timeout_seconds: read_timeout_seconds,
-                               flag_overrides: flag_overrides,
-                               data_governance: data_governance)
+    options = ConfigCatOptions.new(
+      base_url: base_url,
+      polling_mode: PollingMode.lazy_load(cache_refresh_interval_seconds: cache_time_to_live_seconds),
+      config_cache: config_cache,
+      proxy_address: proxy_address,
+      proxy_port: proxy_port,
+      proxy_user: proxy_user,
+      proxy_pass: proxy_pass,
+      open_timeout_seconds: open_timeout_seconds,
+      read_timeout_seconds: read_timeout_seconds,
+      flag_overrides: flag_overrides,
+      data_governance: data_governance
+    )
+    client = ConfigCatClient.get(sdk_key, options: options)
+    client.log.warn('create_client_with_lazy_load is deprecated. Create the ConfigCat Client as a Singleton object with `configcatclient.get()` instead')
+    return client
   end
 
   def ConfigCat.create_client_with_manual_poll(sdk_key,
@@ -190,24 +178,22 @@ module ConfigCat
     #   https://app.configcat.com/organization/data-governance
     #   (Only Organization Admins have access)
     #
-    if sdk_key === nil
-      raise ConfigCatClientException, "SDK Key is required."
-    end
-    return ConfigCatClient.new(sdk_key,
-                               poll_interval_seconds: 0,
-                               max_init_wait_time_seconds: 0,
-                               on_configuration_changed_callback: nil,
-                               cache_time_to_live_seconds: 0,
-                               config_cache: config_cache,
-                               base_url: base_url,
-                               proxy_address: proxy_address,
-                               proxy_port: proxy_port,
-                               proxy_user: proxy_user,
-                               proxy_pass: proxy_pass,
-                               open_timeout_seconds: open_timeout_seconds,
-                               read_timeout_seconds: read_timeout_seconds,
-                               flag_overrides: flag_overrides,
-                               data_governance: data_governance)
+    options = ConfigCatOptions.new(
+      base_url: base_url,
+      polling_mode: PollingMode.manual_poll(),
+      config_cache: config_cache,
+      proxy_address: proxy_address,
+      proxy_port: proxy_port,
+      proxy_user: proxy_user,
+      proxy_pass: proxy_pass,
+      open_timeout_seconds: open_timeout_seconds,
+      read_timeout_seconds: read_timeout_seconds,
+      flag_overrides: flag_overrides,
+      data_governance: data_governance
+    )
+    client = ConfigCatClient.get(sdk_key, options: options)
+    client.log.warn('create_client_with_manual_poll is deprecated. Create the ConfigCat Client as a Singleton object with `configcatclient.get()` instead')
+    return client
   end
 
 end
