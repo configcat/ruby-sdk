@@ -17,11 +17,10 @@ module ConfigCat
   class LocalDictionaryDataSource < OverrideDataSource
     def initialize(source, override_behaviour)
       super(override_behaviour)
-      dictionary = {}
+      @_settings = {}
       source.each do |key, value|
-        dictionary[key] = {VALUE => value}
+        @_settings[key] = {VALUE => value}
       end
-      @_settings = {FEATURE_FLAGS => dictionary}
     end
 
     def get_overrides

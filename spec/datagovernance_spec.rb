@@ -9,10 +9,10 @@ RSpec.describe 'Data governance tests', type: :feature do
   URI_EU_ONLY = ConfigCat::BASE_URL_EU_ONLY + "/" + ConfigCat::BASE_PATH + ConfigCat::BASE_EXTENSION
   URI_CUSTOM = BASE_URL_CUSTOM + "/" + ConfigCat::BASE_PATH + ConfigCat::BASE_EXTENSION
   URI_FORCED = BASE_URL_FORCED + "/" + ConfigCat::BASE_PATH + ConfigCat::BASE_EXTENSION
-  TEST_JSON = '{"test": "json"}'
+  FEATURE_TEST_JSON = '{"test": "json"}'
 
   def stub_request(request_uri, response_uri, redirect)
-    json = '{ "p": { "u": "%s", "r": %d }, "f": %s }' % [response_uri, redirect, TEST_JSON]
+    json = '{ "p": { "u": "%s", "r": %d }, "f": %s }' % [response_uri, redirect, FEATURE_TEST_JSON]
     WebMock.stub_request(:get, request_uri)
       .with(
           body: "",
@@ -41,7 +41,7 @@ RSpec.describe 'Data governance tests', type: :feature do
     fetch_response = fetcher.get_configuration
     config = fetch_response.entry.config
     expect(fetch_response.is_fetched).to be true
-    expect(config.fetch("f")).to eq JSON.parse(TEST_JSON)
+    expect(config.fetch("f")).to eq JSON.parse(FEATURE_TEST_JSON)
     expect(global_stub).to have_been_requested.times(1)
     expect(eu_only_stub).to have_been_requested.times(0)
 
@@ -49,7 +49,7 @@ RSpec.describe 'Data governance tests', type: :feature do
     fetch_response = fetcher.get_configuration()
     config = fetch_response.entry.config
     expect(fetch_response.is_fetched).to be true
-    expect(config.fetch("f")).to eq JSON.parse(TEST_JSON)
+    expect(config.fetch("f")).to eq JSON.parse(FEATURE_TEST_JSON)
     expect(global_stub).to have_been_requested.times(2)
     expect(eu_only_stub).to have_been_requested.times(0)
   end
@@ -71,7 +71,7 @@ RSpec.describe 'Data governance tests', type: :feature do
     fetch_response = fetcher.get_configuration
     config = fetch_response.entry.config
     expect(fetch_response.is_fetched).to be true
-    expect(config.fetch("f")).to eq JSON.parse(TEST_JSON)
+    expect(config.fetch("f")).to eq JSON.parse(FEATURE_TEST_JSON)
     expect(global_stub).to have_been_requested.times(0)
     expect(eu_only_stub).to have_been_requested.times(1)
 
@@ -79,7 +79,7 @@ RSpec.describe 'Data governance tests', type: :feature do
     fetch_response = fetcher.get_configuration
     config = fetch_response.entry.config
     expect(fetch_response.is_fetched).to be true
-    expect(config.fetch("f")).to eq JSON.parse(TEST_JSON)
+    expect(config.fetch("f")).to eq JSON.parse(FEATURE_TEST_JSON)
     expect(global_stub).to have_been_requested.times(0)
     expect(eu_only_stub).to have_been_requested.times(2)
   end
@@ -99,7 +99,7 @@ RSpec.describe 'Data governance tests', type: :feature do
     fetch_response = fetcher.get_configuration
     config = fetch_response.entry.config
     expect(fetch_response.is_fetched).to be true
-    expect(config.fetch("f")).to eq JSON.parse(TEST_JSON)
+    expect(config.fetch("f")).to eq JSON.parse(FEATURE_TEST_JSON)
     expect(global_to_eu_only_stub).to have_been_requested.times(1)
     expect(eu_only_stub).to have_been_requested.times(1)
 
@@ -107,7 +107,7 @@ RSpec.describe 'Data governance tests', type: :feature do
     fetch_response = fetcher.get_configuration
     config = fetch_response.entry.config
     expect(fetch_response.is_fetched).to be true
-    expect(config.fetch("f")).to eq JSON.parse(TEST_JSON)
+    expect(config.fetch("f")).to eq JSON.parse(FEATURE_TEST_JSON)
     expect(global_to_eu_only_stub).to have_been_requested.times(1)
     expect(eu_only_stub).to have_been_requested.times(2)
   end
@@ -128,7 +128,7 @@ RSpec.describe 'Data governance tests', type: :feature do
     fetch_response = fetcher.get_configuration
     config = fetch_response.entry.config
     expect(fetch_response.is_fetched).to be true
-    expect(config.fetch("f")).to eq JSON.parse(TEST_JSON)
+    expect(config.fetch("f")).to eq JSON.parse(FEATURE_TEST_JSON)
     expect(global_to_eu_only_stub).to have_been_requested.times(0)
     expect(eu_only_stub).to have_been_requested.times(1)
 
@@ -136,7 +136,7 @@ RSpec.describe 'Data governance tests', type: :feature do
     fetch_response = fetcher.get_configuration
     config = fetch_response.entry.config
     expect(fetch_response.is_fetched).to be true
-    expect(config.fetch("f")).to eq JSON.parse(TEST_JSON)
+    expect(config.fetch("f")).to eq JSON.parse(FEATURE_TEST_JSON)
     expect(global_to_eu_only_stub).to have_been_requested.times(0)
     expect(eu_only_stub).to have_been_requested.times(2)
   end
@@ -159,7 +159,7 @@ RSpec.describe 'Data governance tests', type: :feature do
     fetch_response = fetcher.get_configuration
     config = fetch_response.entry.config
     expect(fetch_response.is_fetched).to be true
-    expect(config.fetch("f")).to eq JSON.parse(TEST_JSON)
+    expect(config.fetch("f")).to eq JSON.parse(FEATURE_TEST_JSON)
     expect(global_stub).to have_been_requested.times(0)
     expect(eu_only_stub).to have_been_requested.times(0)
     expect(custom_stub).to have_been_requested.times(1)
@@ -168,7 +168,7 @@ RSpec.describe 'Data governance tests', type: :feature do
     fetch_response = fetcher.get_configuration
     config = fetch_response.entry.config
     expect(fetch_response.is_fetched).to be true
-    expect(config.fetch("f")).to eq JSON.parse(TEST_JSON)
+    expect(config.fetch("f")).to eq JSON.parse(FEATURE_TEST_JSON)
     expect(global_stub).to have_been_requested.times(0)
     expect(eu_only_stub).to have_been_requested.times(0)
     expect(custom_stub).to have_been_requested.times(2)
@@ -192,7 +192,7 @@ RSpec.describe 'Data governance tests', type: :feature do
     fetch_response = fetcher.get_configuration
     config = fetch_response.entry.config
     expect(fetch_response.is_fetched).to be true
-    expect(config.fetch("f")).to eq JSON.parse(TEST_JSON)
+    expect(config.fetch("f")).to eq JSON.parse(FEATURE_TEST_JSON)
     expect(global_stub).to have_been_requested.times(0)
     expect(eu_only_stub).to have_been_requested.times(0)
     expect(custom_stub).to have_been_requested.times(1)
@@ -201,7 +201,7 @@ RSpec.describe 'Data governance tests', type: :feature do
     fetch_response = fetcher.get_configuration
     config = fetch_response.entry.config
     expect(fetch_response.is_fetched).to be true
-    expect(config.fetch("f")).to eq JSON.parse(TEST_JSON)
+    expect(config.fetch("f")).to eq JSON.parse(FEATURE_TEST_JSON)
     expect(global_stub).to have_been_requested.times(0)
     expect(eu_only_stub).to have_been_requested.times(0)
     expect(custom_stub).to have_been_requested.times(2)
@@ -224,7 +224,7 @@ RSpec.describe 'Data governance tests', type: :feature do
     fetch_response = fetcher.get_configuration
     config = fetch_response.entry.config
     expect(fetch_response.is_fetched).to be true
-    expect(config.fetch("f")).to eq JSON.parse(TEST_JSON)
+    expect(config.fetch("f")).to eq JSON.parse(FEATURE_TEST_JSON)
     expect(global_to_forced_stub).to have_been_requested.times(1)
     expect(forced_to_forced_stub).to have_been_requested.times(1)
     expect(eu_only_to_forced_stub).to have_been_requested.times(0)
@@ -233,7 +233,7 @@ RSpec.describe 'Data governance tests', type: :feature do
     fetch_response = fetcher.get_configuration
     config = fetch_response.entry.config
     expect(fetch_response.is_fetched).to be true
-    expect(config.fetch("f")).to eq JSON.parse(TEST_JSON)
+    expect(config.fetch("f")).to eq JSON.parse(FEATURE_TEST_JSON)
     expect(global_to_forced_stub).to have_been_requested.times(1)
     expect(forced_to_forced_stub).to have_been_requested.times(2)
     expect(eu_only_to_forced_stub).to have_been_requested.times(0)
@@ -256,7 +256,7 @@ RSpec.describe 'Data governance tests', type: :feature do
     fetch_response = fetcher.get_configuration
     config = fetch_response.entry.config
     expect(fetch_response.is_fetched).to be true
-    expect(config.fetch("f")).to eq JSON.parse(TEST_JSON)
+    expect(config.fetch("f")).to eq JSON.parse(FEATURE_TEST_JSON)
     expect(global_to_forced_stub).to have_been_requested.times(0)
     expect(forced_to_forced_stub).to have_been_requested.times(1)
     expect(eu_only_to_forced_stub).to have_been_requested.times(1)
@@ -265,7 +265,7 @@ RSpec.describe 'Data governance tests', type: :feature do
     fetch_response = fetcher.get_configuration
     config = fetch_response.entry.config
     expect(fetch_response.is_fetched).to be true
-    expect(config.fetch("f")).to eq JSON.parse(TEST_JSON)
+    expect(config.fetch("f")).to eq JSON.parse(FEATURE_TEST_JSON)
     expect(global_to_forced_stub).to have_been_requested.times(0)
     expect(forced_to_forced_stub).to have_been_requested.times(2)
     expect(eu_only_to_forced_stub).to have_been_requested.times(1)
@@ -290,7 +290,7 @@ RSpec.describe 'Data governance tests', type: :feature do
     fetch_response = fetcher.get_configuration
     config = fetch_response.entry.config
     expect(fetch_response.is_fetched).to be true
-    expect(config.fetch("f")).to eq JSON.parse(TEST_JSON)
+    expect(config.fetch("f")).to eq JSON.parse(FEATURE_TEST_JSON)
     expect(global_to_forced_stub).to have_been_requested.times(0)
     expect(eu_only_to_forced_stub).to have_been_requested.times(0)
     expect(custom_to_forced_stub).to have_been_requested.times(1)
@@ -300,7 +300,7 @@ RSpec.describe 'Data governance tests', type: :feature do
     fetch_response = fetcher.get_configuration
     config = fetch_response.entry.config
     expect(fetch_response.is_fetched).to be true
-    expect(config.fetch("f")).to eq JSON.parse(TEST_JSON)
+    expect(config.fetch("f")).to eq JSON.parse(FEATURE_TEST_JSON)
     expect(global_to_forced_stub).to have_been_requested.times(0)
     expect(eu_only_to_forced_stub).to have_been_requested.times(0)
     expect(custom_to_forced_stub).to have_been_requested.times(1)
@@ -326,7 +326,7 @@ RSpec.describe 'Data governance tests', type: :feature do
     fetch_response = fetcher.get_configuration
     config = fetch_response.entry.config
     expect(fetch_response.is_fetched).to be true
-    expect(config.fetch("f")).to eq JSON.parse(TEST_JSON)
+    expect(config.fetch("f")).to eq JSON.parse(FEATURE_TEST_JSON)
     expect(global_to_eu_only_stub).to have_been_requested.times(2)
     expect(eu_only_to_global_stub).to have_been_requested.times(1)
 
@@ -334,7 +334,7 @@ RSpec.describe 'Data governance tests', type: :feature do
     fetch_response = fetcher.get_configuration
     config = fetch_response.entry.config
     expect(fetch_response.is_fetched).to be true
-    expect(config.fetch("f")).to eq JSON.parse(TEST_JSON)
+    expect(config.fetch("f")).to eq JSON.parse(FEATURE_TEST_JSON)
     expect(global_to_eu_only_stub).to have_been_requested.times(3)
     expect(eu_only_to_global_stub).to have_been_requested.times(3)
   end

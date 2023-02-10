@@ -220,18 +220,18 @@ module ConfigCat
         elsif behaviour == OverrideBehaviour::REMOTE_OVER_LOCAL
           remote_settings, fetch_time = @_config_service.get_settings()
           local_settings = @_override_data_source.get_overrides()
+          remote_settings ||= {}
+          local_settings ||= {}
           result = local_settings.clone()
-          if remote_settings.key?(FEATURE_FLAGS) && local_settings.key?(FEATURE_FLAGS)
-            result[FEATURE_FLAGS] = result[FEATURE_FLAGS].merge(remote_settings[FEATURE_FLAGS])
-          end
+          result.update(remote_settings)
           return result, fetch_time
         elsif behaviour == OverrideBehaviour::LOCAL_OVER_REMOTE
           remote_settings, fetch_time = @_config_service.get_settings()
           local_settings = @_override_data_source.get_overrides()
+          remote_settings ||= {}
+          local_settings ||= {}
           result = remote_settings.clone()
-          if remote_settings.key?(FEATURE_FLAGS) && local_settings.key?(FEATURE_FLAGS)
-            result[FEATURE_FLAGS] = result[FEATURE_FLAGS].merge(local_settings[FEATURE_FLAGS])
-          end
+          result.update(local_settings)
           return result, fetch_time
         end
       end

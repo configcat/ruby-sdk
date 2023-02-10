@@ -41,14 +41,13 @@ module ConfigCat
           file = File.read(@_file_path)
           data = JSON.parse(file)
           if data.key?("flags")
-            dictionary = {}
+            @_settings = {}
             source = data["flags"]
             source.each do |key, value|
-              dictionary[key] = {VALUE => value}
+              @_settings[key] = {VALUE => value}
             end
-            @_settings = {FEATURE_FLAGS => dictionary}
           else
-            @_settings = data
+            @_settings = data[FEATURE_FLAGS]
           end
         end
       rescue JSON::ParserError => e
