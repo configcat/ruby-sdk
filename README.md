@@ -27,23 +27,23 @@ require 'configcat'
 
 ### 4. Create a *ConfigCat* client instance:
 ```ruby
-configcat_client = ConfigCat.create_client("#YOUR-SDK-KEY#")
+configcat_client = ConfigCat.get("#YOUR-SDK-KEY#")
 ```
-> We strongly recommend using the *ConfigCat Client* as a Singleton object in your application.
+> We strongly recommend using the *ConfigCat Client* as a Singleton object in your application. The `ConfigCat.get` static factory method constructs singleton client instances for your SDK keys.
 
 ### 5. Get your setting value
 ```ruby
 isMyAwesomeFeatureEnabled = configcat_client.get_value("isMyAwesomeFeatureEnabled", false)
 if isMyAwesomeFeatureEnabled
-    do_the_new_thing()
+    do_the_new_thing
 else
-    do_the_old_thing()
+    do_the_old_thing
 end
 ```
 
 ### 6. Stop *ConfigCat* client on application exit
 ```ruby
-configcat_client.stop()
+configcat_client.close
 ```
 
 ## Getting user specific setting values with Targeting
@@ -55,9 +55,9 @@ user = ConfigCat::User.new("#USER-IDENTIFIER#")
 
 isMyAwesomeFeatureEnabled = configcat_client.get_value("isMyAwesomeFeatureEnabled", false, user)
 if isMyAwesomeFeatureEnabled
-    do_the_new_thing()
+    do_the_new_thing
 else
-    do_the_old_thing()
+    do_the_old_thing
 end
 ```
 
