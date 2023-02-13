@@ -1,10 +1,9 @@
 require 'spec_helper'
-require 'configcat/autopollingcachepolicy'
 require 'configcat/configcache'
 require_relative 'mocks'
 
 
-RSpec.describe ConfigCat::AutoPollingCachePolicy do
+RSpec.describe "AutoPollingCachePolicy" do
   it "test_wrong_params" do
     polling_mode = PollingMode.auto_poll(poll_interval_seconds: 0,
                                          max_init_wait_time_seconds: -1)

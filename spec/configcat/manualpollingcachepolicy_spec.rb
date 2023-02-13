@@ -1,9 +1,8 @@
 require 'spec_helper'
-require 'configcat/manualpollingcachepolicy'
 require 'configcat/configcache'
 require_relative 'mocks'
 
-RSpec.describe ConfigCat::ManualPollingCachePolicy do
+RSpec.describe "ManualPollingCachePolicy" do
   before(:each) do
     WebMock.reset!
   end

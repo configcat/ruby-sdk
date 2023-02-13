@@ -1,10 +1,9 @@
 require 'spec_helper'
-require 'configcat/lazyloadingcachepolicy'
 require 'configcat/configcache'
 require_relative 'mocks'
 
 
-RSpec.describe ConfigCat::LazyLoadingCachePolicy do
+RSpec.describe "LazyLoadingCachePolicy" do
   it "test_wrong_params" do
     polling_mode = PollingMode.lazy_load(cache_refresh_interval_seconds: 0)
     config_fetcher = ConfigFetcherMock.new
