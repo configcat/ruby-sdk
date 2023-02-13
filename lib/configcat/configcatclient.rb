@@ -256,7 +256,7 @@ module ConfigCat
                                       variation_id: variation_id,
                                       fetch_time: fetch_time,
                                       user: user,
-                                      is_default_value: true || false,
+                                      is_default_value: error.nil? || error.empty? ? false : true,
                                       error: error,
                                       matched_evaluation_rule: rule,
                                       matched_evaluation_percentage_rule: percentage_rule)

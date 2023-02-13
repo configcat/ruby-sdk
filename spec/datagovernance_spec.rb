@@ -46,7 +46,7 @@ RSpec.describe 'Data governance tests', type: :feature do
     expect(eu_only_stub).to have_been_requested.times(0)
 
     # Second fetch
-    fetch_response = fetcher.get_configuration()
+    fetch_response = fetcher.get_configuration
     config = fetch_response.entry.config
     expect(fetch_response.is_fetched).to be true
     expect(config.fetch("f")).to eq JSON.parse(FEATURE_TEST_JSON)
