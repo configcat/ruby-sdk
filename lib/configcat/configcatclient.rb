@@ -23,7 +23,7 @@ module ConfigCat
     # :param sdk_key [String] ConfigCat SDK Key to access your configuration.
     # :param options [ConfigCatOptions] Configuration for `ConfigCatClient`.
     # :return [ConfigCatClient] the `ConfigCatClient` instance.
-    def self.get(sdk_key, options: nil)
+    def self.get(sdk_key, options=nil)
       @@lock.synchronize do
         client = @@instances[sdk_key]
         if client
@@ -35,7 +35,7 @@ module ConfigCat
         end
 
         options ||= ConfigCatOptions.new
-        client = ConfigCatClient.new(sdk_key, options: options)
+        client = ConfigCatClient.new(sdk_key, options)
         @@instances[sdk_key] = client
         return client
       end
@@ -51,7 +51,7 @@ module ConfigCat
       end
     end
 
-    private def initialize(sdk_key, options: ConfigCatOptions.new)
+    private def initialize(sdk_key, options=ConfigCatOptions.new)
       @hooks = options.hooks || Hooks.new
       @log = ConfigCatLogger.new(@hooks)
 

@@ -14,9 +14,9 @@ RSpec.describe 'Hooks test', type: :feature do
     )
 
     config_cache = ConfigCacheMock.new
-    client = ConfigCatClient.get('test', options: ConfigCatOptions.new(polling_mode: PollingMode.manual_poll,
-                                                                       config_cache: config_cache,
-                                                                       hooks: hooks))
+    client = ConfigCatClient.get('test', ConfigCatOptions.new(polling_mode: PollingMode.manual_poll,
+                                                              config_cache: config_cache,
+                                                              hooks: hooks))
 
     value = client.get_value('testStringKey', '')
 
@@ -42,7 +42,7 @@ RSpec.describe 'Hooks test', type: :feature do
     hooks.add_on_error(hook_callbacks.method(:on_error))
 
     config_cache = ConfigCacheMock.new
-    client = ConfigCatClient.get('test', options: ConfigCatOptions.new(polling_mode: PollingMode.manual_poll,
+    client = ConfigCatClient.get('test', ConfigCatOptions.new(polling_mode: PollingMode.manual_poll,
                                                                        config_cache: config_cache,
                                                                        hooks: hooks))
 
@@ -65,7 +65,7 @@ RSpec.describe 'Hooks test', type: :feature do
     WebMock.stub_request(:get, Regexp.new('https://.*')).to_return(status: 200, body: TEST_OBJECT_JSON, headers: {})
 
     hook_callbacks = HookCallbacks.new
-    client = ConfigCatClient.get('test', options: ConfigCatOptions.new(polling_mode: PollingMode.manual_poll))
+    client = ConfigCatClient.get('test', ConfigCatOptions.new(polling_mode: PollingMode.manual_poll))
     client.hooks.add_on_flag_evaluated(hook_callbacks.method(:on_flag_evaluated))
 
     client.force_refresh
@@ -103,7 +103,7 @@ RSpec.describe 'Hooks test', type: :feature do
       on_flag_evaluated: hook_callbacks.method(:callback_exception),
       on_error: hook_callbacks.method(:callback_exception)
     )
-    client = ConfigCatClient.get('test', options: ConfigCatOptions.new(polling_mode: PollingMode.manual_poll, hooks: hooks))
+    client = ConfigCatClient.get('test', ConfigCatOptions.new(polling_mode: PollingMode.manual_poll, hooks: hooks))
 
     client.force_refresh
 
