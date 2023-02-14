@@ -252,7 +252,7 @@ module ConfigCat
       details_result = []
       for key in settings.keys
         details = _evaluate(key, user, nil, nil, settings, fetch_time)
-        details_result.append(details)
+        details_result.push(details)
       end
 
       return details_result
