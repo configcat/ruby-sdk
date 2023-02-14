@@ -94,7 +94,7 @@ RSpec.describe "ManualPollingCachePolicy" do
     config_cache = NullConfigCache.new
     cache_policy = ConfigService.new("", polling_mode, Hooks.new, config_fetcher, ConfigCat.logger, config_cache, false)
 
-    expect(cache_policy.is_offline).to be false
+    expect(cache_policy.offline?).to be false
     expect(cache_policy.refresh.is_success).to be true
     settings, _ = cache_policy.get_settings
     expect(settings.fetch("testStringKey").fetch(VALUE)).to eq "testValue"
@@ -102,13 +102,13 @@ RSpec.describe "ManualPollingCachePolicy" do
 
     cache_policy.set_offline
 
-    expect(cache_policy.is_offline).to be true
+    expect(cache_policy.offline?).to be true
     expect(cache_policy.refresh.is_success).to be false
     expect(stub_request).to have_been_made.times(1)
 
     cache_policy.set_online
 
-    expect(cache_policy.is_offline).to be false
+    expect(cache_policy.offline?).to be false
     expect(cache_policy.refresh.is_success).to be true
     expect(stub_request).to have_been_made.times(2)
 
@@ -123,13 +123,13 @@ RSpec.describe "ManualPollingCachePolicy" do
     config_cache = NullConfigCache.new
     cache_policy = ConfigService.new("", polling_mode, Hooks.new, config_fetcher, ConfigCat.logger, config_cache, true)
 
-    expect(cache_policy.is_offline).to be true
+    expect(cache_policy.offline?).to be true
     expect(cache_policy.refresh.is_success).to be false
     expect(stub_request).to have_been_made.times(0)
 
     cache_policy.set_online
 
-    expect(cache_policy.is_offline).to be false
+    expect(cache_policy.offline?).to be false
     expect(cache_policy.refresh.is_success).to be true
     settings, _ = cache_policy.get_settings
     expect(settings.fetch("testStringKey").fetch(VALUE)).to eq "testValue"

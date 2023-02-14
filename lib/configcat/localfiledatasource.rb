@@ -18,7 +18,7 @@ module ConfigCat
     def initialize(file_path, override_behaviour, log)
       super(override_behaviour)
       @log = log
-      if File.exists?(file_path)
+      if !File.exists?(file_path)
         @log.error("The file '%s' does not exists." % file_path)
       end
       @_file_path = file_path

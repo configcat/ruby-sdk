@@ -96,7 +96,7 @@ class ConfigFetcherWithErrorMock
     @_error = error
   end
 
-  def get_configuration(etag="")
+  def get_configuration(*)
     return FetchResponse.failure(@_error, true)
   end
 
@@ -109,7 +109,7 @@ class ConfigFetcherWaitMock
     @_wait_seconds = wait_seconds
   end
 
-  def get_configuration(etag="")
+  def get_configuration(*)
     sleep(@_wait_seconds)
     return FetchResponse.success(ConfigEntry.new(JSON.parse(TEST_JSON)))
   end
@@ -123,7 +123,7 @@ class ConfigFetcherCountMock
     @_value = 0
   end
 
-  def get_configuration(etag="")
+  def get_configuration(*)
     @_value += 1
     config = JSON.parse(TEST_JSON_FORMAT % {value: @_value})
     return FetchResponse.success(ConfigEntry.new(config))

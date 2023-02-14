@@ -88,7 +88,7 @@ module ConfigCat
       end
     end
 
-    def is_offline
+    def offline?
       return @is_offline
     end
 
