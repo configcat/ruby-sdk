@@ -28,7 +28,7 @@ TEST_OBJECT_JSON = '{
   "p": {"u": "https://cdn-global.configcat.com", "r": 0},
   "f": {
     "testBoolKey": {"v": true,"t": 0, "p": [],"r": []},
-    "testStringKey": {"v": "testValue","t": 1, "p": [],"r": [
+    "testStringKey": {"v": "testValue", "i": "id", "t": 1, "p": [],"r": [
       {"i":"id1","v":"fake1","a":"Identifier","t":2,"c":"@test1.com"},
       {"i":"id2","v":"fake2","a":"Identifier","t":2,"c":"@test2.com"}
     ]},

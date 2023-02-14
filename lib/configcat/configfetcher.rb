@@ -35,14 +35,20 @@ module ConfigCat
       @is_transient_error = is_transient_error
     end
 
+    # Gets whether a new configuration value was fetched or not.
+    # :return [Boolean] true if a new configuration value was fetched, otherwise false.
     def is_fetched
       @status == Status::FETCHED
     end
 
+    # Gets whether the fetch resulted a '304 Not Modified' or not.
+    # :return [Boolean] true if the fetch resulted a '304 Not Modified' code, otherwise false.
     def is_not_modified
       @status == Status::NOT_MODIFIED
     end
 
+    # Gets whether the fetch failed or not.
+    # :return [Boolean] true if the fetch failed, otherwise false.
     def is_failed
       @status == Status::FAILURE
     end

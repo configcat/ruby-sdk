@@ -10,7 +10,7 @@ module ConfigCat
     end
 
     def create_data_source(log)
-      LocalDictionaryDataSource.new(@source, @override_behaviour)
+      return LocalDictionaryDataSource.new(@source, @override_behaviour)
     end
   end
 

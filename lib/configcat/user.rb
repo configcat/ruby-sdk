@@ -1,10 +1,7 @@
 module ConfigCat
 
+  #    The user object for variation evaluation
   class User
-    #
-    #    The user object for variation evaluation
-    #
-
     PREDEFINED = ["Identifier", "Email", "Country"]
 
     attr_reader :identifier

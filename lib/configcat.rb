@@ -27,7 +27,7 @@ module ConfigCat
     #
     #   Closes all ConfigCatClient instances.
     #
-    ConfigCatClient.close_all()
+    ConfigCatClient.close_all
   end
 
   def ConfigCat.create_client(sdk_key, data_governance: DataGovernance::GLOBAL)

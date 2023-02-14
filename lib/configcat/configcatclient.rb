@@ -173,7 +173,7 @@ module ConfigCat
     #
     # :param user [User] the user object to identify the caller.
     # :return list of variation IDs
-    def get_all_variation_ids(user: nil)
+    def get_all_variation_ids(user=nil)
       @log.warn("get_all_variation_ids is deprecated and will be removed in a future major version. "\
                 "Please use [get_value_details] instead.")
 
@@ -226,7 +226,7 @@ module ConfigCat
     #
     # :param user [User] the user object to identify the caller.
     # :return dictionary of values
-    def get_all_values(user: nil)
+    def get_all_values(user=nil)
       keys = get_all_keys()
       all_values = {}
       for key in keys
@@ -242,7 +242,7 @@ module ConfigCat
     #
     # :param user [User] the user object to identify the caller.
     # :return list of all evaluation details
-    def get_all_value_details(user: nil)
+    def get_all_value_details(user=nil)
       settings, fetch_time = _get_settings()
       if settings.nil?
         @log.error("Evaluating get_all_value_details() failed. Cache is empty. Returning empty list.")
@@ -250,7 +250,7 @@ module ConfigCat
       end
 
       details_result = []
-      for key in keys
+      for key in settings.keys
         details = _evaluate(key, user, nil, nil, settings, fetch_time)
         details_result.append(details)
       end

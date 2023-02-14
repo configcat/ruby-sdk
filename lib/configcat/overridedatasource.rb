@@ -16,8 +16,8 @@ module ConfigCat
   end
 
   class FlagOverrides
+    # :returns [OverrideDataSource] the created OverrideDataSource
     def create_data_source(log)
-      # :returns the created OverrideDataSource
     end
   end
 

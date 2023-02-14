@@ -11,6 +11,7 @@ module ConfigCat
       @log = log
     end
 
+    # :returns value, variation_id. matched_evaluation_rule, matched_evaluation_percentage_rule, error
     def evaluate(key:, user:, default_value:, default_variation_id:, settings:)
       setting_descriptor = settings[key]
       if setting_descriptor === nil

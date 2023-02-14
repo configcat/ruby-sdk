@@ -1,3 +1,3 @@
 module ConfigCat
-  RefreshResult = Struct.new(:is_success, :error)
+  RefreshResult = Struct.new(:success, :error)
 end

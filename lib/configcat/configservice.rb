@@ -53,9 +53,10 @@ module ConfigCat
       return entry.config[FEATURE_FLAGS], entry.fetch_time
     end
 
+    # :return [RefreshResult]
     def refresh
       _, error = fetch_if_older(Utils::DISTANT_FUTURE)
-      return RefreshResult.new(is_success = error.nil?, error = error)
+      return RefreshResult.new(success = error.nil?, error = error)
     end
 
     def set_online
@@ -100,9 +101,8 @@ module ConfigCat
 
     private
 
+    # :return [ConfigEntry, String] Returns the ConfigEntry object and error message in case of any error.
     def fetch_if_older(time, prefer_cache: false)
-      # Returns the ConfigEntry object and error message in case of any error.
-
       # Sync up with the cache and use it when it's not expired.
       @lock.synchronize do
         if @cached_entry.empty? || @cached_entry.fetch_time > time
