@@ -87,8 +87,8 @@ RSpec.describe 'Hooks test', type: :feature do
     expect(details.matched_evaluation_rule[COMPARISON_VALUE]).to eq("@test1.com")
     expect(details.user.to_s).to eq(user.to_s)
     now = Utils.get_utc_now_seconds_since_epoch
-    expect(details.fetch_time).to be <= now
-    expect(details.fetch_time + 1).to be >= now
+    expect(details.fetch_time.to_f).to be <= now
+    expect(details.fetch_time.to_f + 1).to be >= now
 
     client.close
   end

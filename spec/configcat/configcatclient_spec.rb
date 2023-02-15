@@ -149,8 +149,8 @@ RSpec.describe ConfigCat::ConfigCatClient do
     expect(details.matched_evaluation_rule[COMPARISON_VALUE]).to eq('@test1.com')
     expect(details.user.to_s).to eq(user.to_s)
     now = Utils.get_utc_now_seconds_since_epoch
-    expect(now).to be >= details.fetch_time
-    expect(now).to be <= details.fetch_time + 1
+    expect(now).to be >= details.fetch_time.to_f
+    expect(now).to be <= details.fetch_time.to_f + 1
 
     client.close
   end

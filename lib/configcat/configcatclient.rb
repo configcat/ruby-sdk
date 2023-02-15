@@ -355,7 +355,7 @@ module ConfigCat
       details = EvaluationDetails.new(key: key,
                                       value: value,
                                       variation_id: variation_id,
-                                      fetch_time: fetch_time,
+                                      fetch_time: !fetch_time.nil? ? Time.at(fetch_time).utc : nil,
                                       user: user,
                                       is_default_value: error.nil? || error.empty? ? false : true,
                                       error: error,
