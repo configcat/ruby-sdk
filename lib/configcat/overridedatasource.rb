@@ -15,16 +15,22 @@ module ConfigCat
     REMOTE_OVER_LOCAL = 2
   end
 
+  class FlagOverrides
+    # :returns [OverrideDataSource] the created OverrideDataSource
+    def create_data_source(log)
+    end
+  end
+
   class OverrideDataSource
     def initialize(override_behaviour)
       @_override_behaviour = override_behaviour
     end
 
-    def get_behaviour()
+    def get_behaviour
       return @_override_behaviour
     end
 
-    def get_overrides()
+    def get_overrides
       # :returns the override dictionary
       return {}
     end

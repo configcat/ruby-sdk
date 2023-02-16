@@ -1,114 +1,182 @@
 require 'configcat/interfaces'
 require 'configcat/configcache'
+require 'configcat/configcatoptions'
 require 'configcat/configfetcher'
-require 'configcat/autopollingcachepolicy'
-require 'configcat/manualpollingcachepolicy'
-require 'configcat/lazyloadingcachepolicy'
 require 'configcat/rolloutevaluator'
-require 'configcat/datagovernance'
+require 'configcat/utils'
+require 'configcat/configcatlogger'
+require 'configcat/overridedatasource'
+require 'configcat/configservice'
+require 'configcat/evaluationdetails'
 
 
 module ConfigCat
   KeyValue = Struct.new(:key, :value)
   class ConfigCatClient
-    @@sdk_keys = []
+    attr_reader :log, :hooks
 
-    def initialize(sdk_key,
-                   poll_interval_seconds: 60,
-                   max_init_wait_time_seconds: 5,
-                   on_configuration_changed_callback: nil,
-                   cache_time_to_live_seconds: 60,
-                   config_cache_class: nil,
-                   base_url: nil,
-                   proxy_address: nil,
-                   proxy_port: nil,
-                   proxy_user: nil,
-                   proxy_pass: nil,
-                   open_timeout: 10,
-                   read_timeout: 30,
-                   flag_overrides: nil,
-                   data_governance: DataGovernance::GLOBAL)
+    @@lock = Mutex.new
+    @@instances = {}
+
+    # Creates a new or gets an already existing `ConfigCatClient` for the given `sdk_key`.
+    #
+    # :param sdk_key [String] ConfigCat SDK Key to access your configuration.
+    # :param options [ConfigCatOptions] Configuration for `ConfigCatClient`.
+    # :return [ConfigCatClient] the `ConfigCatClient` instance.
+    def self.get(sdk_key, options=nil)
+      @@lock.synchronize do
+        client = @@instances[sdk_key]
+        if client
+          if options
+            client.log.warn("Client for sdk_key `#{sdk_key}` is already created and will be reused; " +
+                            "options passed are being ignored.")
+          end
+          return client
+        end
+
+        options ||= ConfigCatOptions.new
+        client = ConfigCatClient.new(sdk_key, options)
+        @@instances[sdk_key] = client
+        return client
+      end
+    end
+
+    # Closes all ConfigCatClient instances.
+    def self.close_all
+      @@lock.synchronize do
+        @@instances.each do |key, value|
+          value.send(:_close_resources)
+        end
+        @@instances.clear
+      end
+    end
+
+    private def initialize(sdk_key, options=ConfigCatOptions.new)
+      @hooks = options.hooks || Hooks.new
+      @log = ConfigCatLogger.new(@hooks)
+
       if sdk_key === nil
         raise ConfigCatClientException, "SDK Key is required."
       end
 
-      if @@sdk_keys.include?(sdk_key)
-        ConfigCat.logger.warn("A ConfigCat Client is already initialized with sdk_key %s. "\
-                              "We strongly recommend you to use the ConfigCat Client as "\
-                              "a Singleton object in your application." % sdk_key)
-      else
-        @@sdk_keys.push(sdk_key)
-      end
-
       @_sdk_key = sdk_key
-      @_override_data_source = flag_overrides
-
-      if config_cache_class
-        @_config_cache = config_cache_class.new()
+      @_default_user = options.default_user
+      @_rollout_evaluator = RolloutEvaluator.new(@log)
+      if options.flag_overrides
+        @_override_data_source = options.flag_overrides.create_data_source(@log)
       else
-        @_config_cache = InMemoryConfigCache.new()
+        @_override_data_source = nil
       end
 
-      if !@_override_data_source.equal?(nil) && @_override_data_source.get_behaviour() == OverrideBehaviour::LOCAL_ONLY
+      config_cache = options.config_cache.nil? ? NullConfigCache.new : options.config_cache
+
+      if @_override_data_source && @_override_data_source.get_behaviour() == OverrideBehaviour::LOCAL_ONLY
         @_config_fetcher = nil
-        @_cache_policy = nil
-      elsif poll_interval_seconds > 0
-        @_config_fetcher = CacheControlConfigFetcher.new(sdk_key, "a", base_url: base_url,
-                                                         proxy_address: proxy_address, proxy_port: proxy_port, proxy_user: proxy_user, proxy_pass: proxy_pass,
-                                                         open_timeout: open_timeout, read_timeout: read_timeout,
-                                                         data_governance: data_governance)
-        @_cache_policy = AutoPollingCachePolicy.new(@_config_fetcher, @_config_cache, _get_cache_key(), poll_interval_seconds, max_init_wait_time_seconds, on_configuration_changed_callback)
-      elsif cache_time_to_live_seconds > 0
-        @_config_fetcher = CacheControlConfigFetcher.new(sdk_key, "l", base_url: base_url,
-                                                         proxy_address: proxy_address, proxy_port: proxy_port, proxy_user: proxy_user, proxy_pass: proxy_pass,
-                                                         open_timeout: open_timeout, read_timeout: read_timeout,
-                                                         data_governance: data_governance)
-        @_cache_policy = LazyLoadingCachePolicy.new(@_config_fetcher, @_config_cache, _get_cache_key(), cache_time_to_live_seconds)
+        @_config_service = nil
       else
-        @_config_fetcher = CacheControlConfigFetcher.new(sdk_key, "m", base_url: base_url,
-                                                         proxy_address: proxy_address, proxy_port: proxy_port, proxy_user: proxy_user, proxy_pass: proxy_pass,
-                                                         open_timeout: open_timeout, read_timeout: read_timeout,
-                                                         data_governance: data_governance)
-        @_cache_policy = ManualPollingCachePolicy.new(@_config_fetcher, @_config_cache, _get_cache_key())
+        @_config_fetcher = ConfigFetcher.new(@_sdk_key,
+                                            @log,
+                                            options.polling_mode.identifier,
+                                            base_url: options.base_url,
+                                            proxy_address: options.proxy_address,
+                                            proxy_port: options.proxy_port,
+                                            proxy_user: options.proxy_user,
+                                            proxy_pass: options.proxy_pass,
+                                            open_timeout: options.open_timeout_seconds,
+                                            read_timeout: options.read_timeout_seconds,
+                                            data_governance: options.data_governance)
+
+        @_config_service = ConfigService.new(@sdk_key,
+                                             options.polling_mode,
+                                             @hooks,
+                                             @_config_fetcher,
+                                             @log,
+                                             config_cache,
+                                             options.offline)
       end
     end
 
+    # Gets the value of a feature flag or setting identified by the given `key`.
+    #
+    # :param key [String] the identifier of the feature flag or setting.
+    # :param default_value in case of any failure, this value will be returned.
+    # :param user [User] the user object to identify the caller.
+    # :return the value.
     def get_value(key, default_value, user=nil)
-      config = _get_settings()
-      if config === nil
-        ConfigCat.logger.warn("Evaluating get_value('%s') failed. Cache is empty. "\
-                              "Returning default_value in your get_value call: [%s]." % [key, default_value.to_s])
+      settings, fetch_time = _get_settings()
+      if settings.nil?
+        message = "Evaluating get_value('%s') failed. Cache is empty. " \
+                  "Returning default_value in your get_value call: [%s]." % [key, default_value.to_s]
+        @log.error(message)
+        @hooks.invoke_on_flag_evaluated(EvaluationDetails.from_error(key, default_value, error: message))
         return default_value
       end
-      value, variation_id = RolloutEvaluator.evaluate(key, user, default_value, nil, config)
-      return value
+      details = _evaluate(key, user, default_value, nil, settings, fetch_time)
+      return details.value
     end
 
-    def get_all_keys()
-      config = _get_settings()
-      if config === nil
-        return []
+    # Gets the value and evaluation details of a feature flag or setting identified by the given `key`.
+    #
+    # :param key [String] the identifier of the feature flag or setting.
+    # :param default_value in case of any failure, this value will be returned.
+    # :param user [User] the user object to identify the caller.
+    # :return [EvaluationDetails] the evaluation details.
+    def get_value_details(key, default_value, user=nil)
+      settings, fetch_time = _get_settings()
+      if settings.nil?
+        message = "Evaluating get_value_details('%s') failed. Cache is empty. " \
+                  "Returning default_value in your get_value_details call: [%s]." % [key, default_value.to_s]
+        @log.error(message)
+        @hooks.invoke_on_flag_evaluated(EvaluationDetails.from_error(key, default_value, error: message))
+        return default_value
       end
-      feature_flags = config.fetch(FEATURE_FLAGS, nil)
-      if feature_flags === nil
-        return []
-      end
-      return feature_flags.keys
+      details = _evaluate(key, user, default_value, nil, settings, fetch_time)
+      return details
     end
 
+    # Gets all setting keys.
+    #
+    # :return list of keys.
+    def get_all_keys
+      settings, _ = _get_settings()
+      if settings === nil
+        return []
+      end
+      return settings.keys
+    end
+
+    # Gets the Variation ID (analytics) of a feature flag or setting based on it's key.
+    #
+    # :param key [String] the identifier of the feature flag or setting.
+    # :param default_variation_id in case of any failure, this value will be returned.
+    # :param user [User] the user object to identify the caller.
+    # :return the variation ID.
     def get_variation_id(key, default_variation_id, user=nil)
-      config = _get_settings()
-      if config === nil
-        ConfigCat.logger.warn("Evaluating get_variation_id('%s') failed. Cache is empty. "\
-                              "Returning default_variation_id in your get_variation_id call: [%s]." %
-                              [key, default_variation_id.to_s])
+      @log.warn("get_variation_id is deprecated and will be removed in a future major version. "\
+                "Please use [get_value_details] instead.")
+
+      settings, fetch_time = _get_settings()
+      if settings === nil
+        message = "Evaluating get_variation_id('%s') failed. Cache is empty. "\
+                  "Returning default_variation_id in your get_variation_id call: [%s]." %
+                  [key, default_variation_id.to_s]
+        @log.error(message)
+        @hooks.invoke_on_flag_evaluated(EvaluationDetails.from_error(key, nil, error: message,
+                                                                     variation_id: default_variation_id))
         return default_variation_id
       end
-      value, variation_id = RolloutEvaluator.evaluate(key, user, nil, default_variation_id, config)
-      return variation_id
+      details = _evaluate(key, user, nil, default_variation_id, settings, fetch_time)
+      return details.variation_id
     end
 
-    def get_all_variation_ids(user: nil)
+    # Gets the Variation IDs (analytics) of all feature flags or settings.
+    #
+    # :param user [User] the user object to identify the caller.
+    # :return list of variation IDs
+    def get_all_variation_ids(user=nil)
+      @log.warn("get_all_variation_ids is deprecated and will be removed in a future major version. "\
+                "Please use [get_value_details] instead.")
+
       keys = get_all_keys()
       variation_ids = []
       for key in keys
@@ -120,20 +188,18 @@ module ConfigCat
       return variation_ids
     end
 
+    # Gets the key of a setting, and it's value identified by the given Variation ID (analytics)
+    #
+    # :param variation_id [String] variation ID
+    # :return key and value
     def get_key_and_value(variation_id)
-      config = _get_settings()
-      if config === nil
-        ConfigCat.logger.warn("Evaluating get_variation_id('%s') failed. Cache is empty. Returning nil." % variation_id)
+      settings, _ = _get_settings()
+      if settings === nil
+        @log.warn("Evaluating get_key_and_value('%s') failed. Cache is empty. Returning nil." % variation_id)
         return nil
       end
 
-      feature_flags = config.fetch(FEATURE_FLAGS, nil)
-      if feature_flags === nil
-        ConfigCat.logger.warn("Evaluating get_key_and_value('%s') failed. Cache is empty. Returning None." % variation_id)
-        return nil
-      end
-
-      for key, value in feature_flags
+      for key, value in settings
         if variation_id == value.fetch(VARIATION_ID, nil)
           return KeyValue.new(key, value[VALUE])
         end
@@ -152,9 +218,15 @@ module ConfigCat
           end
         end
       end
+
+      @log.error("Could not find the setting for the given variation_id: " + variation_id)
     end
 
-    def get_all_values(user: nil)
+    # Evaluates and returns the values of all feature flags and settings.
+    #
+    # :param user [User] the user object to identify the caller.
+    # :return dictionary of values
+    def get_all_values(user=nil)
       keys = get_all_keys()
       all_values = {}
       for key in keys
@@ -166,46 +238,131 @@ module ConfigCat
       return all_values
     end
 
-    def force_refresh()
-      @_cache_policy.force_refresh()
+    # Gets the values along with evaluation details of all feature flags and settings.
+    #
+    # :param user [User] the user object to identify the caller.
+    # :return list of all evaluation details
+    def get_all_value_details(user=nil)
+      settings, fetch_time = _get_settings()
+      if settings.nil?
+        @log.error("Evaluating get_all_value_details() failed. Cache is empty. Returning empty list.")
+        return []
+      end
+
+      details_result = []
+      for key in settings.keys
+        details = _evaluate(key, user, nil, nil, settings, fetch_time)
+        details_result.push(details)
+      end
+
+      return details_result
     end
 
-    def stop()
-      @_cache_policy.stop() if @_cache_policy
-      @_config_fetcher.close() if @_config_fetcher
-      @@sdk_keys.delete(@_sdk_key)
+    # Initiates a force refresh on the cached configuration.
+    #
+    # :return [RefreshResult]
+    def force_refresh
+      return @_config_service.refresh if @_config_service
+
+      return RefreshResult(false,
+                           "The SDK uses the LocalOnly flag override behavior which prevents making HTTP requests.")
+    end
+
+    # Sets the default user.
+    #
+    # :param user [User] the user object to identify the caller.
+    def set_default_user(user)
+      @_default_user = user
+    end
+
+    # Sets the default user to nil.
+    def clear_default_user
+      @_default_user = nil
+    end
+
+    # Configures the SDK to allow HTTP requests.
+    def set_online
+      @_config_service.set_online if @_config_service
+      @log.debug('Switched to ONLINE mode.')
+    end
+
+    # Configures the SDK to not initiate HTTP requests and work only from its cache.
+    def set_offline
+      @_config_service.set_offline if @_config_service
+      @log.debug('Switched to OFFLINE mode.')
+    end
+
+    # Returns true when the SDK is configured not to initiate HTTP requests, otherwise false.
+    def offline?
+      return @_config_service ? @_config_service.offline? : true
+    end
+
+    # Closes the underlying resources.
+    def close
+      @@lock.synchronize do
+        _close_resources
+        @@instances.delete(@_sdk_key)
+      end
     end
 
     private
 
-    def _get_settings()
+    def _close_resources
+      @_config_service.close if @_config_service
+      @_config_fetcher.close if @_config_fetcher
+      @hooks.clear
+    end
+
+    def _get_settings
       if !@_override_data_source.nil?
         behaviour = @_override_data_source.get_behaviour()
         if behaviour == OverrideBehaviour::LOCAL_ONLY
-          return @_override_data_source.get_overrides()
+          return @_override_data_source.get_overrides(), Utils::DISTANT_PAST
         elsif behaviour == OverrideBehaviour::REMOTE_OVER_LOCAL
-          remote_settings = @_cache_policy.get()
+          remote_settings, fetch_time = @_config_service.get_settings()
           local_settings = @_override_data_source.get_overrides()
+          remote_settings ||= {}
+          local_settings ||= {}
           result = local_settings.clone()
-          if remote_settings.key?(FEATURE_FLAGS) && local_settings.key?(FEATURE_FLAGS)
-            result[FEATURE_FLAGS] = result[FEATURE_FLAGS].merge(remote_settings[FEATURE_FLAGS])
-          end
-          return result
+          result.update(remote_settings)
+          return result, fetch_time
         elsif behaviour == OverrideBehaviour::LOCAL_OVER_REMOTE
-          remote_settings = @_cache_policy.get()
+          remote_settings, fetch_time = @_config_service.get_settings()
           local_settings = @_override_data_source.get_overrides()
+          remote_settings ||= {}
+          local_settings ||= {}
           result = remote_settings.clone()
-          if remote_settings.key?(FEATURE_FLAGS) && local_settings.key?(FEATURE_FLAGS)
-            result[FEATURE_FLAGS] = result[FEATURE_FLAGS].merge(local_settings[FEATURE_FLAGS])
-          end
-          return result
+          result.update(local_settings)
+          return result, fetch_time
         end
       end
-      return @_cache_policy.get()
+      return @_config_service.get_settings()
     end
 
-    def _get_cache_key()
+    def _get_cache_key
       return Digest::SHA1.hexdigest("ruby_" + CONFIG_FILE_NAME + "_" + @_sdk_key)
+    end
+
+    def _evaluate(key, user, default_value, default_variation_id, settings, fetch_time)
+      user = user || @_default_user
+      value, variation_id, rule, percentage_rule, error = @_rollout_evaluator.evaluate(
+          key: key,
+          user: user,
+          default_value: default_value,
+          default_variation_id: default_variation_id,
+          settings: settings)
+
+      details = EvaluationDetails.new(key: key,
+                                      value: value,
+                                      variation_id: variation_id,
+                                      fetch_time: !fetch_time.nil? ? Time.at(fetch_time).utc : nil,
+                                      user: user,
+                                      is_default_value: error.nil? || error.empty? ? false : true,
+                                      error: error,
+                                      matched_evaluation_rule: rule,
+                                      matched_evaluation_percentage_rule: percentage_rule)
+      @hooks.invoke_on_flag_evaluated(details)
+      return details
     end
 
   end

@@ -39,7 +39,7 @@ RSpec.describe 'Rollout test', type: :feature do
     setting_keys = header.split(";")[4..-1]
     custom_key = header.split(";")[3]
     content.shift()
-    client = ConfigCat.create_client(sdk_key)
+    client = ConfigCat.get(sdk_key)
     errors = ""
     for line in content
       user_descriptor = line.rstrip().split(";")
@@ -70,13 +70,13 @@ RSpec.describe 'Rollout test', type: :feature do
       end
     end
     expect(errors).to eq ""
-    client.stop()
+    client.close()
   end
 
   it "test wrong user object" do
-    client = ConfigCat.create_client("PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A")
+    client = ConfigCat.get("PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A")
     setting_value = client.get_value("stringContainsDogDefaultCat", "Lion", {"Email" => "a@configcat.com"})
     expect(setting_value).to eq "Cat"
-    client.stop()
+    ConfigCat.close_all()
   end
 end

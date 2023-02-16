@@ -7,36 +7,34 @@ module ConfigCat
   class RolloutEvaluator
     COMPARATOR_TEXTS = ["IS ONE OF", "IS NOT ONE OF", "CONTAINS", "DOES NOT CONTAIN", "IS ONE OF (SemVer)", "IS NOT ONE OF (SemVer)", "< (SemVer)", "<= (SemVer)", "> (SemVer)", ">= (SemVer)", "= (Number)", "<> (Number)", "< (Number)", "<= (Number)", "> (Number)", ">= (Number)"]
 
-    def self.evaluate(key, user, default_value, default_variation_id, config)
-      ConfigCat.logger.info("Evaluating get_value('%s')." % key)
+    def initialize(log)
+      @log = log
+    end
 
-      feature_flags = config.fetch(FEATURE_FLAGS, nil)
-      if feature_flags === nil
-        ConfigCat.logger.error("Evaluating get_value('%s') failed. Value not found for key '%s' Returning default_value: [%s]." % [key, key, default_value.to_s])
-        return default_value, default_variation_id
-      end
-
-      setting_descriptor = feature_flags.fetch(key, nil)
+    # :returns value, variation_id. matched_evaluation_rule, matched_evaluation_percentage_rule, error
+    def evaluate(key:, user:, default_value:, default_variation_id:, settings:)
+      setting_descriptor = settings[key]
       if setting_descriptor === nil
-        ConfigCat.logger.error("Evaluating get_value('%s') failed. Value not found for key '%s'. Returning default_value: [%s]. Here are the available keys: %s" % [key, key, default_value.to_s, feature_flags.keys.join(", ")])
-        return default_value, default_variation_id
+        error = "Evaluating get_value('%s') failed. Value not found for key '%s'. Returning default_value: [%s]. Here are the available keys: %s" % [key, key, default_value.to_s, settings.keys.join(", ")]
+        @log.error(error)
+        return default_value, default_variation_id, nil, nil, error
       end
 
       rollout_rules = setting_descriptor.fetch(ROLLOUT_RULES, [])
       rollout_percentage_items = setting_descriptor.fetch(ROLLOUT_PERCENTAGE_ITEMS, [])
 
       if !user.equal?(nil) && !user.class.equal?(User)
-        ConfigCat.logger.warn("Evaluating get_value('%s'). User Object is not an instance of User type." % key)
+        @log.warn("Evaluating get_value('%s'). User Object is not an instance of User type." % key)
         user = nil
       end
       if user === nil
         if rollout_rules.size > 0 || rollout_percentage_items.size > 0
-          ConfigCat.logger.warn("Evaluating get_value('%s'). UserObject missing! You should pass a UserObject to get_value(), in order to make targeting work properly. Read more: https://configcat.com/docs/advanced/user-object/" % key)
+          @log.warn("Evaluating get_value('%s'). UserObject missing! You should pass a UserObject to get_value(), in order to make targeting work properly. Read more: https://configcat.com/docs/advanced/user-object/" % key)
         end
         return_value = setting_descriptor.fetch(VALUE, default_value)
         return_variation_id = setting_descriptor.fetch(VARIATION_ID, default_variation_id)
-        ConfigCat.logger.info("Returning [%s]" % return_value.to_s)
-        return return_value, return_variation_id
+        @log.info("Returning [%s]" % return_value.to_s)
+        return return_value, return_variation_id, nil, nil, nil
       end
 
       log_entries = ["Evaluating get_value('%s')." % key, "User object:\n%s" % user.to_s]
@@ -61,25 +59,25 @@ module ConfigCat
           if comparator == 0
             if comparison_value.to_s.split(",").map { |x| x.strip() }.include?(user_value.to_s)
               log_entries.push(format_match_rule(comparison_attribute, user_value, comparator, comparison_value, value))
-              return value, variation_id
+              return value, variation_id, rollout_rule, nil, nil
             end
           # IS NOT ONE OF
           elsif comparator == 1
             if !comparison_value.to_s.split(",").map { |x| x.strip() }.include?(user_value.to_s)
               log_entries.push(format_match_rule(comparison_attribute, user_value, comparator, comparison_value, value))
-              return value, variation_id
+              return value, variation_id, rollout_rule, nil, nil
             end
           # CONTAINS
           elsif comparator == 2
             if user_value.to_s.include?(comparison_value.to_s)
               log_entries.push(format_match_rule(comparison_attribute, user_value, comparator, comparison_value, value))
-              return value, variation_id
+              return value, variation_id, rollout_rule, nil, nil
             end
           # DOES NOT CONTAIN
           elsif comparator == 3
             if !user_value.to_s.include?(comparison_value.to_s)
               log_entries.push(format_match_rule(comparison_attribute, user_value, comparator, comparison_value, value))
-              return value, variation_id
+              return value, variation_id, rollout_rule, nil, nil
             end
           # IS ONE OF, IS NOT ONE OF (Semantic version)
           elsif (4 <= comparator) && (comparator <= 5)
@@ -92,11 +90,11 @@ module ConfigCat
               }
               if match && comparator == 4 || !match && comparator == 5
                 log_entries.push(format_match_rule(comparison_attribute, user_value, comparator, comparison_value, value))
-                return value, variation_id
+                return value, variation_id, rollout_rule, nil, nil
               end
             rescue ArgumentError => e
               message = format_validation_error_rule(comparison_attribute, user_value, comparator, comparison_value, e.to_s)
-              ConfigCat.logger.warn(message)
+              @log.warn(message)
               log_entries.push(message)
               next
             end
@@ -110,11 +108,11 @@ module ConfigCat
                  (comparator == 8 && user_value_version > comparison_value_version) ||
                  (comparator == 9 && user_value_version >= comparison_value_version)
                 log_entries.push(format_match_rule(comparison_attribute, user_value, comparator, comparison_value, value))
-                return value, variation_id
+                return value, variation_id, rollout_rule, nil, nil
               end
             rescue ArgumentError => e
               message = format_validation_error_rule(comparison_attribute, user_value, comparator, comparison_value, e.to_s)
-              ConfigCat.logger.warn(message)
+              @log.warn(message)
               log_entries.push(message)
               next
             end
@@ -129,11 +127,11 @@ module ConfigCat
                  (comparator == 14 && user_value_float > comparison_value_float) ||
                  (comparator == 15 && user_value_float >= comparison_value_float)
                 log_entries.push(format_match_rule(comparison_attribute, user_value, comparator, comparison_value, value))
-                return value, variation_id
+                return value, variation_id, rollout_rule, nil, nil
               end
             rescue Exception => e
               message = format_validation_error_rule(comparison_attribute, user_value, comparator, comparison_value, e.to_s)
-              ConfigCat.logger.warn(message)
+              @log.warn(message)
               log_entries.push(message)
               next
             end
@@ -141,13 +139,13 @@ module ConfigCat
           elsif comparator == 16
             if comparison_value.to_s.split(",").map { |x| x.strip() }.include?(Digest::SHA1.hexdigest(user_value).to_s)
               log_entries.push(format_match_rule(comparison_attribute, user_value, comparator, comparison_value, value))
-              return value, variation_id
+              return value, variation_id, rollout_rule, nil, nil
             end
           # IS NOT ONE OF (Sensitive)
           elsif comparator == 17
             if !comparison_value.to_s.split(",").map { |x| x.strip() }.include?(Digest::SHA1.hexdigest(user_value).to_s)
               log_entries.push(format_match_rule(comparison_attribute, user_value, comparator, comparison_value, value))
-              return value, variation_id
+              return value, variation_id, rollout_rule, nil, nil
             end
           end
           log_entries.push(format_no_match_rule(comparison_attribute, user_value, comparator, comparison_value))
@@ -164,30 +162,30 @@ module ConfigCat
               percentage_value = rollout_percentage_item.fetch(VALUE, nil)
               variation_id = rollout_percentage_item.fetch(VARIATION_ID, default_variation_id)
               log_entries.push("Evaluating %% options. Returning %s" % percentage_value)
-              return percentage_value, variation_id
+              return percentage_value, variation_id, nil, rollout_percentage_item, nil
             end
           end
         end
         return_value = setting_descriptor.fetch(VALUE, default_value)
         return_variation_id = setting_descriptor.fetch(VARIATION_ID, default_variation_id)
         log_entries.push("Returning %s" % return_value)
-        return return_value, return_variation_id
+        return return_value, return_variation_id, nil, nil, nil
       ensure
-        ConfigCat.logger.info(log_entries.join("\n"))
+        @log.info(log_entries.join("\n"))
       end
     end
 
     private
 
-    def self.format_match_rule(comparison_attribute, user_value, comparator, comparison_value, value)
+    def format_match_rule(comparison_attribute, user_value, comparator, comparison_value, value)
       return "Evaluating rule: [%s:%s] [%s] [%s] => match, returning: %s" % [comparison_attribute, user_value, COMPARATOR_TEXTS[comparator], comparison_value, value]
     end
 
-    def self.format_no_match_rule(comparison_attribute, user_value, comparator, comparison_value)
+    def format_no_match_rule(comparison_attribute, user_value, comparator, comparison_value)
       return "Evaluating rule: [%s:%s] [%s] [%s] => no match" % [comparison_attribute, user_value, COMPARATOR_TEXTS[comparator], comparison_value]
     end
 
-    def self.format_validation_error_rule(comparison_attribute, user_value, comparator, comparison_value, error)
+    def format_validation_error_rule(comparison_attribute, user_value, comparator, comparison_value, error)
       return "Evaluating rule: [%s:%s] [%s] [%s] => SKIP rule. Validation error: %s" % [comparison_attribute, user_value, COMPARATOR_TEXTS[comparator], comparison_value, error]
     end
 

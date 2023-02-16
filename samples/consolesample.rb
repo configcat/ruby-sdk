@@ -5,7 +5,7 @@ require 'configcat'
 ConfigCat.logger.level = Logger::INFO
 
 # Initialize the ConfigCatClient with an SDK Key.
-client = ConfigCat.create_client("PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A")
+client = ConfigCat.get("PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A")
 
 # In the project there is a 'keySampleText' setting with the following rules:
 # 1. If the User's country is Hungary, the value should be 'Dog'
@@ -37,4 +37,4 @@ puts("'keySampleText' value from ConfigCat: " + my_setting_value.to_s)
 my_setting_not_exists = client.get_value("myKeyNotExists", "default value")
 puts("'myKeyNotExists' value from ConfigCat: " + my_setting_not_exists.to_s)
 
-client.stop()
+client.close
