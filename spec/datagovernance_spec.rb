@@ -15,12 +15,12 @@ RSpec.describe 'Data governance tests', type: :feature do
     json = '{ "p": { "u": "%s", "r": %d }, "f": %s }' % [response_uri, redirect, FEATURE_TEST_JSON]
     WebMock.stub_request(:get, request_uri)
       .with(
-          body: "",
-          headers: {
-              'Accept' => '*/*',
-              'Content-Type' => 'application/json',
-              'Accept-Encoding' => 'gzip;q=1.0,deflate;q=0.6,identity;q=0.3'
-          }
+        body: "",
+        headers: {
+            'Accept' => '*/*',
+            'Content-Type' => 'application/json',
+            'Accept-Encoding' => 'gzip;q=1.0,deflate;q=0.6,identity;q=0.3'
+        }
       )
       .to_return(status: 200, body: json, headers: {})
   end
@@ -93,7 +93,7 @@ RSpec.describe 'Data governance tests', type: :feature do
     global_to_eu_only_stub = stub_request(URI_GLOBAL, ConfigCat::BASE_URL_EU_ONLY, 1)
     eu_only_stub = stub_request(URI_EU_ONLY, ConfigCat::BASE_URL_EU_ONLY, 0)
 
-    fetcher = ConfigCat::ConfigFetcher.new("", ConfigCat.logger,"m",
+    fetcher = ConfigCat::ConfigFetcher.new("", ConfigCat.logger, "m",
                                            data_governance: ConfigCat::DataGovernance::GLOBAL)
     # First fetch
     fetch_response = fetcher.get_configuration

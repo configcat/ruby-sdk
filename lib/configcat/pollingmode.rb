@@ -1,7 +1,5 @@
 module ConfigCat
-
   class PollingMode
-
     # Creates a configured auto polling configuration.
     #
     # :param poll_interval_seconds: sets at least how often this policy should fetch the latest configuration and refresh the cache.
@@ -61,5 +59,4 @@ module ConfigCat
       return "m"
     end
   end
-
 end

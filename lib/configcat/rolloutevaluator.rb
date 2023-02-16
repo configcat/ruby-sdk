@@ -154,7 +154,7 @@ module ConfigCat
         if rollout_percentage_items.size > 0
           user_key = user.get_identifier()
           hash_candidate = ("%s%s" % [key, user_key]).encode("utf-8")
-          hash_val = Digest::SHA1.hexdigest(hash_candidate)[0...7].to_i(base=16) % 100
+          hash_val = Digest::SHA1.hexdigest(hash_candidate)[0...7].to_i(base = 16) % 100
           bucket = 0
           for rollout_percentage_item in rollout_percentage_items || []
             bucket += rollout_percentage_item.fetch(PERCENTAGE, 0)
@@ -188,8 +188,5 @@ module ConfigCat
     def format_validation_error_rule(comparison_attribute, user_value, comparator, comparison_value, error)
       return "Evaluating rule: [%s:%s] [%s] [%s] => SKIP rule. Validation error: %s" % [comparison_attribute, user_value, COMPARATOR_TEXTS[comparator], comparison_value, error]
     end
-
   end
-
 end
-

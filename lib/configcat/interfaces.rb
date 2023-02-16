@@ -1,8 +1,6 @@
 module ConfigCat
-
   # Config cache interface
   class ConfigCache
-
     # :returns the config json object from the cache
     def get(key)
     end
@@ -15,5 +13,4 @@ module ConfigCat
   # Generic ConfigCatClientException
   class ConfigCatClientException < Exception
   end
-
 end

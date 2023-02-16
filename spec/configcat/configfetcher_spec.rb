@@ -28,14 +28,14 @@ RSpec.describe ConfigCat::ConfigFetcher do
     uri_template = Addressable::Template.new "https://{base_url}/{base_path}/{api_key}/{base_ext}"
     WebMock.stub_request(:get, uri_template)
         .with(
-            body: "",
-            headers: {
-                'Accept' => '*/*',
-                'Content-Type' => 'application/json',
-                'Accept-Encoding' => 'gzip;q=1.0,deflate;q=0.6,identity;q=0.3'
-            }
+          body: "",
+          headers: {
+              'Accept' => '*/*',
+              'Content-Type' => 'application/json',
+              'Accept-Encoding' => 'gzip;q=1.0,deflate;q=0.6,identity;q=0.3'
+          }
         )
-        .to_return(status: 200, body: TEST_JSON, headers: {"ETag" => etag})
+        .to_return(status: 200, body: TEST_JSON, headers: { "ETag" => etag })
     log = ConfigCatLogger.new(Hooks.new)
     fetcher = ConfigCat::ConfigFetcher.new("", log, "m")
     fetch_response = fetcher.get_configuration()
@@ -45,15 +45,15 @@ RSpec.describe ConfigCat::ConfigFetcher do
 
     WebMock.stub_request(:get, uri_template)
         .with(
-            body: "",
-            headers: {
-                'Accept' => '*/*',
-                'Content-Type' => 'application/json',
-                'Accept-Encoding' => 'gzip;q=1.0,deflate;q=0.6,identity;q=0.3',
-                'If-None-Match' => etag
-            }
+          body: "",
+          headers: {
+              'Accept' => '*/*',
+              'Content-Type' => 'application/json',
+              'Accept-Encoding' => 'gzip;q=1.0,deflate;q=0.6,identity;q=0.3',
+              'If-None-Match' => etag
+          }
         )
-        .to_return(status: 304, body: "", headers: {"ETag" => etag})
+        .to_return(status: 304, body: "", headers: { "ETag" => etag })
     fetch_response = fetcher.get_configuration(etag)
     expect(fetch_response.is_fetched()).to be false
     expect(fetch_response.is_not_modified()).to be true

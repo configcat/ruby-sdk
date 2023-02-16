@@ -6,7 +6,6 @@ require 'configcat/user'
 require 'logger'
 
 module ConfigCat
-
   @logger = Logger.new(STDOUT, level: Logger::WARN)
   class << self
     attr_accessor :logger
@@ -17,7 +16,7 @@ module ConfigCat
   # :param sdk_key [String] ConfigCat SDK Key to access your configuration.
   # :param options [ConfigCatOptions] Configuration `ConfigCatOptions` for `ConfigCatClient`.
   # :return [ConfigCatClient] the `ConfigCatClient` instance.
-  def ConfigCat.get(sdk_key, options=nil)
+  def ConfigCat.get(sdk_key, options = nil)
     return ConfigCatClient.get(sdk_key, options)
   end
 
@@ -185,5 +184,4 @@ module ConfigCat
     client.log.warn('create_client_with_manual_poll is deprecated. Create the ConfigCat Client as a Singleton object with `configcatclient.get()` instead')
     return client
   end
-
 end

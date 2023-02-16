@@ -61,7 +61,7 @@ RSpec.describe "ManualPollingCachePolicy" do
 
   it "test_cache" do
     stub_request = WebMock.stub_request(:get, Regexp.new('https://.*'))
-                     .to_return(status: 200, body: TEST_JSON_FORMAT % {value: '"test"'}, headers: {})
+                          .to_return(status: 200, body: TEST_JSON_FORMAT % { value: '"test"' }, headers: {})
 
     polling_mode = PollingMode.manual_poll
     config_fetcher = ConfigFetcher.new("", ConfigCat.logger, polling_mode.identifier())
@@ -75,7 +75,7 @@ RSpec.describe "ManualPollingCachePolicy" do
     expect(config_cache.value.length).to eq 1
 
     WebMock.stub_request(:get, Regexp.new('https://.*'))
-           .to_return(status: 200, body: TEST_JSON_FORMAT % {value: '"test2"'}, headers: {})
+           .to_return(status: 200, body: TEST_JSON_FORMAT % { value: '"test2"' }, headers: {})
 
     cache_policy.refresh
     settings, _ = cache_policy.get_settings

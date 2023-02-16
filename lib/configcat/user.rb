@@ -1,5 +1,4 @@
 module ConfigCat
-
   #    The user object for variation evaluation
   class User
     PREDEFINED = ["Identifier", "Email", "Country"]
@@ -8,7 +7,7 @@ module ConfigCat
 
     def initialize(identifier, email: nil, country: nil, custom: nil)
       @identifier = (!identifier.equal?(nil)) ? identifier : ""
-      @data = { "Identifier" => identifier, "Email" => email, "Country" => country}
+      @data = { "Identifier" => identifier, "Email" => email, "Country" => country }
       @custom = custom
     end
 
@@ -33,5 +32,4 @@ module ConfigCat
       return dump.to_json
     end
   end
-
 end

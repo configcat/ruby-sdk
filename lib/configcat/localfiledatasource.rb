@@ -44,7 +44,7 @@ module ConfigCat
             @_settings = {}
             source = data["flags"]
             source.each do |key, value|
-              @_settings[key] = {VALUE => value}
+              @_settings[key] = { VALUE => value }
             end
           else
             @_settings = data[FEATURE_FLAGS]

@@ -32,7 +32,7 @@ RSpec.describe 'Rollout test', type: :feature do
     script_dir = File.dirname(__FILE__)
     file_path = File.join(script_dir, file_path)
     content = ""
-    open(file_path, "r") {|f|
+    open(file_path, "r") { |f|
       content = f.readlines()
     }
     header = content[0].rstrip()
@@ -56,7 +56,7 @@ RSpec.describe 'Rollout test', type: :feature do
           country = user_descriptor[2]
         end
         if !user_descriptor[3].equal?(nil) && user_descriptor[3] != "" && user_descriptor[3] != "##null##"
-          custom = {custom_key => user_descriptor[3]}
+          custom = { custom_key => user_descriptor[3] }
         end
         user_object = ConfigCat::User.new(identifier, email: email, country: country, custom: custom)
       end
@@ -75,7 +75,7 @@ RSpec.describe 'Rollout test', type: :feature do
 
   it "test wrong user object" do
     client = ConfigCat.get("PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A")
-    setting_value = client.get_value("stringContainsDogDefaultCat", "Lion", {"Email" => "a@configcat.com"})
+    setting_value = client.get_value("stringContainsDogDefaultCat", "Lion", { "Email" => "a@configcat.com" })
     expect(setting_value).to eq "Cat"
     ConfigCat.close_all()
   end

@@ -12,12 +12,12 @@ RSpec.describe 'Override test', type: :feature do
     json = '{"f": {"fakeKey": {"v": false} } }'
     WebMock.stub_request(:get, uri_template)
         .with(
-            body: "",
-            headers: {
-                'Accept' => '*/*',
-                'Content-Type' => 'application/json',
-                'Accept-Encoding' => 'gzip;q=1.0,deflate;q=0.6,identity;q=0.3'
-            }
+          body: "",
+          headers: {
+              'Accept' => '*/*',
+              'Content-Type' => 'application/json',
+              'Accept-Encoding' => 'gzip;q=1.0,deflate;q=0.6,identity;q=0.3'
+          }
         )
         .to_return(status: 200, body: json, headers: {})
   end
@@ -71,7 +71,7 @@ RSpec.describe 'Override test', type: :feature do
 
   it "test reload file" do
     temp = Tempfile.new("test-simple")
-    dictionary = {"flags" => {"enabledFeature" => false}}
+    dictionary = { "flags" => { "enabledFeature" => false } }
     begin
       temp.write(dictionary.to_json)
       temp.flush

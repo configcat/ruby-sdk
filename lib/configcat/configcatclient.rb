@@ -23,7 +23,7 @@ module ConfigCat
     # :param sdk_key [String] ConfigCat SDK Key to access your configuration.
     # :param options [ConfigCatOptions] Configuration for `ConfigCatClient`.
     # :return [ConfigCatClient] the `ConfigCatClient` instance.
-    def self.get(sdk_key, options=nil)
+    def self.get(sdk_key, options = nil)
       @@lock.synchronize do
         client = @@instances[sdk_key]
         if client
@@ -51,7 +51,7 @@ module ConfigCat
       end
     end
 
-    private def initialize(sdk_key, options=ConfigCatOptions.new)
+    private def initialize(sdk_key, options = ConfigCatOptions.new)
       @hooks = options.hooks || Hooks.new
       @log = ConfigCatLogger.new(@hooks)
 
@@ -102,7 +102,7 @@ module ConfigCat
     # :param default_value in case of any failure, this value will be returned.
     # :param user [User] the user object to identify the caller.
     # :return the value.
-    def get_value(key, default_value, user=nil)
+    def get_value(key, default_value, user = nil)
       settings, fetch_time = _get_settings()
       if settings.nil?
         message = "Evaluating get_value('%s') failed. Cache is empty. " \
@@ -121,7 +121,7 @@ module ConfigCat
     # :param default_value in case of any failure, this value will be returned.
     # :param user [User] the user object to identify the caller.
     # :return [EvaluationDetails] the evaluation details.
-    def get_value_details(key, default_value, user=nil)
+    def get_value_details(key, default_value, user = nil)
       settings, fetch_time = _get_settings()
       if settings.nil?
         message = "Evaluating get_value_details('%s') failed. Cache is empty. " \
@@ -151,7 +151,7 @@ module ConfigCat
     # :param default_variation_id in case of any failure, this value will be returned.
     # :param user [User] the user object to identify the caller.
     # :return the variation ID.
-    def get_variation_id(key, default_variation_id, user=nil)
+    def get_variation_id(key, default_variation_id, user = nil)
       @log.warn("get_variation_id is deprecated and will be removed in a future major version. "\
                 "Please use [get_value_details] instead.")
 
@@ -173,7 +173,7 @@ module ConfigCat
     #
     # :param user [User] the user object to identify the caller.
     # :return list of variation IDs
-    def get_all_variation_ids(user=nil)
+    def get_all_variation_ids(user = nil)
       @log.warn("get_all_variation_ids is deprecated and will be removed in a future major version. "\
                 "Please use [get_value_details] instead.")
 
@@ -226,7 +226,7 @@ module ConfigCat
     #
     # :param user [User] the user object to identify the caller.
     # :return dictionary of values
-    def get_all_values(user=nil)
+    def get_all_values(user = nil)
       keys = get_all_keys()
       all_values = {}
       for key in keys
@@ -242,7 +242,7 @@ module ConfigCat
     #
     # :param user [User] the user object to identify the caller.
     # :return list of all evaluation details
-    def get_all_value_details(user=nil)
+    def get_all_value_details(user = nil)
       settings, fetch_time = _get_settings()
       if settings.nil?
         @log.error("Evaluating get_all_value_details() failed. Cache is empty. Returning empty list.")
@@ -346,11 +346,11 @@ module ConfigCat
     def _evaluate(key, user, default_value, default_variation_id, settings, fetch_time)
       user = user || @_default_user
       value, variation_id, rule, percentage_rule, error = @_rollout_evaluator.evaluate(
-          key: key,
-          user: user,
-          default_value: default_value,
-          default_variation_id: default_variation_id,
-          settings: settings)
+        key: key,
+        user: user,
+        default_value: default_value,
+        default_variation_id: default_variation_id,
+        settings: settings)
 
       details = EvaluationDetails.new(key: key,
                                       value: value,
@@ -364,6 +364,5 @@ module ConfigCat
       @hooks.invoke_on_flag_evaluated(details)
       return details
     end
-
   end
 end

@@ -2,7 +2,6 @@ require 'configcat/datagovernance'
 require 'configcat/pollingmode'
 
 module ConfigCat
-
   class Hooks
     #
     #    Events fired by [ConfigCatClient].
@@ -151,5 +150,4 @@ module ConfigCat
       @offline = offline
     end
   end
-
 end

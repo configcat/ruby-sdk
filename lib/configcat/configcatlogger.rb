@@ -1,5 +1,4 @@
 module ConfigCat
-
   class ConfigCatLogger
     def initialize(hooks)
       @hooks = hooks
@@ -22,5 +21,4 @@ module ConfigCat
       ConfigCat.logger.error(message)
     end
   end
-
 end

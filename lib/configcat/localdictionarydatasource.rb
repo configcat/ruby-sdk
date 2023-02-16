@@ -19,7 +19,7 @@ module ConfigCat
       super(override_behaviour)
       @_settings = {}
       source.each do |key, value|
-        @_settings[key] = {VALUE => value}
+        @_settings[key] = { VALUE => value }
       end
     end
 

@@ -18,7 +18,7 @@ my_setting_value = client.get_value("keySampleText", "default value", ConfigCat:
 puts("'keySampleText' value from ConfigCat: " + my_setting_value.to_s)
 
 # 2. As the passed User's custom attribute - SubscriptionType - is unlimited this will print 'Lion'
-my_setting_value = client.get_value("keySampleText", "default value", ConfigCat::User.new("key", custom: {"SubscriptionType" => "unlimited"}))
+my_setting_value = client.get_value("keySampleText", "default value", ConfigCat::User.new("key", custom: { "SubscriptionType" => "unlimited" }))
 puts("'keySampleText' value from ConfigCat: " + my_setting_value.to_s)
 
 # 3/a. As the passed User doesn't fill in any rules, this will serve 'Falcon' or 'Horse'.
