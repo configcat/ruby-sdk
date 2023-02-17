@@ -5,7 +5,6 @@ require 'configcat/refreshresult'
 
 
 module ConfigCat
-
   class ConfigService
     def initialize(sdk_key, polling_mode, hooks, config_fetcher, log, config_cache, is_offline)
       @sdk_key = sdk_key
@@ -166,7 +165,7 @@ module ConfigCat
 
     def start_poll
       @started = Concurrent::Event.new
-      @thread = Thread.new{run()}
+      @thread = Thread.new { run() }
       @started.wait()
     end
 
@@ -209,7 +208,5 @@ module ConfigCat
         @log.error("An error occurred during the cache write. #{e}")
       end
     end
-
   end
-
 end

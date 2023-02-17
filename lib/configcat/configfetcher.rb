@@ -67,9 +67,9 @@ module ConfigCat
   end
 
   class ConfigFetcher
-    def initialize(sdk_key, log, mode, base_url:nil, proxy_address:nil, proxy_port:nil, proxy_user:nil, proxy_pass:nil,
-                   open_timeout:10, read_timeout:30,
-                   data_governance:DataGovernance::GLOBAL)
+    def initialize(sdk_key, log, mode, base_url: nil, proxy_address: nil, proxy_port: nil, proxy_user: nil, proxy_pass: nil,
+                   open_timeout: 10, read_timeout: 30,
+                   data_governance: DataGovernance::GLOBAL)
       @_sdk_key = sdk_key
       @log = log
       @_proxy_address = proxy_address
@@ -78,7 +78,7 @@ module ConfigCat
       @_proxy_pass = proxy_pass
       @_open_timeout = open_timeout
       @_read_timeout = read_timeout
-      @_headers = {"User-Agent" => ((("ConfigCat-Ruby/") + mode) + ("-")) + VERSION, "X-ConfigCat-UserAgent" => ((("ConfigCat-Ruby/") + mode) + ("-")) + VERSION, "Content-Type" => "application/json"}
+      @_headers = { "User-Agent" => ((("ConfigCat-Ruby/") + mode) + ("-")) + VERSION, "X-ConfigCat-UserAgent" => ((("ConfigCat-Ruby/") + mode) + ("-")) + VERSION, "Content-Type" => "application/json" }
       if !base_url.equal?(nil)
         @_base_url_overridden = true
         @_base_url = base_url.chomp("/")
@@ -92,11 +92,11 @@ module ConfigCat
       end
     end
 
-    def get_open_timeout()
+    def get_open_timeout
       return @_open_timeout
     end
 
-    def get_read_timeout()
+    def get_read_timeout
       return @_read_timeout
     end
 

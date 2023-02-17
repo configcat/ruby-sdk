@@ -47,10 +47,12 @@ class FetchResponseMock
   def initialize(json)
     @json = json
   end
-  def json()
+
+  def json
     return @json
   end
-  def is_fetched()
+
+  def is_fetched
     return true
   end
 end
@@ -63,7 +65,7 @@ class ConfigFetcherMock
     @_etag = "test_etag"
   end
 
-  def get_configuration(etag="")
+  def get_configuration(etag = "")
     @_call_count += 1
     if etag != @_etag
       @_fetch_count += 1
@@ -125,7 +127,7 @@ class ConfigFetcherCountMock
 
   def get_configuration(*)
     @_value += 1
-    config = JSON.parse(TEST_JSON_FORMAT % {value: @_value})
+    config = JSON.parse(TEST_JSON_FORMAT % { value: @_value })
     return FetchResponse.success(ConfigEntry.new(config))
   end
 
@@ -135,8 +137,9 @@ end
 
 class ConfigCacheMock < ConfigCache
   def get(key)
-    return JSON.dump({ConfigEntry::CONFIG => TEST_OBJECT, ConfigEntry::ETAG  => 'test-etag' })
+    return JSON.dump({ ConfigEntry::CONFIG => TEST_OBJECT, ConfigEntry::ETAG => 'test-etag' })
   end
+
   def set(key, value)
   end
 end

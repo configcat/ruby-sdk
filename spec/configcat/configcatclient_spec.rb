@@ -76,7 +76,7 @@ RSpec.describe ConfigCat::ConfigCatClient do
     all_values = client.get_all_values()
     expect(all_values.size).to eq 6
     expect(all_values["testBoolKey"]).to eq true
-    expect(all_values["testStringKey"]).to eq  "testValue"
+    expect(all_values["testStringKey"]).to eq "testValue"
     expect(all_values["testIntKey"]).to eq 1
     expect(all_values["testDoubleKey"]).to eq 1.1
     expect(all_values["key1"]).to eq true
