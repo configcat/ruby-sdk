@@ -35,6 +35,6 @@ module ConfigCat
       }
     end
 
-    EMPTY = ConfigEntry.new
+    EMPTY = ConfigEntry.new(etag: 'empty')
   end
 end
