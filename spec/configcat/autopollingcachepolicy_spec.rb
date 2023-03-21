@@ -9,7 +9,9 @@ RSpec.describe "AutoPollingCachePolicy" do
                                          max_init_wait_time_seconds: -1)
     config_fetcher = ConfigFetcherMock.new
     config_cache = NullConfigCache.new
-    cache_policy = ConfigService.new("", polling_mode, Hooks.new, config_fetcher, ConfigCat.logger, config_cache, false)
+    hooks = Hooks.new
+    logger = ConfigCatLogger.new(hooks)
+    cache_policy = ConfigService.new("", polling_mode, hooks, config_fetcher, logger, config_cache, false)
     sleep(2)
     settings, _ = cache_policy.get_settings
     expect(settings.fetch("testKey").fetch(VALUE)).to eq "testValue"
@@ -21,7 +23,9 @@ RSpec.describe "AutoPollingCachePolicy" do
                                          max_init_wait_time_seconds: 5)
     config_fetcher = ConfigFetcherWaitMock.new(0)
     config_cache = NullConfigCache.new
-    cache_policy = ConfigService.new("", polling_mode, Hooks.new, config_fetcher, ConfigCat.logger, config_cache, false)
+    hooks = Hooks.new
+    logger = ConfigCatLogger.new(hooks)
+    cache_policy = ConfigService.new("", polling_mode, hooks, config_fetcher, logger, config_cache, false)
 
     settings, _ = cache_policy.get_settings
     expect(settings.fetch("testKey").fetch(VALUE)).to eq "testValue"
@@ -34,7 +38,9 @@ RSpec.describe "AutoPollingCachePolicy" do
     config_fetcher = ConfigFetcherWaitMock.new(5)
     config_cache = NullConfigCache.new
     start_time = Time.now.utc
-    cache_policy = ConfigService.new("", polling_mode, Hooks.new, config_fetcher, ConfigCat.logger, config_cache, false)
+    hooks = Hooks.new
+    logger = ConfigCatLogger.new(hooks)
+    cache_policy = ConfigService.new("", polling_mode, hooks, config_fetcher, logger, config_cache, false)
     settings, _ = cache_policy.get_settings
     end_time = Time.now.utc
     elapsed_time = end_time - start_time
@@ -49,7 +55,9 @@ RSpec.describe "AutoPollingCachePolicy" do
                                          max_init_wait_time_seconds: 1)
     config_fetcher = ConfigFetcherMock.new
     config_cache = NullConfigCache.new
-    cache_policy = ConfigService.new("", polling_mode, Hooks.new, config_fetcher, ConfigCat.logger, config_cache, false)
+    hooks = Hooks.new
+    logger = ConfigCatLogger.new(hooks)
+    cache_policy = ConfigService.new("", polling_mode, hooks, config_fetcher, logger, config_cache, false)
     sleep(3)
     expect(config_fetcher.get_call_count).to eq 2
     settings, _ = cache_policy.get_settings
@@ -62,7 +70,9 @@ RSpec.describe "AutoPollingCachePolicy" do
                                          max_init_wait_time_seconds: 5)
     config_fetcher = ConfigFetcherCountMock.new
     config_cache = NullConfigCache.new
-    cache_policy = ConfigService.new("", polling_mode, Hooks.new, config_fetcher, ConfigCat.logger, config_cache, false)
+    hooks = Hooks.new
+    logger = ConfigCatLogger.new(hooks)
+    cache_policy = ConfigService.new("", polling_mode, hooks, config_fetcher, logger, config_cache, false)
 
     settings, _ = cache_policy.get_settings
     expect(settings.fetch("testKey").fetch(VALUE)).to eq 1
@@ -80,7 +90,9 @@ RSpec.describe "AutoPollingCachePolicy" do
                                          max_init_wait_time_seconds: 1)
     config_fetcher = ConfigFetcherWithErrorMock.new(StandardError.new("error"))
     config_cache = NullConfigCache.new
-    cache_policy = ConfigService.new("", polling_mode, Hooks.new, config_fetcher, ConfigCat.logger, config_cache, false)
+    hooks = Hooks.new
+    logger = ConfigCatLogger.new(hooks)
+    cache_policy = ConfigService.new("", polling_mode, hooks, config_fetcher, logger, config_cache, false)
 
     # Get value from Config Store, which indicates a config_fetcher call
     settings, _ = cache_policy.get_settings
@@ -93,7 +105,9 @@ RSpec.describe "AutoPollingCachePolicy" do
                                          max_init_wait_time_seconds: 5)
     config_fetcher = ConfigFetcherCountMock.new
     config_cache = NullConfigCache.new
-    cache_policy = ConfigService.new("", polling_mode, Hooks.new, config_fetcher, ConfigCat.logger, config_cache, false)
+    hooks = Hooks.new
+    logger = ConfigCatLogger.new(hooks)
+    cache_policy = ConfigService.new("", polling_mode, hooks, config_fetcher, logger, config_cache, false)
     cache_policy.close
     settings, _ = cache_policy.get_settings
     expect(settings.fetch("testKey").fetch(VALUE)).to eq 1
@@ -108,7 +122,9 @@ RSpec.describe "AutoPollingCachePolicy" do
                                          max_init_wait_time_seconds: 5)
     config_fetcher = ConfigFetcherMock.new
     config_cache = NullConfigCache.new
-    cache_policy = ConfigService.new("", polling_mode, Hooks.new, config_fetcher, ConfigCat.logger, config_cache, false)
+    hooks = Hooks.new
+    logger = ConfigCatLogger.new(hooks)
+    cache_policy = ConfigService.new("", polling_mode, hooks, config_fetcher, logger, config_cache, false)
     sleep(2.2)
     expect(config_fetcher.get_call_count).to eq 2
     cache_policy.close
@@ -122,8 +138,8 @@ RSpec.describe "AutoPollingCachePolicy" do
     hook_callbacks = HookCallbacks.new
     hooks = Hooks.new
     hooks.add_on_config_changed(hook_callbacks.method(:on_config_changed))
-
-    cache_policy = ConfigService.new("", polling_mode, hooks, config_fetcher, ConfigCat.logger, config_cache, false)
+    logger = ConfigCatLogger.new(hooks)
+    cache_policy = ConfigService.new("", polling_mode, hooks, config_fetcher, logger, config_cache, false)
 
     sleep(1)
     expect(config_fetcher.get_call_count).to eq 1
@@ -146,8 +162,8 @@ RSpec.describe "AutoPollingCachePolicy" do
     hook_callbacks = HookCallbacks.new
     hooks = Hooks.new
     hooks.add_on_config_changed(hook_callbacks.method(:callback_exception))
-
-    cache_policy = ConfigService.new("", polling_mode, hooks, config_fetcher, ConfigCat.logger, config_cache, false)
+    logger = ConfigCatLogger.new(hooks)
+    cache_policy = ConfigService.new("", polling_mode, hooks, config_fetcher, logger, config_cache, false)
 
     sleep(1)
     expect(config_fetcher.get_call_count).to eq 1
@@ -166,9 +182,11 @@ RSpec.describe "AutoPollingCachePolicy" do
     WebMock.stub_request(:get, Regexp.new('https://.*')).to_return(status: 200, body: TEST_OBJECT_JSON, headers: {})
 
     polling_mode = PollingMode.auto_poll(poll_interval_seconds: 1)
-    config_fetcher = ConfigFetcher.new("", ConfigCat.logger, polling_mode.identifier())
+    hooks = Hooks.new
+    logger = ConfigCatLogger.new(hooks)
+    config_fetcher = ConfigFetcher.new("", logger, polling_mode.identifier())
     config_cache = NullConfigCache.new
-    cache_policy = ConfigService.new("", polling_mode, Hooks.new, config_fetcher, ConfigCat.logger, config_cache, false)
+    cache_policy = ConfigService.new("", polling_mode, hooks, config_fetcher, logger, config_cache, false)
 
     # first call
     settings, _ = cache_policy.get_settings
@@ -201,7 +219,9 @@ RSpec.describe "AutoPollingCachePolicy" do
     )
 
     start_time = Time.now.utc
-    cache_policy = ConfigService.new("", polling_mode, Hooks.new, config_fetcher, ConfigCat.logger, config_cache, false)
+    hooks = Hooks.new
+    logger = ConfigCatLogger.new(hooks)
+    cache_policy = ConfigService.new("", polling_mode, hooks, config_fetcher, logger, config_cache, false)
     settings, _ = cache_policy.get_settings
     end_time = Time.now.utc
     elapsed_time = end_time - start_time
@@ -238,7 +258,9 @@ RSpec.describe "AutoPollingCachePolicy" do
       }.to_json
     )
 
-    cache_policy = ConfigService.new("", polling_mode, Hooks.new, config_fetcher, ConfigCat.logger, config_cache, false)
+    hooks = Hooks.new
+    logger = ConfigCatLogger.new(hooks)
+    cache_policy = ConfigService.new("", polling_mode, hooks, config_fetcher, logger, config_cache, false)
 
     settings, _ = cache_policy.get_settings
 
@@ -264,7 +286,9 @@ RSpec.describe "AutoPollingCachePolicy" do
     )
 
     start_time = Time.now.utc
-    cache_policy = ConfigService.new("", polling_mode, Hooks.new, config_fetcher, ConfigCat.logger, config_cache, false)
+    hooks = Hooks.new
+    logger = ConfigCatLogger.new(hooks)
+    cache_policy = ConfigService.new("", polling_mode, hooks, config_fetcher, logger, config_cache, false)
     settings, _ = cache_policy.get_settings
     end_time = Time.now.utc
     elapsed_time = end_time - start_time
@@ -281,9 +305,11 @@ RSpec.describe "AutoPollingCachePolicy" do
     stub_request = WebMock.stub_request(:get, Regexp.new('https://.*')).to_return(status: 200, body: TEST_OBJECT_JSON, headers: {})
 
     polling_mode = PollingMode.auto_poll(poll_interval_seconds: 1)
-    config_fetcher = ConfigFetcher.new("", ConfigCat.logger, polling_mode.identifier())
+    hooks = Hooks.new
+    logger = ConfigCatLogger.new(hooks)
+    config_fetcher = ConfigFetcher.new("", logger, polling_mode.identifier())
     config_cache = NullConfigCache.new
-    cache_policy = ConfigService.new("", polling_mode, Hooks.new, config_fetcher, ConfigCat.logger, config_cache, false)
+    cache_policy = ConfigService.new("", polling_mode, hooks, config_fetcher, logger, config_cache, false)
 
     expect(cache_policy.offline?).to be false
 
@@ -311,9 +337,11 @@ RSpec.describe "AutoPollingCachePolicy" do
     stub_request = WebMock.stub_request(:get, Regexp.new('https://.*')).to_return(status: 200, body: TEST_OBJECT_JSON, headers: {})
 
     polling_mode = PollingMode.auto_poll(poll_interval_seconds: 1)
-    config_fetcher = ConfigFetcher.new("", ConfigCat.logger, polling_mode.identifier())
+    hooks = Hooks.new
+    logger = ConfigCatLogger.new(hooks)
+    config_fetcher = ConfigFetcher.new("", logger, polling_mode.identifier())
     config_cache = NullConfigCache.new
-    cache_policy = ConfigService.new("", polling_mode, Hooks.new, config_fetcher, ConfigCat.logger, config_cache, true)
+    cache_policy = ConfigService.new("", polling_mode, hooks, config_fetcher, logger, config_cache, true)
 
     expect(cache_policy.offline?).to be true
     settings, _ = cache_policy.get_settings

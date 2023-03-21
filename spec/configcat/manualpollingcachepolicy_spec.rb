@@ -10,7 +10,9 @@ RSpec.describe "ManualPollingCachePolicy" do
   it "test_without_refresh" do
     config_fetcher = ConfigFetcherMock.new
     config_cache = NullConfigCache.new
-    cache_policy = ConfigService.new("", PollingMode.manual_poll, Hooks.new, config_fetcher, ConfigCat.logger, config_cache, false)
+    hooks = Hooks.new
+    logger = ConfigCatLogger.new(hooks)
+    cache_policy = ConfigService.new("", PollingMode.manual_poll, hooks, config_fetcher, logger, config_cache, false)
     settings, _ = cache_policy.get_settings
     expect(settings).to be nil
     expect(config_fetcher.get_call_count).to eq 0
@@ -20,7 +22,9 @@ RSpec.describe "ManualPollingCachePolicy" do
   it "test_with_refresh" do
     config_fetcher = ConfigFetcherMock.new
     config_cache = NullConfigCache.new
-    cache_policy = ConfigService.new("", PollingMode.manual_poll, Hooks.new, config_fetcher, ConfigCat.logger, config_cache, false)
+    hooks = Hooks.new
+    logger = ConfigCatLogger.new(hooks)
+    cache_policy = ConfigService.new("", PollingMode.manual_poll, hooks, config_fetcher, logger, config_cache, false)
     cache_policy.refresh
     settings, _ = cache_policy.get_settings
     expect(settings.fetch("testKey").fetch(VALUE)).to eq "testValue"
@@ -31,7 +35,9 @@ RSpec.describe "ManualPollingCachePolicy" do
   it "test_with_refresh_error" do
     config_fetcher = ConfigFetcherWithErrorMock.new(StandardError.new("error"))
     config_cache = InMemoryConfigCache.new
-    cache_policy = ConfigService.new('', PollingMode.manual_poll, Hooks.new, config_fetcher, ConfigCat.logger, config_cache, false)
+    hooks = Hooks.new
+    logger = ConfigCatLogger.new(hooks)
+    cache_policy = ConfigService.new('', PollingMode.manual_poll, hooks, config_fetcher, logger, config_cache, false)
     cache_policy.refresh
     settings, _ = cache_policy.get_settings
     expect(settings).to be nil
@@ -42,9 +48,11 @@ RSpec.describe "ManualPollingCachePolicy" do
     WebMock.stub_request(:get, Regexp.new('https://.*')).to_return(status: 200, body: TEST_OBJECT_JSON, headers: {})
 
     polling_mode = PollingMode.manual_poll
-    config_fetcher = ConfigFetcher.new("", ConfigCat.logger, polling_mode.identifier())
+    hooks = Hooks.new
+    logger = ConfigCatLogger.new(hooks)
+    config_fetcher = ConfigFetcher.new("", logger, polling_mode.identifier())
     config_cache = NullConfigCache.new
-    cache_policy = ConfigService.new("", polling_mode, Hooks.new, config_fetcher, ConfigCat.logger, config_cache, false)
+    cache_policy = ConfigService.new("", polling_mode, hooks, config_fetcher, logger, config_cache, false)
 
     cache_policy.refresh
     settings, _ = cache_policy.get_settings
@@ -64,9 +72,11 @@ RSpec.describe "ManualPollingCachePolicy" do
                           .to_return(status: 200, body: TEST_JSON_FORMAT % { value: '"test"' }, headers: {})
 
     polling_mode = PollingMode.manual_poll
-    config_fetcher = ConfigFetcher.new("", ConfigCat.logger, polling_mode.identifier())
+    hooks = Hooks.new
+    logger = ConfigCatLogger.new(hooks)
+    config_fetcher = ConfigFetcher.new("", logger, polling_mode.identifier())
     config_cache = InMemoryConfigCache.new
-    cache_policy = ConfigService.new("", polling_mode, Hooks.new, config_fetcher, ConfigCat.logger, config_cache, false)
+    cache_policy = ConfigService.new("", polling_mode, hooks, config_fetcher, logger, config_cache, false)
 
     cache_policy.refresh
     settings, _ = cache_policy.get_settings
@@ -90,9 +100,11 @@ RSpec.describe "ManualPollingCachePolicy" do
     stub_request = WebMock.stub_request(:get, Regexp.new('https://.*')).to_return(status: 200, body: TEST_OBJECT_JSON, headers: {})
 
     polling_mode = PollingMode.manual_poll
-    config_fetcher = ConfigFetcher.new("", ConfigCat.logger, polling_mode.identifier())
+    hooks = Hooks.new
+    logger = ConfigCatLogger.new(hooks)
+    config_fetcher = ConfigFetcher.new("", logger, polling_mode.identifier())
     config_cache = NullConfigCache.new
-    cache_policy = ConfigService.new("", polling_mode, Hooks.new, config_fetcher, ConfigCat.logger, config_cache, false)
+    cache_policy = ConfigService.new("", polling_mode, hooks, config_fetcher, logger, config_cache, false)
 
     expect(cache_policy.offline?).to be false
     expect(cache_policy.refresh.success).to be true
@@ -119,9 +131,11 @@ RSpec.describe "ManualPollingCachePolicy" do
     stub_request = WebMock.stub_request(:get, Regexp.new('https://.*')).to_return(status: 200, body: TEST_OBJECT_JSON, headers: {})
 
     polling_mode = PollingMode.manual_poll
-    config_fetcher = ConfigFetcher.new("", ConfigCat.logger, polling_mode.identifier())
+    hooks = Hooks.new
+    logger = ConfigCatLogger.new(hooks)
+    config_fetcher = ConfigFetcher.new("", logger, polling_mode.identifier())
     config_cache = NullConfigCache.new
-    cache_policy = ConfigService.new("", polling_mode, Hooks.new, config_fetcher, ConfigCat.logger, config_cache, true)
+    cache_policy = ConfigService.new("", polling_mode, hooks, config_fetcher, logger, config_cache, true)
 
     expect(cache_policy.offline?).to be true
     expect(cache_policy.refresh.success).to be false
