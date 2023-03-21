@@ -28,8 +28,9 @@ module ConfigCat
         client = @@instances[sdk_key]
         if client
           if options
-            client.log.warn("Client for sdk_key `#{sdk_key}` is already created and will be reused; " +
-                            "options passed are being ignored.")
+            client.log.warn(3000, "There is an existing client instance for the specified SDK Key. " \
+                                  "No new client instance will be created and the specified options are ignored. " \
+                                  "Returning the existing client instance. SDK Key: '#{sdk_key}'.")
           end
           return client
         end
@@ -105,9 +106,8 @@ module ConfigCat
     def get_value(key, default_value, user = nil)
       settings, fetch_time = _get_settings()
       if settings.nil?
-        message = "Evaluating get_value('%s') failed. Cache is empty. " \
-                  "Returning default_value in your get_value call: [%s]." % [key, default_value.to_s]
-        @log.error(message)
+        message = "Config JSON is not present. Returning the `default_value` parameter that you specified in your application: '#{default_value}'."
+        @log.error(1000, message)
         @hooks.invoke_on_flag_evaluated(EvaluationDetails.from_error(key, default_value, error: message))
         return default_value
       end
@@ -124,9 +124,8 @@ module ConfigCat
     def get_value_details(key, default_value, user = nil)
       settings, fetch_time = _get_settings()
       if settings.nil?
-        message = "Evaluating get_value_details('%s') failed. Cache is empty. " \
-                  "Returning default_value in your get_value_details call: [%s]." % [key, default_value.to_s]
-        @log.error(message)
+        message = "Config JSON is not present. Returning the `default_value` parameter that you specified in your application: '#{default_value}'."
+        @log.error(1000, message)
         @hooks.invoke_on_flag_evaluated(EvaluationDetails.from_error(key, default_value, error: message))
         return default_value
       end
@@ -152,15 +151,13 @@ module ConfigCat
     # :param user [User] the user object to identify the caller.
     # :return the variation ID.
     def get_variation_id(key, default_variation_id, user = nil)
-      @log.warn("get_variation_id is deprecated and will be removed in a future major version. "\
-                "Please use [get_value_details] instead.")
+      ConfigCat.logger.warn("get_variation_id is deprecated and will be removed in a future major version. "\
+                            "Please use [get_value_details] instead.")
 
       settings, fetch_time = _get_settings()
       if settings === nil
-        message = "Evaluating get_variation_id('%s') failed. Cache is empty. "\
-                  "Returning default_variation_id in your get_variation_id call: [%s]." %
-                  [key, default_variation_id.to_s]
-        @log.error(message)
+        message = "Config JSON is not present. Returning the `default_variation_id` parameter that you specified in your application: '#{default_variation_id}'."
+        @log.error(1000, message)
         @hooks.invoke_on_flag_evaluated(EvaluationDetails.from_error(key, nil, error: message,
                                                                      variation_id: default_variation_id))
         return default_variation_id
@@ -174,8 +171,8 @@ module ConfigCat
     # :param user [User] the user object to identify the caller.
     # :return list of variation IDs
     def get_all_variation_ids(user = nil)
-      @log.warn("get_all_variation_ids is deprecated and will be removed in a future major version. "\
-                "Please use [get_value_details] instead.")
+      ConfigCat.logger.warn("get_all_variation_ids is deprecated and will be removed in a future major version. "\
+                            "Please use [get_value_details] instead.")
 
       keys = get_all_keys()
       variation_ids = []
@@ -195,7 +192,7 @@ module ConfigCat
     def get_key_and_value(variation_id)
       settings, _ = _get_settings()
       if settings === nil
-        @log.warn("Evaluating get_key_and_value('%s') failed. Cache is empty. Returning nil." % variation_id)
+        @log.error(1000, "Config JSON is not present. Returning nil.")
         return nil
       end
 
@@ -219,7 +216,7 @@ module ConfigCat
         end
       end
 
-      @log.error("Could not find the setting for the given variation_id: " + variation_id)
+      @log.error(2011, "Could not find the setting for the specified variation ID: '#{variation_id}'.")
     end
 
     # Evaluates and returns the values of all feature flags and settings.
@@ -245,7 +242,7 @@ module ConfigCat
     def get_all_value_details(user = nil)
       settings, fetch_time = _get_settings()
       if settings.nil?
-        @log.error("Evaluating get_all_value_details() failed. Cache is empty. Returning empty list.")
+        @log.error(1000, "Config JSON is not present. Returning empty list.")
         return []
       end
 
@@ -282,14 +279,16 @@ module ConfigCat
 
     # Configures the SDK to allow HTTP requests.
     def set_online
-      @_config_service.set_online if @_config_service
-      @log.debug('Switched to ONLINE mode.')
+      if @_config_service
+        @_config_service.set_online
+      else
+        @log.warn(3202, "Client is configured to use the `LOCAL_ONLY` override behavior, thus `set_online()` has no effect.")
+      end
     end
 
     # Configures the SDK to not initiate HTTP requests and work only from its cache.
     def set_offline
       @_config_service.set_offline if @_config_service
-      @log.debug('Switched to OFFLINE mode.')
     end
 
     # Returns true when the SDK is configured not to initiate HTTP requests, otherwise false.

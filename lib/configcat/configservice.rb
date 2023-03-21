@@ -68,7 +68,7 @@ module ConfigCat
         if @polling_mode.is_a?(AutoPollingMode)
           start_poll
         end
-        @log.debug('Switched to ONLINE mode.')
+        @log.info(5200, 'Switched to ONLINE mode.')
       end
     end
 
@@ -84,7 +84,7 @@ module ConfigCat
           @thread.join
         end
 
-        @log.debug('Switched to OFFLINE mode.')
+        @log.info(5200, 'Switched to OFFLINE mode.')
       end
     end
 
@@ -127,8 +127,8 @@ module ConfigCat
 
         # If we are in offline mode we are not allowed to initiate fetch.
         if @is_offline
-          offline_warning = 'The SDK is in offline mode, it can not initiate HTTP calls.'
-          @log.warn(offline_warning)
+          offline_warning = "Client is in offline mode, it cannot initiate HTTP calls."
+          @log.warn(3200, offline_warning)
           return @cached_entry, offline_warning
         end
       end
@@ -196,7 +196,7 @@ module ConfigCat
         @cached_entry_string = json_string
         return ConfigEntry.create_from_json(JSON.parse(json_string))
       rescue Exception => e
-        @log.error("An error occurred during the cache read. #{e}")
+        @log.error(2200, "Error occurred while reading the cache. #{e}")
         return ConfigEntry::EMPTY
       end
     end
@@ -205,7 +205,7 @@ module ConfigCat
       begin
         @config_cache.set(@cache_key, config_entry.to_json.to_json)
       rescue Exception => e
-        @log.error("An error occurred during the cache write. #{e}")
+        @log.error(2201, "Error occurred while writing the cache. #{e}")
       end
     end
   end

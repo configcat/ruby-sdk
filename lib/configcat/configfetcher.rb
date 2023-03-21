@@ -140,12 +140,13 @@ module ConfigCat
       # Try to download again with the new url
 
       if redirect == RedirectMode::SHOULD_REDIRECT
-        @log.warn("Your data_governance parameter at ConfigCatClient initialization is not in sync with your preferences on the ConfigCat Dashboard: https://app.configcat.com/organization/data-governance. Only Organization Admins can set this preference.")
+        @log.warn(3002, "The `dataGovernance` parameter specified at the client initialization is not in sync with the preferences on the ConfigCat Dashboard. " \
+                        "Read more: https://configcat.com/docs/advanced/data-governance/")
       end
 
       # To prevent loops we check if we retried at least 3 times with the new base_url
       if retries >= 2
-        @log.error("Redirect loop during config.json fetch. Please contact support@configcat.com.")
+        @log.error(1104, "Redirection loop encountered while trying to fetch config JSON. Please contact us at https://configcat.com/support/")
         return fetch_response
       end
 
@@ -182,23 +183,23 @@ module ConfigCat
         when Net::HTTPNotModified
           return FetchResponse.not_modified
         when Net::HTTPNotFound, Net::HTTPForbidden
-          error = "Double-check your SDK Key at https://app.configcat.com/sdkkey. Received unexpected response: #{response}"
-          @log.error(error)
+          error = "Your SDK Key seems to be wrong. You can find the valid SDK Key at https://app.configcat.com/sdkkey. Received unexpected response: #{response}"
+          @log.error(1100, error)
           return FetchResponse.failure(error, false)
         else
           raise Net::HTTPError.new("", response)
         end
       rescue Net::HTTPError => e
-        error = "Unexpected HTTP response was received: #{e}"
-        @log.error(error)
+        error = "Unexpected HTTP response was received while trying to fetch config JSON: #{e}"
+        @log.error(1101, error)
         return FetchResponse.failure(error, true)
       rescue Timeout::Error => e
-        error = "Request timed out. Timeout values: [connect: #{get_open_timeout()}s, read: #{get_read_timeout()}s]"
-        @log.error(error)
+        error = "Request timed out while trying to fetch config JSON. Timeout values: [connect: #{get_open_timeout()}s, read: #{get_read_timeout()}s]"
+        @log.error(1102, error)
         return FetchResponse.failure(error, true)
       rescue Exception => e
-        error = "An exception occurred during fetching: #{e}"
-        @log.error(error)
+        error = "Unexpected error occurred while trying to fetch config JSON: #{e}"
+        @log.error(1103, error)
         return FetchResponse.failure(error, true)
       end
     end

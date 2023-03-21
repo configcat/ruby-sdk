@@ -15,25 +15,28 @@ module ConfigCat
     def evaluate(key:, user:, default_value:, default_variation_id:, settings:)
       setting_descriptor = settings[key]
       if setting_descriptor === nil
-        error = "Evaluating get_value('%s') failed. Value not found for key '%s'. Returning default_value: [%s]. Here are the available keys: %s" % [key, key, default_value.to_s, settings.keys.join(", ")]
-        @log.error(error)
+        error = "Failed to evaluate setting '#{key}' (the key was not found in config JSON). Returning the `default_value` parameter that you specified in your application: '#{default_value}'. Available keys: #{settings.keys.join(", ")}."
+        @log.error(1001, error)
         return default_value, default_variation_id, nil, nil, error
       end
 
       rollout_rules = setting_descriptor.fetch(ROLLOUT_RULES, [])
       rollout_percentage_items = setting_descriptor.fetch(ROLLOUT_PERCENTAGE_ITEMS, [])
 
-      if !user.equal?(nil) && !user.class.equal?(User)
-        @log.warn("Evaluating get_value('%s'). User Object is not an instance of User type." % key)
+      user_has_invalid_type = !user.equal?(nil) && !user.class.equal?(User)
+      if user_has_invalid_type
+        @log.warn(4001, "Cannot evaluate targeting rules and % options for setting '#{key}' (User Object is not an instance of User type).")
         user = nil
       end
       if user === nil
-        if rollout_rules.size > 0 || rollout_percentage_items.size > 0
-          @log.warn("Evaluating get_value('%s'). UserObject missing! You should pass a UserObject to get_value(), in order to make targeting work properly. Read more: https://configcat.com/docs/advanced/user-object/" % key)
+        if !user_has_invalid_type && (rollout_rules.size > 0 || rollout_percentage_items.size > 0)
+          @log.warn(3001, "Cannot evaluate targeting rules and % options for setting '#{key}' (User Object is missing). " \
+                          "You should pass a User Object to the evaluation methods like `get_value()` in order to make targeting work properly. " \
+                          "Read more: https://configcat.com/docs/advanced/user-object/")
         end
         return_value = setting_descriptor.fetch(VALUE, default_value)
         return_variation_id = setting_descriptor.fetch(VARIATION_ID, default_variation_id)
-        @log.info("Returning [%s]" % return_value.to_s)
+        @log.info(5000, "Returning [#{return_value}]")
         return return_value, return_variation_id, nil, nil, nil
       end
 
@@ -94,7 +97,7 @@ module ConfigCat
               end
             rescue ArgumentError => e
               message = format_validation_error_rule(comparison_attribute, user_value, comparator, comparison_value, e.to_s)
-              @log.warn(message)
+              @log.warn(0, message)
               log_entries.push(message)
               next
             end
@@ -112,7 +115,7 @@ module ConfigCat
               end
             rescue ArgumentError => e
               message = format_validation_error_rule(comparison_attribute, user_value, comparator, comparison_value, e.to_s)
-              @log.warn(message)
+              @log.warn(0, message)
               log_entries.push(message)
               next
             end
@@ -131,7 +134,7 @@ module ConfigCat
               end
             rescue Exception => e
               message = format_validation_error_rule(comparison_attribute, user_value, comparator, comparison_value, e.to_s)
-              @log.warn(message)
+              @log.warn(0, message)
               log_entries.push(message)
               next
             end
@@ -171,7 +174,7 @@ module ConfigCat
         log_entries.push("Returning %s" % return_value)
         return return_value, return_variation_id, nil, nil, nil
       ensure
-        @log.info(log_entries.join("\n"))
+        @log.info(5000, log_entries.join("\n"))
       end
     end
 

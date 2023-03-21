@@ -5,20 +5,20 @@ module ConfigCat
     end
 
     def debug(message)
-      ConfigCat.logger.debug(message)
+      ConfigCat.logger.debug("[0] " + message)
     end
 
-    def info(message)
-      ConfigCat.logger.info(message)
+    def info(event_id, message)
+      ConfigCat.logger.info("[" + event_id.to_s + "] " + message)
     end
 
-    def warn(message)
-      ConfigCat.logger.warn(message)
+    def warn(event_id, message)
+      ConfigCat.logger.warn("[" + event_id.to_s + "] " + message)
     end
 
-    def error(message)
+    def error(event_id, message)
       @hooks.invoke_on_error(message)
-      ConfigCat.logger.error(message)
+      ConfigCat.logger.error("[" + event_id.to_s + "] " + message)
     end
   end
 end

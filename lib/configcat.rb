@@ -85,9 +85,9 @@ module ConfigCat
       flag_overrides: flag_overrides,
       data_governance: data_governance
     )
+    ConfigCat.logger.warn('create_client_with_auto_poll is deprecated. Create the ConfigCat Client as a Singleton object with `configcatclient.get()` instead')
     client = ConfigCatClient.get(sdk_key, options)
     client.hooks.add_on_config_changed(on_configuration_changed_callback) if on_configuration_changed_callback
-    client.log.warn('create_client_with_auto_poll is deprecated. Create the ConfigCat Client as a Singleton object with `configcatclient.get()` instead')
     return client
   end
 
@@ -134,8 +134,8 @@ module ConfigCat
       flag_overrides: flag_overrides,
       data_governance: data_governance
     )
+    ConfigCat.logger.warn('create_client_with_lazy_load is deprecated. Create the ConfigCat Client as a Singleton object with `configcatclient.get()` instead')
     client = ConfigCatClient.get(sdk_key, options)
-    client.log.warn('create_client_with_lazy_load is deprecated. Create the ConfigCat Client as a Singleton object with `configcatclient.get()` instead')
     return client
   end
 
@@ -180,8 +180,8 @@ module ConfigCat
       flag_overrides: flag_overrides,
       data_governance: data_governance
     )
+    ConfigCat.logger.warn('create_client_with_manual_poll is deprecated. Create the ConfigCat Client as a Singleton object with `configcatclient.get()` instead')
     client = ConfigCatClient.get(sdk_key, options)
-    client.log.warn('create_client_with_manual_poll is deprecated. Create the ConfigCat Client as a Singleton object with `configcatclient.get()` instead')
     return client
   end
 end
