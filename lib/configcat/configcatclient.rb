@@ -151,7 +151,7 @@ module ConfigCat
     # :param user [User] the user object to identify the caller.
     # :return the variation ID.
     def get_variation_id(key, default_variation_id, user = nil)
-      ConfigCat.logger.warn("get_variation_id is deprecated and will be removed in a future major version. "\
+      ConfigCat.logger.warn("get_variation_id is deprecated and will be removed in a future major version. " \
                             "Please use [get_value_details] instead.")
 
       settings, fetch_time = _get_settings()
@@ -171,7 +171,7 @@ module ConfigCat
     # :param user [User] the user object to identify the caller.
     # :return list of variation IDs
     def get_all_variation_ids(user = nil)
-      ConfigCat.logger.warn("get_all_variation_ids is deprecated and will be removed in a future major version. "\
+      ConfigCat.logger.warn("get_all_variation_ids is deprecated and will be removed in a future major version. " \
                             "Please use [get_value_details] instead.")
 
       keys = get_all_keys()
