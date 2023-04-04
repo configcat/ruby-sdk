@@ -106,7 +106,7 @@ module ConfigCat
     def get_value(key, default_value, user = nil)
       settings, fetch_time = _get_settings()
       if settings.nil?
-        message = "Config JSON is not present. Returning the `default_value` parameter that you specified in your application: '#{default_value}'."
+        message = "Config JSON is not present when evaluating setting '#{key}'. Returning the `default_value` parameter that you specified in your application: '#{default_value}'."
         @log.error(1000, message)
         @hooks.invoke_on_flag_evaluated(EvaluationDetails.from_error(key, default_value, error: message))
         return default_value
@@ -124,7 +124,7 @@ module ConfigCat
     def get_value_details(key, default_value, user = nil)
       settings, fetch_time = _get_settings()
       if settings.nil?
-        message = "Config JSON is not present. Returning the `default_value` parameter that you specified in your application: '#{default_value}'."
+        message = "Config JSON is not present when evaluating setting '#{key}'. Returning the `default_value` parameter that you specified in your application: '#{default_value}'."
         @log.error(1000, message)
         @hooks.invoke_on_flag_evaluated(EvaluationDetails.from_error(key, default_value, error: message))
         return default_value
@@ -156,7 +156,7 @@ module ConfigCat
 
       settings, fetch_time = _get_settings()
       if settings === nil
-        message = "Config JSON is not present. Returning the `default_variation_id` parameter that you specified in your application: '#{default_variation_id}'."
+        message = "Config JSON is not present when evaluating setting '#{key}'. Returning the `default_variation_id` parameter that you specified in your application: '#{default_variation_id}'."
         @log.error(1000, message)
         @hooks.invoke_on_flag_evaluated(EvaluationDetails.from_error(key, nil, error: message,
                                                                      variation_id: default_variation_id))
