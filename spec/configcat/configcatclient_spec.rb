@@ -171,7 +171,7 @@ RSpec.describe ConfigCat::ConfigCatClient do
     client.close
   end
 
-  it "test_default_user_get_all_value" do
+  it "test_default_user_get_all_values" do
     client = ConfigCatClient.get('test', ConfigCatOptions.new(polling_mode: PollingMode.manual_poll,
                                                               config_cache: ConfigCacheMock.new))
     user1 = User.new("test@test1.com")
