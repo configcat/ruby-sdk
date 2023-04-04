@@ -15,7 +15,9 @@ module ConfigCat
     def evaluate(key:, user:, default_value:, default_variation_id:, settings:)
       setting_descriptor = settings[key]
       if setting_descriptor === nil
-        error = "Failed to evaluate setting '#{key}' (the key was not found in config JSON). Returning the `default_value` parameter that you specified in your application: '#{default_value}'. Available keys: [#{settings.keys.join(", ")}]."
+        error = "Failed to evaluate setting '#{key}' (the key was not found in config JSON). " \
+                "Returning the `default_value` parameter that you specified in your application: '#{default_value}'. " \
+                "Available keys: [#{settings.keys.map { |s| "'#{s}'" }.join(", ")}]."
         @log.error(1001, error)
         return default_value, default_variation_id, nil, nil, error
       end
