@@ -34,7 +34,7 @@ RSpec.describe 'Data governance tests', type: :feature do
     global_stub = stub_request(URI_GLOBAL, ConfigCat::BASE_URL_GLOBAL, 0)
     eu_only_stub = stub_request(URI_EU_ONLY, ConfigCat::BASE_URL_EU_ONLY, 0)
 
-    fetcher = ConfigCat::ConfigFetcher.new("", ConfigCatLogger.new(Hooks.new), "m",
+    fetcher = ConfigCat::ConfigFetcher.new("", ConfigCat::ConfigCatLogger.new(ConfigCat::Hooks.new), "m",
                                            data_governance: ConfigCat::DataGovernance::GLOBAL)
 
     # First fetch
@@ -64,7 +64,7 @@ RSpec.describe 'Data governance tests', type: :feature do
     eu_only_stub = stub_request(URI_EU_ONLY, ConfigCat::BASE_URL_EU_ONLY, 0)
 
 
-    fetcher = ConfigCat::ConfigFetcher.new("", ConfigCatLogger.new(Hooks.new), "m",
+    fetcher = ConfigCat::ConfigFetcher.new("", ConfigCat::ConfigCatLogger.new(ConfigCat::Hooks.new), "m",
                                            data_governance: ConfigCat::DataGovernance::EU_ONLY)
 
     # First fetch
@@ -93,7 +93,7 @@ RSpec.describe 'Data governance tests', type: :feature do
     global_to_eu_only_stub = stub_request(URI_GLOBAL, ConfigCat::BASE_URL_EU_ONLY, 1)
     eu_only_stub = stub_request(URI_EU_ONLY, ConfigCat::BASE_URL_EU_ONLY, 0)
 
-    fetcher = ConfigCat::ConfigFetcher.new("", ConfigCatLogger.new(Hooks.new), "m",
+    fetcher = ConfigCat::ConfigFetcher.new("", ConfigCat::ConfigCatLogger.new(ConfigCat::Hooks.new), "m",
                                            data_governance: ConfigCat::DataGovernance::GLOBAL)
     # First fetch
     fetch_response = fetcher.get_configuration
@@ -121,7 +121,7 @@ RSpec.describe 'Data governance tests', type: :feature do
     global_to_eu_only_stub = stub_request(URI_GLOBAL, ConfigCat::BASE_URL_EU_ONLY, 1)
     eu_only_stub = stub_request(URI_EU_ONLY, ConfigCat::BASE_URL_EU_ONLY, 0)
 
-    fetcher = ConfigCat::ConfigFetcher.new("", ConfigCatLogger.new(Hooks.new), "m",
+    fetcher = ConfigCat::ConfigFetcher.new("", ConfigCat::ConfigCatLogger.new(ConfigCat::Hooks.new), "m",
                                            data_governance: ConfigCat::DataGovernance::EU_ONLY)
 
     # First fetch
@@ -151,7 +151,7 @@ RSpec.describe 'Data governance tests', type: :feature do
     eu_only_stub = stub_request(URI_EU_ONLY, ConfigCat::BASE_URL_EU_ONLY, 0)
     custom_stub = stub_request(URI_CUSTOM, ConfigCat::BASE_URL_GLOBAL, 0)
 
-    fetcher = ConfigCat::ConfigFetcher.new("", ConfigCatLogger.new(Hooks.new), "m",
+    fetcher = ConfigCat::ConfigFetcher.new("", ConfigCat::ConfigCatLogger.new(ConfigCat::Hooks.new), "m",
                                            base_url: BASE_URL_CUSTOM,
                                            data_governance: ConfigCat::DataGovernance::GLOBAL)
 
@@ -184,7 +184,7 @@ RSpec.describe 'Data governance tests', type: :feature do
     eu_only_stub = stub_request(URI_EU_ONLY, ConfigCat::BASE_URL_EU_ONLY, 0)
     custom_stub = stub_request(URI_CUSTOM, ConfigCat::BASE_URL_GLOBAL, 0)
 
-    fetcher = ConfigCat::ConfigFetcher.new("", ConfigCatLogger.new(Hooks.new), "m",
+    fetcher = ConfigCat::ConfigFetcher.new("", ConfigCat::ConfigCatLogger.new(ConfigCat::Hooks.new), "m",
                                            base_url: BASE_URL_CUSTOM,
                                            data_governance: ConfigCat::DataGovernance::EU_ONLY)
 
@@ -217,7 +217,7 @@ RSpec.describe 'Data governance tests', type: :feature do
     eu_only_to_forced_stub = stub_request(URI_EU_ONLY, BASE_URL_FORCED, 2)
     forced_to_forced_stub = stub_request(URI_FORCED, BASE_URL_FORCED, 2)
 
-    fetcher = ConfigCat::ConfigFetcher.new("", ConfigCatLogger.new(Hooks.new), "m",
+    fetcher = ConfigCat::ConfigFetcher.new("", ConfigCat::ConfigCatLogger.new(ConfigCat::Hooks.new), "m",
                                            data_governance: ConfigCat::DataGovernance::GLOBAL)
 
     # First fetch
@@ -249,7 +249,7 @@ RSpec.describe 'Data governance tests', type: :feature do
     eu_only_to_forced_stub = stub_request(URI_EU_ONLY, BASE_URL_FORCED, 2)
     forced_to_forced_stub = stub_request(URI_FORCED, BASE_URL_FORCED, 2)
 
-    fetcher = ConfigCat::ConfigFetcher.new("", ConfigCatLogger.new(Hooks.new), "m",
+    fetcher = ConfigCat::ConfigFetcher.new("", ConfigCat::ConfigCatLogger.new(ConfigCat::Hooks.new), "m",
                                            data_governance: ConfigCat::DataGovernance::EU_ONLY)
 
     # First fetch
@@ -282,7 +282,7 @@ RSpec.describe 'Data governance tests', type: :feature do
     forced_to_forced_stub = stub_request(URI_FORCED, BASE_URL_FORCED, 2)
     custom_to_forced_stub = stub_request(URI_CUSTOM, BASE_URL_FORCED, 2)
 
-    fetcher = ConfigCat::ConfigFetcher.new("", ConfigCatLogger.new(Hooks.new), "m",
+    fetcher = ConfigCat::ConfigFetcher.new("", ConfigCat::ConfigCatLogger.new(ConfigCat::Hooks.new), "m",
                                            base_url: BASE_URL_CUSTOM,
                                            data_governance: ConfigCat::DataGovernance::GLOBAL)
 
@@ -319,7 +319,7 @@ RSpec.describe 'Data governance tests', type: :feature do
     global_to_eu_only_stub = stub_request(URI_GLOBAL, ConfigCat::BASE_URL_EU_ONLY, 1)
     eu_only_to_global_stub = stub_request(URI_EU_ONLY, ConfigCat::BASE_URL_GLOBAL, 1)
 
-    fetcher = ConfigCat::ConfigFetcher.new("", ConfigCatLogger.new(Hooks.new), "m",
+    fetcher = ConfigCat::ConfigFetcher.new("", ConfigCat::ConfigCatLogger.new(ConfigCat::Hooks.new), "m",
                                            data_governance: ConfigCat::DataGovernance::GLOBAL)
 
     # First fetch
