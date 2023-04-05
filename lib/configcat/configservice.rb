@@ -24,7 +24,7 @@ module ConfigCat
       @fetch_finished = Concurrent::Event.new
       @start_time = Utils.get_utc_now_seconds_since_epoch
 
-      if @polling_mode.is_a?(AutoPollingMode)
+      if @polling_mode.is_a?(AutoPollingMode) && !@is_offline
         start_poll
       else
         set_initialized
