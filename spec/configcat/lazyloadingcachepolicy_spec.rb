@@ -8,7 +8,9 @@ RSpec.describe "LazyLoadingCachePolicy" do
     polling_mode = PollingMode.lazy_load(cache_refresh_interval_seconds: 0)
     config_fetcher = ConfigFetcherMock.new
     config_cache = NullConfigCache.new
-    cache_policy = ConfigService.new("", polling_mode, Hooks.new, config_fetcher, ConfigCat.logger, config_cache, false)
+    hooks = Hooks.new
+    logger = ConfigCatLogger.new(hooks)
+    cache_policy = ConfigService.new("", polling_mode, hooks, config_fetcher, logger, config_cache, false)
     settings, _ = cache_policy.get_settings
     expect(settings.fetch("testKey").fetch(VALUE)).to eq "testValue"
     cache_policy.close
@@ -18,7 +20,9 @@ RSpec.describe "LazyLoadingCachePolicy" do
     polling_mode = PollingMode.lazy_load(cache_refresh_interval_seconds: 1)
     config_fetcher = ConfigFetcherMock.new
     config_cache = NullConfigCache.new
-    cache_policy = ConfigService.new("", polling_mode, Hooks.new, config_fetcher, ConfigCat.logger, config_cache, false)
+    hooks = Hooks.new
+    logger = ConfigCatLogger.new(hooks)
+    cache_policy = ConfigService.new("", polling_mode, hooks, config_fetcher, logger, config_cache, false)
 
     # Get value from Config Store, which indicates a config_fetcher call
     settings, _ = cache_policy.get_settings
@@ -43,7 +47,9 @@ RSpec.describe "LazyLoadingCachePolicy" do
     polling_mode = PollingMode.lazy_load(cache_refresh_interval_seconds: 160)
     config_fetcher = ConfigFetcherMock.new
     config_cache = NullConfigCache.new
-    cache_policy = ConfigService.new("", polling_mode, Hooks.new, config_fetcher, ConfigCat.logger, config_cache, false)
+    hooks = Hooks.new
+    logger = ConfigCatLogger.new(hooks)
+    cache_policy = ConfigService.new("", polling_mode, hooks, config_fetcher, logger, config_cache, false)
 
     # Get value from Config Store, which indicates a config_fetcher call
     settings, fetch_time = cache_policy.get_settings
@@ -69,7 +75,9 @@ RSpec.describe "LazyLoadingCachePolicy" do
 
     polling_mode = PollingMode.lazy_load(cache_refresh_interval_seconds: 160)
     config_cache = NullConfigCache.new
-    cache_policy = ConfigService.new("", polling_mode, Hooks.new, config_fetcher, ConfigCat.logger, config_cache, false)
+    hooks = Hooks.new
+    logger = ConfigCatLogger.new(hooks)
+    cache_policy = ConfigService.new("", polling_mode, hooks, config_fetcher, logger, config_cache, false)
 
     now = Time.new(2020, 5, 20, 0, 0, 0, "+00:00")
     allow(Time).to receive(:now).and_return(now)
@@ -96,7 +104,9 @@ RSpec.describe "LazyLoadingCachePolicy" do
     polling_mode = PollingMode.lazy_load(cache_refresh_interval_seconds: 160)
     config_fetcher = ConfigFetcherWithErrorMock.new(StandardError.new("error"))
     config_cache = InMemoryConfigCache.new()
-    cache_policy = ConfigService.new("", polling_mode, Hooks.new, config_fetcher, ConfigCat.logger, config_cache, false)
+    hooks = Hooks.new
+    logger = ConfigCatLogger.new(hooks)
+    cache_policy = ConfigService.new("", polling_mode, hooks, config_fetcher, logger, config_cache, false)
 
     # Get value from Config Store, which indicates a config_fetcher call
     settings, _ = cache_policy.get_settings
@@ -115,7 +125,9 @@ RSpec.describe "LazyLoadingCachePolicy" do
       }.to_json
     )
 
-    cache_policy = ConfigService.new("", polling_mode, Hooks.new, config_fetcher, ConfigCat.logger, config_cache, false)
+    hooks = Hooks.new
+    logger = ConfigCatLogger.new(hooks)
+    cache_policy = ConfigService.new("", polling_mode, hooks, config_fetcher, logger, config_cache, false)
 
     settings, _ = cache_policy.get_settings
 
@@ -146,7 +158,9 @@ RSpec.describe "LazyLoadingCachePolicy" do
       }.to_json
     )
 
-    cache_policy = ConfigService.new("", polling_mode, Hooks.new, config_fetcher, ConfigCat.logger, config_cache, false)
+    hooks = Hooks.new
+    logger = ConfigCatLogger.new(hooks)
+    cache_policy = ConfigService.new("", polling_mode, hooks, config_fetcher, logger, config_cache, false)
 
     settings, _ = cache_policy.get_settings
 
@@ -161,9 +175,11 @@ RSpec.describe "LazyLoadingCachePolicy" do
     stub_request = WebMock.stub_request(:get, Regexp.new('https://.*')).to_return(status: 200, body: TEST_OBJECT_JSON, headers: {})
 
     polling_mode = PollingMode.lazy_load(cache_refresh_interval_seconds: 1)
-    config_fetcher = ConfigFetcher.new("", ConfigCat.logger, polling_mode.identifier())
+    hooks = Hooks.new
+    logger = ConfigCatLogger.new(hooks)
+    config_fetcher = ConfigFetcher.new("", logger, polling_mode.identifier())
     config_cache = NullConfigCache.new
-    cache_policy = ConfigService.new("", polling_mode, Hooks.new, config_fetcher, ConfigCat.logger, config_cache, false)
+    cache_policy = ConfigService.new("", polling_mode, hooks, config_fetcher, logger, config_cache, false)
 
     expect(cache_policy.offline?).to be false
     settings, _ = cache_policy.get_settings
@@ -193,9 +209,11 @@ RSpec.describe "LazyLoadingCachePolicy" do
     stub_request = WebMock.stub_request(:get, Regexp.new('https://.*')).to_return(status: 200, body: TEST_OBJECT_JSON, headers: {})
 
     polling_mode = PollingMode.lazy_load(cache_refresh_interval_seconds: 1)
-    config_fetcher = ConfigFetcher.new("", ConfigCat.logger, polling_mode.identifier())
+    hooks = Hooks.new
+    logger = ConfigCatLogger.new(hooks)
+    config_fetcher = ConfigFetcher.new("", logger, polling_mode.identifier())
     config_cache = NullConfigCache.new
-    cache_policy = ConfigService.new("", polling_mode, Hooks.new, config_fetcher, ConfigCat.logger, config_cache, true)
+    cache_policy = ConfigService.new("", polling_mode, hooks, config_fetcher, logger, config_cache, true)
 
     expect(cache_policy.offline?).to be true
     settings, _ = cache_policy.get_settings
