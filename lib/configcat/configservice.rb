@@ -34,7 +34,10 @@ module ConfigCat
     def get_settings
       if @polling_mode.is_a?(LazyLoadingMode)
         entry, _ = fetch_if_older(Utils.get_utc_now_seconds_since_epoch - @polling_mode.cache_refresh_interval_seconds)
-        return entry.config[FEATURE_FLAGS], entry.fetch_time
+        return !entry.empty? ?
+          [entry.config.fetch(FEATURE_FLAGS, {}), entry.fetch_time] :
+          [nil, Utils::DISTANT_PAST]
+          
       elsif @polling_mode.is_a?(AutoPollingMode) && !@initialized.set?
         elapsed_time = Utils.get_utc_now_seconds_since_epoch - @start_time # Elapsed time in seconds
         if elapsed_time < @polling_mode.max_init_wait_time_seconds
@@ -43,13 +46,17 @@ module ConfigCat
           # Max wait time expired without result, notify subscribers with the cached config.
           if !@initialized.set?
             set_initialized
-            return @cached_entry.config[FEATURE_FLAGS], @cached_entry.fetch_time
+            return !@cached_entry.empty? ?
+              [@cached_entry.config.fetch(FEATURE_FLAGS, {}), @cached_entry.fetch_time] :
+              [nil, Utils::DISTANT_PAST]
           end
         end
       end
 
       entry, _ = fetch_if_older(Utils::DISTANT_PAST, prefer_cache: true)
-      return entry.config[FEATURE_FLAGS], entry.fetch_time
+      return !entry.empty? ?
+        [entry.config.fetch(FEATURE_FLAGS, {}), entry.fetch_time] :
+        [nil, Utils::DISTANT_PAST]
     end
 
     # :return [RefreshResult]

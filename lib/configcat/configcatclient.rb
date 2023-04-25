@@ -139,6 +139,7 @@ module ConfigCat
     def get_all_keys
       settings, _ = _get_settings()
       if settings === nil
+        @log.error(1000, "Config JSON is not present. Returning empty list.")
         return []
       end
       return settings.keys
@@ -174,9 +175,14 @@ module ConfigCat
       ConfigCat.logger.warn("get_all_variation_ids is deprecated and will be removed in a future major version. " \
                             "Please use [get_value_details] instead.")
 
-      keys = get_all_keys()
+      settings, _ = _get_settings()
+      if settings === nil
+        @log.error(1000, "Config JSON is not present. Returning empty list.")
+        return []
+      end
+
       variation_ids = []
-      for key in keys
+      for key in settings.keys
         variation_id = get_variation_id(key, nil, user)
         if !variation_id.equal?(nil)
           variation_ids.push(variation_id)
@@ -224,9 +230,14 @@ module ConfigCat
     # :param user [User] the user object to identify the caller.
     # :return dictionary of values
     def get_all_values(user = nil)
-      keys = get_all_keys()
+      settings, _ = _get_settings()
+      if settings === nil
+        @log.error(1000, "Config JSON is not present. Returning empty dictionary.")
+        return {}
+      end
+
       all_values = {}
-      for key in keys
+      for key in settings.keys
         value = get_value(key, nil, user)
         if !value.equal?(nil)
           all_values[key] = value
