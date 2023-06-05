@@ -211,51 +211,6 @@ RSpec.describe ConfigCat::ConfigCatClient do
     client.close
   end
 
-  it "test_default_user_get_variation_id" do
-    client = ConfigCatClient.get('test', ConfigCatOptions.new(polling_mode: PollingMode.manual_poll,
-                                                              config_cache: ConfigCacheMock.new))
-    user1 = User.new("test@test1.com")
-    user2 = User.new("test@test2.com")
-
-    client.set_default_user(user1)
-    expect(client.get_variation_id("testStringKey", "")).to eq("id1")
-    expect(client.get_variation_id("testStringKey", "", user2)).to eq("id2")
-
-    client.clear_default_user
-    expect(client.get_variation_id("testStringKey", "")).to eq("id")
-
-    client.close
-  end
-
-  it "test_default_user_get_all_variation_ids" do
-    client = ConfigCatClient.get('test', ConfigCatOptions.new(polling_mode: PollingMode.manual_poll,
-                                                              config_cache: ConfigCacheMock.new))
-    user1 = User.new("test@test1.com")
-    user2 = User.new("test@test2.com")
-
-    client.set_default_user(user1)
-    result = client.get_all_variation_ids
-    expect(result.length).to eq(3)
-    expect(result).to include('id1')
-    expect(result).to include('fakeId1')
-    expect(result).to include('fakeId2')
-
-    result = client.get_all_variation_ids(user2)
-    expect(result.length).to eq(3)
-    expect(result).to include('id2')
-    expect(result).to include('fakeId1')
-    expect(result).to include('fakeId2')
-
-    client.clear_default_user
-    result = client.get_all_variation_ids
-    expect(result.length).to eq(3)
-    expect(result).to include('id')
-    expect(result).to include('fakeId1')
-    expect(result).to include('fakeId2')
-
-    client.close
-  end
-
   it "test_online_offline" do
     stub_request = WebMock.stub_request(:get, Regexp.new('https://.*')).to_return(status: 200, body: TEST_OBJECT_JSON, headers: {})
 
@@ -309,32 +264,22 @@ RSpec.describe ConfigCat::ConfigCatClient do
   it "test_get_variation_id" do
     client = ConfigCatClient.get("test", ConfigCatOptions.new(polling_mode: PollingMode.manual_poll,
                                                               config_cache: ConfigCacheMock.new))
-    expect(client.get_variation_id("key1", nil)).to eq "fakeId1"
-    expect(client.get_variation_id("key2", nil)).to eq "fakeId2"
+    expect(client.get_value_details("key1", nil).variation_id).to eq "fakeId1"
+    expect(client.get_value_details("key2", nil).variation_id).to eq "fakeId2"
     client.close()
   end
 
   it "test_get_variation_id_not_found" do
     client = ConfigCatClient.get("test", ConfigCatOptions.new(polling_mode: PollingMode.manual_poll,
                                                               config_cache: ConfigCacheMock.new))
-    expect(client.get_variation_id("nonexisting", "default_variation_id")).to eq "default_variation_id"
+    expect(client.get_value_details("nonexisting", "default_value").variation_id).to be_nil
     client.close()
   end
 
   it "test_get_variation_id_empty_config" do
     client = ConfigCatClient.get("test", ConfigCatOptions.new(polling_mode: PollingMode.manual_poll,
                                                               config_cache: ConfigCacheMock.new))
-    expect(client.get_variation_id("nonexisting", "default_variation_id")).to eq "default_variation_id"
-    client.close()
-  end
-
-  it "test_get_all_variation_ids" do
-    client = ConfigCatClient.get("test", ConfigCatOptions.new(polling_mode: PollingMode.manual_poll,
-                                                              config_cache: ConfigCacheMock.new))
-    result = client.get_all_variation_ids()
-    expect(result.size).to eq 3
-    expect(result.include?("fakeId1")).to eq true
-    expect(result.include?("fakeId2")).to eq true
+    expect(client.get_value_details("nonexisting", "default_value").variation_id).to be_nil
     client.close()
   end
 
