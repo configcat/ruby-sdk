@@ -283,6 +283,15 @@ RSpec.describe ConfigCat::ConfigCatClient do
     client.close()
   end
 
+  it "test flag_overrides" do
+    flag_overrides = LocalDictionaryDataSource.new(
+      { some_feature: "yes" },
+      OverrideBehaviour::LOCAL_ONLY,
+    )
+    client = ConfigCatClient.get("test", ConfigCatOptions.new(flag_overrides: flag_overrides))
+    client.close()
+  end
+
   it "test_get_key_and_value" do
     client = ConfigCatClient.get("test", ConfigCatOptions.new(polling_mode: PollingMode.manual_poll,
                                                               config_cache: ConfigCacheMock.new))
