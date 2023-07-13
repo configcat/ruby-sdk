@@ -45,7 +45,7 @@ module ConfigCat
         raise "Invalid config JSON: #{config_json}. #{e.message}"
       end
 
-      ConfigEntry.new(config = config, etag = etag, config_json_string = config_json, fetch_time = fetch_time / 1000.0)
+      ConfigEntry.new(config, etag, config_json, fetch_time / 1000.0)
     end
 
     EMPTY = ConfigEntry.new(etag: 'empty')
