@@ -7,14 +7,13 @@ require 'configcat/refreshresult'
 module ConfigCat
   class ConfigService
     def initialize(sdk_key, polling_mode, hooks, config_fetcher, log, config_cache, is_offline)
-      @sdk_key = sdk_key
       @cached_entry = ConfigEntry::EMPTY
       @cached_entry_string = ''
       @polling_mode = polling_mode
       @log = log
       @config_cache = config_cache
       @hooks = hooks
-      @cache_key = Digest::SHA1.hexdigest("ruby_#{CONFIG_FILE_NAME}_#{@sdk_key}")
+      @cache_key = ConfigService.get_cache_key(sdk_key)
       @config_fetcher = config_fetcher
       @is_offline = is_offline
       @response_future = nil
@@ -106,6 +105,10 @@ module ConfigCat
     end
 
     private
+
+    def self.get_cache_key(sdk_key)
+      Digest::SHA1.hexdigest("#{sdk_key}_#{CONFIG_FILE_NAME}.json_#{SERIALIZATION_FORMAT_VERSION}")
+    end
 
     # :return [ConfigEntry, String] Returns the ConfigEntry object and error message in case of any error.
     def fetch_if_older(time, prefer_cache: false)
@@ -201,7 +204,7 @@ module ConfigCat
         end
 
         @cached_entry_string = json_string
-        return ConfigEntry.create_from_json(JSON.parse(json_string))
+        return ConfigEntry.create_from_string(json_string)
       rescue Exception => e
         @log.error(2200, "Error occurred while reading the cache. #{e}")
         return ConfigEntry::EMPTY
@@ -210,7 +213,7 @@ module ConfigCat
 
     def write_cache(config_entry)
       begin
-        @config_cache.set(@cache_key, config_entry.to_json.to_json)
+        @config_cache.set(@cache_key, config_entry.serialize)
       rescue Exception => e
         @log.error(2201, "Error occurred while writing the cache. #{e}")
       end

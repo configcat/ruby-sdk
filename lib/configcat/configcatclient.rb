@@ -350,10 +350,6 @@ module ConfigCat
       return @_config_service.get_settings()
     end
 
-    def _get_cache_key
-      return Digest::SHA1.hexdigest("ruby_" + CONFIG_FILE_NAME + "_" + @_sdk_key)
-    end
-
     def _evaluate(key, user, default_value, default_variation_id, settings, fetch_time)
       user = user || @_default_user
       value, variation_id, rule, percentage_rule, error = @_rollout_evaluator.evaluate(

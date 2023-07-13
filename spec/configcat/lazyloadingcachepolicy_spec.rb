@@ -70,7 +70,7 @@ RSpec.describe "LazyLoadingCachePolicy" do
 
   it "test_get_skips_hitting_api_after_update_from_different_thread" do
     config_fetcher = double("ConfigFetcher")
-    successful_fetch_response = FetchResponse.success(ConfigEntry.new(JSON.parse(TEST_JSON)))
+    successful_fetch_response = FetchResponse.success(ConfigEntry.new(JSON.parse(TEST_JSON), '', TEST_JSON))
     allow(config_fetcher).to receive(:get_configuration).and_return(successful_fetch_response)
 
     polling_mode = PollingMode.lazy_load(cache_refresh_interval_seconds: 160)
@@ -117,12 +117,11 @@ RSpec.describe "LazyLoadingCachePolicy" do
   it "test_return_cached_config_when_cache_is_not_expired" do
     polling_mode = PollingMode.lazy_load(cache_refresh_interval_seconds: 1)
     config_fetcher = ConfigFetcherMock.new
-    config_cache = SingleValueConfigCache.new(
-      {
-        ConfigEntry::CONFIG => JSON.parse(TEST_JSON),
-        ConfigEntry::ETAG => 'test-etag',
-        ConfigEntry::FETCH_TIME => Utils.get_utc_now_seconds_since_epoch
-      }.to_json
+    config_cache = SingleValueConfigCache.new(ConfigEntry.new(
+      JSON.parse(TEST_JSON),
+      'test-etag',
+      TEST_JSON,
+      Utils.get_utc_now_seconds_since_epoch).serialize
     )
 
     hooks = Hooks.new
@@ -150,12 +149,11 @@ RSpec.describe "LazyLoadingCachePolicy" do
     cache_time_to_live_seconds = 1
     polling_mode = PollingMode.lazy_load(cache_refresh_interval_seconds: cache_time_to_live_seconds)
     config_fetcher = ConfigFetcherMock.new
-    config_cache = SingleValueConfigCache.new(
-      {
-        ConfigEntry::CONFIG => JSON.parse(TEST_JSON),
-        ConfigEntry::ETAG => 'test-etag',
-        ConfigEntry::FETCH_TIME => Utils.get_utc_now_seconds_since_epoch - cache_time_to_live_seconds
-      }.to_json
+    config_cache = SingleValueConfigCache.new(ConfigEntry.new(
+      JSON.parse(TEST_JSON),
+      'test-etag',
+      TEST_JSON,
+      Utils.get_utc_now_seconds_since_epoch - cache_time_to_live_seconds).serialize
     )
 
     hooks = Hooks.new
