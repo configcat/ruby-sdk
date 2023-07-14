@@ -126,8 +126,9 @@ module ConfigCat
       if settings.nil?
         message = "Config JSON is not present when evaluating setting '#{key}'. Returning the `default_value` parameter that you specified in your application: '#{default_value}'."
         @log.error(1000, message)
-        @hooks.invoke_on_flag_evaluated(EvaluationDetails.from_error(key, default_value, error: message))
-        return default_value
+        details = EvaluationDetails.from_error(key, default_value, error: message)
+        @hooks.invoke_on_flag_evaluated(details)
+        return details
       end
       details = _evaluate(key, user, default_value, nil, settings, fetch_time)
       return details
@@ -301,10 +302,6 @@ module ConfigCat
         end
       end
       return @_config_service.get_settings()
-    end
-
-    def _get_cache_key
-      return Digest::SHA1.hexdigest("ruby_" + CONFIG_FILE_NAME + "_" + @_sdk_key)
     end
 
     def _evaluate(key, user, default_value, default_variation_id, settings, fetch_time)

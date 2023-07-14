@@ -210,12 +210,11 @@ RSpec.describe "AutoPollingCachePolicy" do
     polling_mode = PollingMode.auto_poll(poll_interval_seconds: poll_interval_seconds,
                                          max_init_wait_time_seconds: max_init_wait_time_seconds)
     config_fetcher = ConfigFetcherMock.new
-    config_cache = SingleValueConfigCache.new(
-      {
-        ConfigEntry::CONFIG => JSON.parse(TEST_JSON),
-        ConfigEntry::ETAG => 'test-etag',
-        ConfigEntry::FETCH_TIME => Utils.get_utc_now_seconds_since_epoch
-      }.to_json
+    config_cache = SingleValueConfigCache.new(ConfigEntry.new(
+      JSON.parse(TEST_JSON),
+      'test-etag',
+      TEST_JSON,
+      Utils.get_utc_now_seconds_since_epoch).serialize
     )
 
     start_time = Time.now.utc
@@ -250,12 +249,11 @@ RSpec.describe "AutoPollingCachePolicy" do
     polling_mode = PollingMode.auto_poll(poll_interval_seconds: poll_interval_seconds,
                                          max_init_wait_time_seconds: max_init_wait_time_seconds)
     config_fetcher = ConfigFetcherMock.new
-    config_cache = SingleValueConfigCache.new(
-      {
-        ConfigEntry::CONFIG => JSON.parse(TEST_JSON),
-        ConfigEntry::ETAG => 'test-etag',
-        ConfigEntry::FETCH_TIME => Utils.get_utc_now_seconds_since_epoch - poll_interval_seconds
-      }.to_json
+    config_cache = SingleValueConfigCache.new(ConfigEntry.new(
+      JSON.parse(TEST_JSON),
+      'test-etag',
+      TEST_JSON,
+      Utils.get_utc_now_seconds_since_epoch - poll_interval_seconds).serialize
     )
 
     hooks = Hooks.new
@@ -277,12 +275,11 @@ RSpec.describe "AutoPollingCachePolicy" do
     polling_mode = PollingMode.auto_poll(poll_interval_seconds: poll_interval_seconds,
                                          max_init_wait_time_seconds: max_init_wait_time_seconds)
     config_fetcher = ConfigFetcherWaitMock.new(5)
-    config_cache = SingleValueConfigCache.new(
-      {
-        ConfigEntry::CONFIG => JSON.parse(TEST_JSON2),
-        ConfigEntry::ETAG => 'test-etag',
-        ConfigEntry::FETCH_TIME => Utils.get_utc_now_seconds_since_epoch - 2 * poll_interval_seconds
-      }.to_json
+    config_cache = SingleValueConfigCache.new(ConfigEntry.new(
+      JSON.parse(TEST_JSON2),
+      'test-etag',
+      TEST_JSON2,
+      Utils.get_utc_now_seconds_since_epoch - 2 * poll_interval_seconds).serialize
     )
 
     start_time = Time.now.utc

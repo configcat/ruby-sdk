@@ -1,5 +1,6 @@
 module ConfigCat
   CONFIG_FILE_NAME = "config_v5"
+  SERIALIZATION_FORMAT_VERSION = "v2"
 
   PREFERENCES = "p"
   BASE_URL = "u"
