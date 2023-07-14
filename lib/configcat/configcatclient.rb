@@ -146,52 +146,6 @@ module ConfigCat
       return settings.keys
     end
 
-    # Gets the Variation ID (analytics) of a feature flag or setting based on it's key.
-    #
-    # :param key [String] the identifier of the feature flag or setting.
-    # :param default_variation_id in case of any failure, this value will be returned.
-    # :param user [User] the user object to identify the caller.
-    # :return the variation ID.
-    def get_variation_id(key, default_variation_id, user = nil)
-      ConfigCat.logger.warn("get_variation_id is deprecated and will be removed in a future major version. " \
-                            "Please use [get_value_details] instead.")
-
-      settings, fetch_time = _get_settings()
-      if settings === nil
-        message = "Config JSON is not present when evaluating setting '#{key}'. Returning the `default_variation_id` parameter that you specified in your application: '#{default_variation_id}'."
-        @log.error(1000, message)
-        @hooks.invoke_on_flag_evaluated(EvaluationDetails.from_error(key, nil, error: message,
-                                                                     variation_id: default_variation_id))
-        return default_variation_id
-      end
-      details = _evaluate(key, user, nil, default_variation_id, settings, fetch_time)
-      return details.variation_id
-    end
-
-    # Gets the Variation IDs (analytics) of all feature flags or settings.
-    #
-    # :param user [User] the user object to identify the caller.
-    # :return list of variation IDs
-    def get_all_variation_ids(user = nil)
-      ConfigCat.logger.warn("get_all_variation_ids is deprecated and will be removed in a future major version. " \
-                            "Please use [get_value_details] instead.")
-
-      settings, _ = _get_settings()
-      if settings === nil
-        @log.error(1000, "Config JSON is not present. Returning empty list.")
-        return []
-      end
-
-      variation_ids = []
-      for key in settings.keys
-        variation_id = get_variation_id(key, nil, user)
-        if !variation_id.equal?(nil)
-          variation_ids.push(variation_id)
-        end
-      end
-      return variation_ids
-    end
-
     # Gets the key of a setting, and it's value identified by the given Variation ID (analytics)
     #
     # :param variation_id [String] variation ID

@@ -62,7 +62,7 @@ RSpec.describe 'Rollout test', type: :feature do
       end
       i = 0
       for setting_key in setting_keys
-        value = (type == VARIATION_TEST_TYPE) ? client.get_variation_id(setting_key, nil, user_object) : client.get_value(setting_key, nil, user_object)
+        value = (type == VARIATION_TEST_TYPE) ? client.get_value_details(setting_key, nil, user_object).variation_id : client.get_value(setting_key, nil, user_object)
         if value.to_s != (user_descriptor[i + 4]).to_s
           errors += ((((((("Identifier: " + user_descriptor[0]) + ". SettingKey: ") + setting_key) + ". Expected: ") + ((user_descriptor[i + 4]).to_s)) + ". Result: ") + value.to_s) + ".\n"
         end
