@@ -69,7 +69,7 @@ class ConfigFetcherMock
     @_call_count += 1
     if etag != @_etag
       @_fetch_count += 1
-      return FetchResponse.success(ConfigEntry.new(JSON.parse(@_configuration), @_etag, Utils.get_utc_now_seconds_since_epoch))
+      return FetchResponse.success(ConfigEntry.new(JSON.parse(@_configuration), @_etag, @_configuration, Utils.get_utc_now_seconds_since_epoch))
     end
     return FetchResponse.not_modified
   end
@@ -111,9 +111,9 @@ class ConfigFetcherWaitMock
     @_wait_seconds = wait_seconds
   end
 
-  def get_configuration(*)
+  def get_configuration(etag = '')
     sleep(@_wait_seconds)
-    return FetchResponse.success(ConfigEntry.new(JSON.parse(TEST_JSON)))
+    return FetchResponse.success(ConfigEntry.new(JSON.parse(TEST_JSON), etag, TEST_JSON))
   end
 
   def close
@@ -125,10 +125,11 @@ class ConfigFetcherCountMock
     @_value = 0
   end
 
-  def get_configuration(*)
+  def get_configuration(etag = '')
     @_value += 1
-    config = JSON.parse(TEST_JSON_FORMAT % { value: @_value })
-    return FetchResponse.success(ConfigEntry.new(config))
+    config_json_string = TEST_JSON_FORMAT % { value: @_value }
+    config = JSON.parse(config_json_string)
+    return FetchResponse.success(ConfigEntry.new(config, etag, config_json_string))
   end
 
   def close
@@ -137,7 +138,7 @@ end
 
 class ConfigCacheMock < ConfigCache
   def get(key)
-    return JSON.dump({ ConfigEntry::CONFIG => TEST_OBJECT, ConfigEntry::ETAG => 'test-etag' })
+    [Utils::DISTANT_PAST, 'test-etag', JSON.dump(TEST_OBJECT)].join("\n")
   end
 
   def set(key, value)
@@ -145,7 +146,7 @@ class ConfigCacheMock < ConfigCache
 end
 
 class SingleValueConfigCache < ConfigCache
-  attr_reader :value
+  attr_accessor :value
 
   def initialize(value)
     @value = value

@@ -69,7 +69,8 @@ RSpec.describe "ManualPollingCachePolicy" do
 
   it "test_cache" do
     stub_request = WebMock.stub_request(:get, Regexp.new('https://.*'))
-                          .to_return(status: 200, body: TEST_JSON_FORMAT % { value: '"test"' }, headers: {})
+                          .to_return(status: 200, body: TEST_JSON_FORMAT % { value: '"test"' },
+                                     headers: { 'ETag' => 'test-etag' })
 
     polling_mode = PollingMode.manual_poll
     hooks = Hooks.new
@@ -78,20 +79,40 @@ RSpec.describe "ManualPollingCachePolicy" do
     config_cache = InMemoryConfigCache.new
     cache_policy = ConfigService.new("", polling_mode, hooks, config_fetcher, logger, config_cache, false)
 
+    start_time_milliseconds = (Utils.get_utc_now_seconds_since_epoch * 1000).floor
     cache_policy.refresh
     settings, _ = cache_policy.get_settings
     expect(settings.fetch("testKey").fetch(VALUE)).to eq "test"
     expect(stub_request).to have_been_made.times(1)
     expect(config_cache.value.length).to eq 1
 
-    WebMock.stub_request(:get, Regexp.new('https://.*'))
-           .to_return(status: 200, body: TEST_JSON_FORMAT % { value: '"test2"' }, headers: {})
+    # Check cache content
+    cache_tokens = config_cache.value.values[0].split("\n")
+    expect(cache_tokens.length).to eq(3)
+    expect(start_time_milliseconds).to be <= cache_tokens[0].to_f
+    expect((Utils.get_utc_now_seconds_since_epoch * 1000).floor).to be >= cache_tokens[0].to_f
+    expect(cache_tokens[1]).to eq('test-etag')
+    expect(cache_tokens[2]).to eq(TEST_JSON_FORMAT % { value: '"test"' })
 
+    # Update response
+    WebMock.stub_request(:get, Regexp.new('https://.*'))
+           .to_return(status: 200, body: TEST_JSON_FORMAT % { value: '"test2"' },
+                      headers: { 'ETag' => 'test-etag' })
+
+    start_time_milliseconds = (Utils.get_utc_now_seconds_since_epoch * 1000).floor
     cache_policy.refresh
     settings, _ = cache_policy.get_settings
     expect(settings.fetch("testKey").fetch(VALUE)).to eq "test2"
     expect(stub_request).to have_been_made.times(2)
     expect(config_cache.value.length).to eq 1
+
+    # Check cache content
+    cache_tokens = config_cache.value.values[0].split("\n")
+    expect(cache_tokens.length).to eq(3)
+    expect(start_time_milliseconds).to be <= cache_tokens[0].to_f
+    expect((Utils.get_utc_now_seconds_since_epoch * 1000).floor).to be >= cache_tokens[0].to_f
+    expect(cache_tokens[1]).to eq('test-etag')
+    expect(cache_tokens[2]).to eq(TEST_JSON_FORMAT % { value: '"test2"' })
 
     cache_policy.close
   end
