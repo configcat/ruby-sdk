@@ -52,8 +52,8 @@ jobs:
         bundler-cache: true
     - name: Run tests with coverage
       run: bundle exec rake
-      env:
-        COV: true
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
   
   publish:
     needs: coverage
