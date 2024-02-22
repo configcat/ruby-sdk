@@ -4,6 +4,10 @@ module ConfigCat
       @hooks = hooks
     end
 
+    def enabled_for?(log_level)
+      ConfigCat.logger.level <= log_level
+    end
+
     def debug(message)
       ConfigCat.logger.debug("[0] " + message)
     end

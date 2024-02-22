@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-_SDK_KEY = "PKDVCLf-Hq-h-kCzMp-L7Q/PaDVCFk9EpmD6sLpGLltTA"
+_SDK_KEY = "configcat-sdk-1/PKDVCLf-Hq-h-kCzMp-L7Q/1cGEJXUwYUGZCBOL-E2sOw"
 RSpec.describe 'Integration test: DefaultTests', type: :feature do
   it "test_without_sdk_key" do
     expect {

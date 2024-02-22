@@ -3,33 +3,25 @@ require 'configcat/localdictionarydatasource'
 require 'configcat/localfiledatasource'
 require 'tempfile'
 require 'json'
+require_relative 'configcat/mocks'
+
 
 RSpec.describe 'Override test', type: :feature do
   script_dir = File.dirname(__FILE__)
 
   def stub_request
-    uri_template = Addressable::Template.new "https://{base_url}/{base_path}/{api_key}/{base_ext}"
-    json = '{"f": {"fakeKey": {"v": false} } }'
-    WebMock.stub_request(:get, uri_template)
-        .with(
-          body: "",
-          headers: {
-              'Accept' => '*/*',
-              'Content-Type' => 'application/json',
-              'Accept-Encoding' => 'gzip;q=1.0,deflate;q=0.6,identity;q=0.3'
-          }
-        )
-        .to_return(status: 200, body: json, headers: {})
+    json = '{"f": {"fakeKey": {"v": {"b": false}, "t": 0}, "fakeKey2": {"v": {"s": "test"}, "t": 1}}}'
+    WebMock.stub_request(:get, Regexp.new('https://.*')).to_return(status: 200, body: json, headers: {})
   end
 
   it "test file" do
     options = ConfigCat::ConfigCatOptions.new(polling_mode: ConfigCat::PollingMode.manual_poll,
                                               flag_overrides: ConfigCat::LocalFileFlagOverrides.new(
-                                                File.join(script_dir, "test.json"),
+                                                File.join(script_dir, "data/test.json"),
                                                 ConfigCat::OverrideBehaviour::LOCAL_ONLY
                                               )
     )
-    client = ConfigCat::ConfigCatClient.get("test", options)
+    client = ConfigCat::ConfigCatClient.get("", options)
 
     expect(client.get_value("enabledFeature", false)).to eq true
     expect(client.get_value("disabledFeature", true)).to eq false
@@ -42,11 +34,11 @@ RSpec.describe 'Override test', type: :feature do
   it "test simple file" do
     options = ConfigCat::ConfigCatOptions.new(polling_mode: ConfigCat::PollingMode.manual_poll,
                                               flag_overrides: ConfigCat::LocalFileFlagOverrides.new(
-                                                File.join(script_dir, "test-simple.json"),
+                                                File.join(script_dir, "data/test-simple.json"),
                                                 ConfigCat::OverrideBehaviour::LOCAL_ONLY
                                               )
     )
-    client = ConfigCat::ConfigCatClient.get("test", options)
+    client = ConfigCat::ConfigCatClient.get(TEST_SDK_KEY, options)
 
     expect(client.get_value("enabledFeature", false)).to eq true
     expect(client.get_value("disabledFeature", true)).to eq false
@@ -63,7 +55,7 @@ RSpec.describe 'Override test', type: :feature do
                                                 ConfigCat::OverrideBehaviour::LOCAL_ONLY
                                               )
     )
-    client = ConfigCat::ConfigCatClient.get("test", options)
+    client = ConfigCat::ConfigCatClient.get(TEST_SDK_KEY, options)
 
     expect(client.get_value("enabledFeature", false)).to eq false
     client.close
@@ -82,7 +74,7 @@ RSpec.describe 'Override test', type: :feature do
                                                   ConfigCat::OverrideBehaviour::LOCAL_ONLY
                                                 )
       )
-      client = ConfigCat::ConfigCatClient.get("test", options)
+      client = ConfigCat::ConfigCatClient.get(TEST_SDK_KEY, options)
 
       expect(client.get_value("enabledFeature", true)).to eq false
 
@@ -117,7 +109,7 @@ RSpec.describe 'Override test', type: :feature do
                                                   ConfigCat::OverrideBehaviour::LOCAL_ONLY
                                                 )
       )
-      client = ConfigCat::ConfigCatClient.get("test", options)
+      client = ConfigCat::ConfigCatClient.get(TEST_SDK_KEY, options)
 
       expect(client.get_value("enabledFeature", false)).to eq false
       client.close
@@ -140,7 +132,7 @@ RSpec.describe 'Override test', type: :feature do
                                                 ConfigCat::OverrideBehaviour::LOCAL_ONLY
                                               )
     )
-    client = ConfigCat::ConfigCatClient.get("test", options)
+    client = ConfigCat::ConfigCatClient.get(TEST_SDK_KEY, options)
 
     expect(client.get_value("enabledFeature", false)).to eq true
     expect(client.get_value("disabledFeature", true)).to eq false
@@ -162,7 +154,7 @@ RSpec.describe 'Override test', type: :feature do
                                                 ConfigCat::OverrideBehaviour::LOCAL_OVER_REMOTE
                                               )
     )
-    client = ConfigCat::ConfigCatClient.get("test", options)
+    client = ConfigCat::ConfigCatClient.get(TEST_SDK_KEY, options)
     client.force_refresh
 
     expect(client.get_value("fakeKey", false)).to eq true
@@ -183,7 +175,7 @@ RSpec.describe 'Override test', type: :feature do
                                                 ConfigCat::OverrideBehaviour::REMOTE_OVER_LOCAL
                                               )
     )
-    client = ConfigCat::ConfigCatClient.get("test", options)
+    client = ConfigCat::ConfigCatClient.get(TEST_SDK_KEY, options)
     client.force_refresh
 
     expect(client.get_value("fakeKey", true)).to eq false

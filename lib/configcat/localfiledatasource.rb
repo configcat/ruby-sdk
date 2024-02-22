@@ -1,5 +1,5 @@
 require 'configcat/overridedatasource'
-require 'configcat/constants'
+require 'configcat/config'
 
 
 module ConfigCat
@@ -22,13 +22,13 @@ module ConfigCat
         @log.error(1300, "Cannot find the local config file '#{file_path}'. This is a path that your application provided to the ConfigCat SDK by passing it to the `LocalFileFlagOverrides.new()` method. Read more: https://configcat.com/docs/sdk-reference/ruby/#json-file")
       end
       @_file_path = file_path
-      @_settings = nil
+      @_config = nil
       @_cached_file_stamp = 0
     end
 
     def get_overrides
       reload_file_content()
-      return @_settings
+      return @_config
     end
 
     private
@@ -41,13 +41,29 @@ module ConfigCat
           file = File.read(@_file_path)
           data = JSON.parse(file)
           if data.key?("flags")
-            @_settings = {}
+            @_config = {FEATURE_FLAGS => {}}
             source = data["flags"]
             source.each do |key, value|
-              @_settings[key] = { VALUE => value }
+              value_type = case value
+                           when true, false
+                             BOOL_VALUE
+                           when String
+                             STRING_VALUE
+                           when Integer
+                             INT_VALUE
+                           when Float
+                             DOUBLE_VALUE
+                           else
+                             UNSUPPORTED_VALUE
+                           end
+
+              @_config[FEATURE_FLAGS][key] = {VALUE => {value_type => value}}
+              setting_type = SettingType.from_type(value.class)
+              @_config[FEATURE_FLAGS][key][SETTING_TYPE] = setting_type.to_i unless setting_type.nil?
             end
           else
-            @_settings = data[FEATURE_FLAGS]
+            Config.extend_config_with_inline_salt_and_segment(data)
+            @_config = data
           end
         end
       rescue JSON::ParserError => e

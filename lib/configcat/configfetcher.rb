@@ -1,7 +1,7 @@
 require 'configcat/interfaces'
 require 'configcat/version'
 require 'configcat/datagovernance'
-require 'configcat/constants'
+require 'configcat/config'
 require 'configcat/configentry'
 require 'net/http'
 require 'uri'
@@ -20,8 +20,8 @@ module ConfigCat
   end
 
   class Status
-    FETCHED = 0,
-    NOT_MODIFIED = 1,
+    FETCHED = 0
+    NOT_MODIFIED = 1
     FAILURE = 2
   end
 
@@ -179,6 +179,7 @@ module ConfigCat
             response_etag = ""
           end
           config = JSON.parse(response.body)
+          Config.extend_config_with_inline_salt_and_segment(config)
           return FetchResponse.success(ConfigEntry.new(config, response_etag, response.body, Utils.get_utc_now_seconds_since_epoch))
         when Net::HTTPNotModified
           return FetchResponse.not_modified
@@ -198,7 +199,9 @@ module ConfigCat
         @log.error(1102, error)
         return FetchResponse.failure(error, true)
       rescue Exception => e
-        error = "Unexpected error occurred while trying to fetch config JSON: #{e}"
+        error = "Unexpected error occurred while trying to fetch config JSON. It is most likely due to a local network " \
+                "issue. Please make sure your application can reach the ConfigCat CDN servers (or your proxy server) " \
+                "over HTTP. #{e}"
         @log.error(1103, error)
         return FetchResponse.failure(error, true)
       end

@@ -18,8 +18,8 @@ RSpec.describe ConfigCat::InMemoryConfigCache do
   end
 
   it "test_cache_key" do
-    expect(ConfigService.send(:get_cache_key, 'test1')).to eq('147c5b4c2b2d7c77e1605b1a4309f0ea6684a0c6')
-    expect(ConfigService.send(:get_cache_key, 'test2')).to eq('c09513b1756de9e4bc48815ec7a142b2441ed4d5')
+    expect(ConfigService.send(:get_cache_key, 'configcat-sdk-1/TEST_KEY-0123456789012/1234567890123456789012')).to eq('f83ba5d45bceb4bb704410f51b704fb6dfa19942')
+    expect(ConfigService.send(:get_cache_key, 'configcat-sdk-1/TEST_KEY2-123456789012/1234567890123456789012')).to eq('da7bfd8662209c8ed3f9db96daed4f8d91ba5876')
   end
 
   it "test_cache_payload" do
@@ -32,7 +32,7 @@ RSpec.describe ConfigCat::InMemoryConfigCache do
   it "tests_invalid_cache_content" do
     hook_callbacks = HookCallbacks.new
     hooks = Hooks.new(on_error: hook_callbacks.method(:on_error))
-    config_json_string = TEST_JSON_FORMAT % { value: '"test"' }
+    config_json_string = TEST_JSON_FORMAT % { value_type: SettingType::STRING, value: '{"s": "test"}' }
     config_cache = SingleValueConfigCache.new(ConfigEntry.new(
       JSON.parse(config_json_string),
       'test-etag',
@@ -40,21 +40,21 @@ RSpec.describe ConfigCat::InMemoryConfigCache do
       Utils.get_utc_now_seconds_since_epoch).serialize
     )
 
-    client = ConfigCatClient.get('test', ConfigCatOptions.new(polling_mode: PollingMode.manual_poll,
-                                                              config_cache: config_cache,
-                                                              hooks: hooks))
+    client = ConfigCatClient.get(TEST_SDK_KEY, ConfigCatOptions.new(polling_mode: PollingMode.manual_poll,
+                                                                    config_cache: config_cache,
+                                                                    hooks: hooks))
 
     expect(client.get_value('testKey', 'default')).to eq('test')
     expect(hook_callbacks.error_call_count).to eq(0)
 
     # Invalid fetch time in cache
-    config_cache.value = ['text', 'test-etag', TEST_JSON_FORMAT % { value: '"test2"' }].join("\n")
+    config_cache.value = ['text', 'test-etag', TEST_JSON_FORMAT % { value_type: SettingType::STRING, value: '{"s": "test2}"' }].join("\n")
 
     expect(client.get_value('testKey', 'default')).to eq('test')
     expect(hook_callbacks.error).to include('Error occurred while reading the cache. Invalid fetch time: text')
 
     # Number of values is fewer than expected
-    config_cache.value = [Utils.get_utc_now_seconds_since_epoch.to_s, TEST_JSON_FORMAT % { value: '"test2"' }].join("\n")
+    config_cache.value = [Utils.get_utc_now_seconds_since_epoch.to_s, TEST_JSON_FORMAT % { value_type: SettingType::STRING, value: '{"s": "test2}"' }].join("\n")
 
     expect(client.get_value('testKey', 'default')).to eq('test')
     expect(hook_callbacks.error).to include('Error occurred while reading the cache. Number of values is fewer than expected.')

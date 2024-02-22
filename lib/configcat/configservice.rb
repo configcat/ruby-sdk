@@ -30,13 +30,12 @@ module ConfigCat
       end
     end
 
-    def get_settings
+    def get_config
       if @polling_mode.is_a?(LazyLoadingMode)
         entry, _ = fetch_if_older(Utils.get_utc_now_seconds_since_epoch - @polling_mode.cache_refresh_interval_seconds)
         return !entry.empty? ?
-          [entry.config.fetch(FEATURE_FLAGS, {}), entry.fetch_time] :
+          [entry.config, entry.fetch_time] :
           [nil, Utils::DISTANT_PAST]
-          
       elsif @polling_mode.is_a?(AutoPollingMode) && !@initialized.set?
         elapsed_time = Utils.get_utc_now_seconds_since_epoch - @start_time # Elapsed time in seconds
         if elapsed_time < @polling_mode.max_init_wait_time_seconds
@@ -46,20 +45,27 @@ module ConfigCat
           if !@initialized.set?
             set_initialized
             return !@cached_entry.empty? ?
-              [@cached_entry.config.fetch(FEATURE_FLAGS, {}), @cached_entry.fetch_time] :
+              [@cached_entry.config, @cached_entry.fetch_time] :
               [nil, Utils::DISTANT_PAST]
           end
         end
       end
 
-      entry, _ = fetch_if_older(Utils::DISTANT_PAST, prefer_cache: true)
+      # If we are initialized, we prefer the cached results
+      entry, _ = fetch_if_older(Utils::DISTANT_PAST, prefer_cache: @initialized.set?)
       return !entry.empty? ?
-        [entry.config.fetch(FEATURE_FLAGS, {}), entry.fetch_time] :
+        [entry.config, entry.fetch_time] :
         [nil, Utils::DISTANT_PAST]
     end
 
     # :return [RefreshResult]
     def refresh
+      if offline?
+        offline_warning = "Client is in offline mode, it cannot initiate HTTP calls."
+        @log.warn(3200, offline_warning)
+        return RefreshResult.new(success = false, error = offline_warning)
+      end
+
       _, error = fetch_if_older(Utils::DISTANT_FUTURE)
       return RefreshResult.new(success = error.nil?, error = error)
     end
@@ -74,7 +80,7 @@ module ConfigCat
         if @polling_mode.is_a?(AutoPollingMode)
           start_poll
         end
-        @log.info(5200, 'Switched to ONLINE mode.')
+        @log.info(5200, "Switched to ONLINE mode.")
       end
     end
 
@@ -90,7 +96,7 @@ module ConfigCat
           @thread.join
         end
 
-        @log.info(5200, 'Switched to OFFLINE mode.')
+        @log.info(5200, "Switched to OFFLINE mode.")
       end
     end
 
@@ -111,35 +117,25 @@ module ConfigCat
     end
 
     # :return [ConfigEntry, String] Returns the ConfigEntry object and error message in case of any error.
-    def fetch_if_older(time, prefer_cache: false)
+    def fetch_if_older(threshold, prefer_cache: false)
       # Sync up with the cache and use it when it's not expired.
       @lock.synchronize do
-        if @cached_entry.empty? || @cached_entry.fetch_time > time
-          entry = read_cache
-          if !entry.empty? && entry.etag != @cached_entry.etag
-            @cached_entry = entry
-            @hooks.invoke_on_config_changed(entry.config[FEATURE_FLAGS])
-          end
-
-          # Cache isn't expired
-          if @cached_entry.fetch_time > time
-            set_initialized
-            return @cached_entry, nil
-          end
+        # Sync up with the cache and use it when it's not expired.
+        from_cache = read_cache
+        if !from_cache.empty? && from_cache.etag != @cached_entry.etag
+          @cached_entry = from_cache
+          @hooks.invoke_on_config_changed(from_cache.config[FEATURE_FLAGS])
         end
 
-        # Use cache anyway (get calls on auto & manual poll must not initiate fetch).
-        # The initialized check ensures that we subscribe for the ongoing fetch during the
-        # max init wait time window in case of auto poll.
-        if prefer_cache && @initialized.set?
+        # Cache isn't expired
+        if @cached_entry.fetch_time > threshold
+          set_initialized
           return @cached_entry, nil
         end
 
-        # If we are in offline mode we are not allowed to initiate fetch.
-        if @is_offline
-          offline_warning = "Client is in offline mode, it cannot initiate HTTP calls."
-          @log.warn(3200, offline_warning)
-          return @cached_entry, offline_warning
+        # If we are in offline mode or the caller prefers cached values, do not initiate fetch.
+        if @is_offline || prefer_cache
+          return @cached_entry, nil
         end
       end
 

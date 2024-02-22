@@ -5,27 +5,27 @@ RSpec.describe 'Rollout test', type: :feature do
   VARIATION_TEST_TYPE = "variation_test"
 
   it "test matrix" do
-    test_matrix("./testmatrix.csv", "PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A", VALUE_TEST_TYPE)
+    test_matrix("./data/testmatrix.csv", "PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A", VALUE_TEST_TYPE)
   end
 
   it "test matrix semantic" do
-    test_matrix("./testmatrix_semantic.csv", "PKDVCLf-Hq-h-kCzMp-L7Q/BAr3KgLTP0ObzKnBTo5nhA", VALUE_TEST_TYPE)
+    test_matrix("./data/testmatrix_semantic.csv", "PKDVCLf-Hq-h-kCzMp-L7Q/BAr3KgLTP0ObzKnBTo5nhA", VALUE_TEST_TYPE)
   end
 
   it "test matrix semantic 2" do
-    test_matrix("./testmatrix_semantic_2.csv", "PKDVCLf-Hq-h-kCzMp-L7Q/q6jMCFIp-EmuAfnmZhPY7w", VALUE_TEST_TYPE)
+    test_matrix("./data/testmatrix_semantic_2.csv", "PKDVCLf-Hq-h-kCzMp-L7Q/q6jMCFIp-EmuAfnmZhPY7w", VALUE_TEST_TYPE)
   end
 
   it "test matrix number" do
-    test_matrix("./testmatrix_number.csv", "PKDVCLf-Hq-h-kCzMp-L7Q/uGyK3q9_ckmdxRyI7vjwCw", VALUE_TEST_TYPE)
+    test_matrix("./data/testmatrix_number.csv", "PKDVCLf-Hq-h-kCzMp-L7Q/uGyK3q9_ckmdxRyI7vjwCw", VALUE_TEST_TYPE)
   end
 
   it "test matrix sensitive" do
-    test_matrix("./testmatrix_sensitive.csv", "PKDVCLf-Hq-h-kCzMp-L7Q/qX3TP2dTj06ZpCCT1h_SPA", VALUE_TEST_TYPE)
+    test_matrix("./data/testmatrix_sensitive.csv", "PKDVCLf-Hq-h-kCzMp-L7Q/qX3TP2dTj06ZpCCT1h_SPA", VALUE_TEST_TYPE)
   end
 
   it "test matrix variation id" do
-    test_matrix("./testmatrix_variationId.csv", "PKDVCLf-Hq-h-kCzMp-L7Q/nQ5qkhRAUEa6beEyyrVLBA", VARIATION_TEST_TYPE)
+    test_matrix("./data/testmatrix_variationId.csv", "PKDVCLf-Hq-h-kCzMp-L7Q/nQ5qkhRAUEa6beEyyrVLBA", VARIATION_TEST_TYPE)
   end
 
   def test_matrix(file_path, sdk_key, type)

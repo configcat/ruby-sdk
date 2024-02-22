@@ -4,12 +4,12 @@ require_relative 'mocks'
 
 RSpec.describe ConfigCat::ConfigCatClient do
   it "test_ensure_singleton_per_sdk_key" do
-    client1 = ConfigCatClient.get('test', ConfigCatOptions.new(polling_mode: PollingMode.manual_poll))
-    client2 = ConfigCatClient.get('test', ConfigCatOptions.new(polling_mode: PollingMode.manual_poll))
+    client1 = ConfigCatClient.get(TEST_SDK_KEY, ConfigCatOptions.new(polling_mode: PollingMode.manual_poll))
+    client2 = ConfigCatClient.get(TEST_SDK_KEY, ConfigCatOptions.new(polling_mode: PollingMode.manual_poll))
     expect(client1).to eq(client2)
 
     ConfigCatClient.close_all
-    client1 = ConfigCatClient.get('test', ConfigCatOptions.new(polling_mode: PollingMode.manual_poll))
+    client1 = ConfigCatClient.get(TEST_SDK_KEY, ConfigCatOptions.new(polling_mode: PollingMode.manual_poll))
     expect(client1).not_to eq(client2)
 
     ConfigCatClient.close_all
@@ -22,57 +22,57 @@ RSpec.describe ConfigCat::ConfigCatClient do
   end
 
   it "test_bool" do
-    client = ConfigCatClient.get("test", ConfigCatOptions.new(polling_mode: PollingMode.manual_poll,
-                                                              config_cache: ConfigCacheMock.new))
+    client = ConfigCatClient.get(TEST_SDK_KEY, ConfigCatOptions.new(polling_mode: PollingMode.manual_poll,
+                                                                    config_cache: ConfigCacheMock.new))
     expect(client.get_value("testBoolKey", false)).to eq true
     client.close()
   end
 
   it "test_string" do
-    client = ConfigCatClient.get("test", ConfigCatOptions.new(polling_mode: PollingMode.manual_poll,
-                                                              config_cache: ConfigCacheMock.new))
+    client = ConfigCatClient.get(TEST_SDK_KEY, ConfigCatOptions.new(polling_mode: PollingMode.manual_poll,
+                                                                    config_cache: ConfigCacheMock.new))
     expect(client.get_value("testStringKey", "default")).to eq "testValue"
     client.close()
   end
 
   it "test_int" do
-    client = ConfigCatClient.get("test", ConfigCatOptions.new(polling_mode: PollingMode.manual_poll,
-                                                              config_cache: ConfigCacheMock.new))
+    client = ConfigCatClient.get(TEST_SDK_KEY, ConfigCatOptions.new(polling_mode: PollingMode.manual_poll,
+                                                                    config_cache: ConfigCacheMock.new))
     expect(client.get_value("testIntKey", 0)).to eq 1
     client.close()
   end
 
   it "test_double" do
-    client = ConfigCatClient.get("test", ConfigCatOptions.new(polling_mode: PollingMode.manual_poll,
-                                                              config_cache: ConfigCacheMock.new))
+    client = ConfigCatClient.get(TEST_SDK_KEY, ConfigCatOptions.new(polling_mode: PollingMode.manual_poll,
+                                                                    config_cache: ConfigCacheMock.new))
     expect(client.get_value("testDoubleKey", 0.0)).to eq 1.1
     client.close()
   end
 
   it "test_unknown" do
-    client = ConfigCatClient.get("test", ConfigCatOptions.new(polling_mode: PollingMode.manual_poll,
-                                                              config_cache: ConfigCacheMock.new))
+    client = ConfigCatClient.get(TEST_SDK_KEY, ConfigCatOptions.new(polling_mode: PollingMode.manual_poll,
+                                                                    config_cache: ConfigCacheMock.new))
     expect(client.get_value("testUnknownKey", "default")).to eq "default"
     client.close()
   end
 
   it "test_invalidation" do
-    client = ConfigCatClient.get("test", ConfigCatOptions.new(polling_mode: PollingMode.manual_poll,
-                                                              config_cache: ConfigCacheMock.new))
+    client = ConfigCatClient.get(TEST_SDK_KEY, ConfigCatOptions.new(polling_mode: PollingMode.manual_poll,
+                                                                    config_cache: ConfigCacheMock.new))
     expect(client.get_value("testBoolKey", false)).to eq true
     client.close()
   end
 
   it "test_get_all_keys" do
-    client = ConfigCatClient.get("test", ConfigCatOptions.new(polling_mode: PollingMode.manual_poll,
-                                                              config_cache: ConfigCacheMock.new))
+    client = ConfigCatClient.get(TEST_SDK_KEY, ConfigCatOptions.new(polling_mode: PollingMode.manual_poll,
+                                                                    config_cache: ConfigCacheMock.new))
     expect(Set.new(client.get_all_keys())).to eq Set.new(["testBoolKey", "testStringKey", "testIntKey", "testDoubleKey", "key1", "key2"])
     client.close()
   end
 
   it "test_get_all_values" do
-    client = ConfigCatClient.get("test", ConfigCatOptions.new(polling_mode: PollingMode.manual_poll,
-                                                              config_cache: ConfigCacheMock.new))
+    client = ConfigCatClient.get(TEST_SDK_KEY, ConfigCatOptions.new(polling_mode: PollingMode.manual_poll,
+                                                                    config_cache: ConfigCacheMock.new))
     all_values = client.get_all_values()
     expect(all_values.size).to eq 6
     expect(all_values["testBoolKey"]).to eq true
@@ -80,13 +80,13 @@ RSpec.describe ConfigCat::ConfigCatClient do
     expect(all_values["testIntKey"]).to eq 1
     expect(all_values["testDoubleKey"]).to eq 1.1
     expect(all_values["key1"]).to eq true
-    expect(all_values["key2"]).to eq false
+    expect(all_values["key2"]).to eq "fake4"
     client.close()
   end
 
   it "test_get_all_value_details" do
-    client = ConfigCatClient.get('test', ConfigCatOptions.new(polling_mode: PollingMode.manual_poll,
-                                                              config_cache: ConfigCacheMock.new))
+    client = ConfigCatClient.get(TEST_SDK_KEY, ConfigCatOptions.new(polling_mode: PollingMode.manual_poll,
+                                                                    config_cache: ConfigCacheMock.new))
     all_details = client.get_all_value_details
 
     def details_by_key(all_details, key)
@@ -118,12 +118,12 @@ RSpec.describe ConfigCat::ConfigCatClient do
     details = details_by_key(all_details, 'key1')
     expect(details.key).to eq 'key1'
     expect(details.value).to eq true
-    expect(details.variation_id).to eq 'fakeId1'
+    expect(details.variation_id).to eq 'id3'
 
     details = details_by_key(all_details, 'key2')
     expect(details.key).to eq 'key2'
-    expect(details.value).to eq false
-    expect(details.variation_id).to eq 'fakeId2'
+    expect(details.value).to eq 'fake4'
+    expect(details.variation_id).to eq 'id4'
 
     client.close
   end
@@ -131,7 +131,7 @@ RSpec.describe ConfigCat::ConfigCatClient do
   it "test_get_value_details" do
     WebMock.stub_request(:get, Regexp.new('https://.*')).to_return(status: 200, body: TEST_OBJECT_JSON, headers: {})
 
-    client = ConfigCatClient.get('test', ConfigCatOptions.new(polling_mode: PollingMode.manual_poll))
+    client = ConfigCatClient.get(TEST_SDK_KEY, ConfigCatOptions.new(polling_mode: PollingMode.manual_poll))
     client.force_refresh
 
     user = User.new("test@test1.com")
@@ -142,11 +142,8 @@ RSpec.describe ConfigCat::ConfigCatClient do
     expect(details.variation_id).to eq('id1')
     expect(details.is_default_value).to be_falsey
     expect(details.error).to be_nil
-    expect(details.matched_evaluation_percentage_rule).to be_nil
-    expect(details.matched_evaluation_rule[VALUE]).to eq('fake1')
-    expect(details.matched_evaluation_rule[COMPARATOR]).to eq(2)
-    expect(details.matched_evaluation_rule[COMPARISON_ATTRIBUTE]).to eq('Identifier')
-    expect(details.matched_evaluation_rule[COMPARISON_VALUE]).to eq('@test1.com')
+    expect(details.matched_percentage_option).to be_nil
+    expect(details.matched_targeting_rule[SERVED_VALUE][VALUE][STRING_VALUE]).to eq('fake1')
     expect(details.user.to_s).to eq(user.to_s)
     now = Utils.get_utc_now_seconds_since_epoch
     expect(now).to be >= details.fetch_time.to_f
@@ -156,8 +153,8 @@ RSpec.describe ConfigCat::ConfigCatClient do
   end
 
   it "test_default_user_get_value" do
-    client = ConfigCatClient.get('test', ConfigCatOptions.new(polling_mode: PollingMode.manual_poll,
-                                                              config_cache: ConfigCacheMock.new))
+    client = ConfigCatClient.get(TEST_SDK_KEY, ConfigCatOptions.new(polling_mode: PollingMode.manual_poll,
+                                                                    config_cache: ConfigCacheMock.new))
     user1 = User.new("test@test1.com")
     user2 = User.new("test@test2.com")
 
@@ -172,8 +169,8 @@ RSpec.describe ConfigCat::ConfigCatClient do
   end
 
   it "test_default_user_get_all_values" do
-    client = ConfigCatClient.get('test', ConfigCatOptions.new(polling_mode: PollingMode.manual_poll,
-                                                              config_cache: ConfigCacheMock.new))
+    client = ConfigCatClient.get(TEST_SDK_KEY, ConfigCatOptions.new(polling_mode: PollingMode.manual_poll,
+                                                                    config_cache: ConfigCacheMock.new))
     user1 = User.new("test@test1.com")
     user2 = User.new("test@test2.com")
 
@@ -186,7 +183,7 @@ RSpec.describe ConfigCat::ConfigCatClient do
     expect(all_values['testIntKey']).to eq(1)
     expect(all_values['testDoubleKey']).to eq(1.1)
     expect(all_values['key1']).to be(true)
-    expect(all_values['key2']).to be(false)
+    expect(all_values['key2']).to eq('fake6')
 
     all_values = client.get_all_values(user2)
     # Two dictionary should have exactly the same elements, order doesn't matter.
@@ -196,7 +193,7 @@ RSpec.describe ConfigCat::ConfigCatClient do
     expect(all_values['testIntKey']).to eq(1)
     expect(all_values['testDoubleKey']).to eq(1.1)
     expect(all_values['key1']).to be(true)
-    expect(all_values['key2']).to be(false)
+    expect(all_values['key2']).to eq('fake8')
 
     client.clear_default_user()
     all_values = client.get_all_values
@@ -206,7 +203,7 @@ RSpec.describe ConfigCat::ConfigCatClient do
     expect(all_values['testIntKey']).to eq(1)
     expect(all_values['testDoubleKey']).to eq(1.1)
     expect(all_values['key1']).to be(true)
-    expect(all_values['key2']).to be(false)
+    expect(all_values['key2']).to eq('fake4')
 
     client.close
   end
@@ -214,7 +211,7 @@ RSpec.describe ConfigCat::ConfigCatClient do
   it "test_online_offline" do
     stub_request = WebMock.stub_request(:get, Regexp.new('https://.*')).to_return(status: 200, body: TEST_OBJECT_JSON, headers: {})
 
-    client = ConfigCatClient.get('test', ConfigCatOptions.new(polling_mode: PollingMode.manual_poll))
+    client = ConfigCatClient.get(TEST_SDK_KEY, ConfigCatOptions.new(polling_mode: PollingMode.manual_poll))
 
     expect(client.offline?).to be false
 
@@ -242,8 +239,8 @@ RSpec.describe ConfigCat::ConfigCatClient do
   it "test_init_offline" do
     stub_request = WebMock.stub_request(:get, Regexp.new('https://.*')).to_return(status: 200, body: TEST_OBJECT_JSON, headers: {})
 
-    client = ConfigCatClient.get('test', ConfigCatOptions.new(polling_mode: PollingMode.manual_poll,
-                                                              offline: true))
+    client = ConfigCatClient.get(TEST_SDK_KEY, ConfigCatOptions.new(polling_mode: PollingMode.manual_poll,
+                                                                    offline: true))
 
     expect(client.offline?).to be true
 
@@ -261,37 +258,65 @@ RSpec.describe ConfigCat::ConfigCatClient do
     client.close
   end
 
+  # variation id tests
+
   it "test_get_variation_id" do
-    client = ConfigCatClient.get("test", ConfigCatOptions.new(polling_mode: PollingMode.manual_poll,
-                                                              config_cache: ConfigCacheMock.new))
-    expect(client.get_value_details("key1", nil).variation_id).to eq "fakeId1"
-    expect(client.get_value_details("key2", nil).variation_id).to eq "fakeId2"
+    client = ConfigCatClient.get(TEST_SDK_KEY, ConfigCatOptions.new(polling_mode: PollingMode.manual_poll,
+                                                                    config_cache: ConfigCacheMock.new))
+    expect(client.get_value_details("key1", nil).variation_id).to eq "id3"
+    expect(client.get_value_details("key2", nil).variation_id).to eq "id4"
     client.close()
   end
 
   it "test_get_variation_id_not_found" do
-    client = ConfigCatClient.get("test", ConfigCatOptions.new(polling_mode: PollingMode.manual_poll,
-                                                              config_cache: ConfigCacheMock.new))
+    client = ConfigCatClient.get(TEST_SDK_KEY, ConfigCatOptions.new(polling_mode: PollingMode.manual_poll,
+                                                                    config_cache: ConfigCacheMock.new))
     expect(client.get_value_details("nonexisting", "default_value").variation_id).to be_nil
     client.close()
   end
 
   it "test_get_variation_id_empty_config" do
-    client = ConfigCatClient.get("test", ConfigCatOptions.new(polling_mode: PollingMode.manual_poll,
-                                                              config_cache: ConfigCacheMock.new))
+    client = ConfigCatClient.get(TEST_SDK_KEY, ConfigCatOptions.new(polling_mode: PollingMode.manual_poll,
+                                                                    config_cache: ConfigCacheMock.new))
     expect(client.get_value_details("nonexisting", "default_value").variation_id).to be_nil
     client.close()
   end
 
   it "test_get_key_and_value" do
-    client = ConfigCatClient.get("test", ConfigCatOptions.new(polling_mode: PollingMode.manual_poll,
-                                                              config_cache: ConfigCacheMock.new))
-    result = client.get_key_and_value("fakeId1")
+    client = ConfigCatClient.get(TEST_SDK_KEY, ConfigCatOptions.new(polling_mode: PollingMode.manual_poll,
+                                                                    config_cache: ConfigCacheMock.new))
+    result = client.get_key_and_value("id1")
+    expect(result.key).to eq "testStringKey"
+    expect(result.value).to eq "fake1"
+
+    result = client.get_key_and_value("id2")
+    expect(result.key).to eq "testStringKey"
+    expect(result.value).to eq "fake2"
+
+    result = client.get_key_and_value("id3")
     expect(result.key).to eq "key1"
     expect(result.value).to eq true
-    result = client.get_key_and_value("fakeId2")
+
+    result = client.get_key_and_value("id4")
     expect(result.key).to eq "key2"
-    expect(result.value).to eq false
+    expect(result.value).to eq "fake4"
+
+    result = client.get_key_and_value("id5")
+    expect(result.key).to eq "key2"
+    expect(result.value).to eq "fake5"
+
+    result = client.get_key_and_value("id6")
+    expect(result.key).to eq "key2"
+    expect(result.value).to eq "fake6"
+
+    result = client.get_key_and_value("id7")
+    expect(result.key).to eq "key2"
+    expect(result.value).to eq "fake7"
+
+    result = client.get_key_and_value("id8")
+    expect(result.key).to eq "key2"
+    expect(result.value).to eq "fake8"
+
     client.close()
   end
 end
