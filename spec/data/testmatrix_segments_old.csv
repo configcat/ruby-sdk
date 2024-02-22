@@ -1,0 +1,6 @@
+Identifier;Email;Country;Custom1;featureWithSegmentTargeting;featureWithSegmentTargetingCleartext;featureWithNegatedSegmentTargeting;featureWithNegatedSegmentTargetingCleartext;featureWithSegmentTargetingInverse;featureWithSegmentTargetingInverseCleartext;featureWithNegatedSegmentTargetingInverse;featureWithNegatedSegmentTargetingInverseCleartext
+##null##;;;;false;false;false;false;false;false;false;false
+;;;;false;false;false;false;false;false;false;false
+john@example.com;john@example.com;##null##;##null##;true;true;false;false;false;false;true;true
+jane@example.com;jane@example.com;##null##;##null##;true;true;false;false;false;false;true;true
+kate@example.com;kate@example.com;##null##;##null##;false;false;true;true;true;true;false;false

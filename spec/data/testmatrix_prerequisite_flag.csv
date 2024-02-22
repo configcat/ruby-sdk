@@ -1,0 +1,5 @@
+Identifier;Email;Country;Custom1;mainBoolFlag;mainStringFlag;mainIntFlag;mainDoubleFlag;stringDependsOnBool;stringDependsOnString;stringDependsOnStringCaseCheck;stringDependsOnInt;stringDependsOnDouble;stringDependsOnDoubleIntValue;boolDependsOnBool;intDependsOnBool;doubleDependsOnBool;boolDependsOnBoolDependsOnBool;mainBoolFlagEmpty;stringDependsOnEmptyBool;stringInverseDependsOnEmptyBool;mainBoolFlagInverse;boolDependsOnBoolInverse
+##null##;;;;true;public;42;3.14;Dog;Cat;Cat;Cat;Cat;Cat;true;1;1.1;false;true;EmptyOn;EmptyOn;false;true
+;;;;true;public;42;3.14;Dog;Cat;Cat;Cat;Cat;Cat;true;1;1.1;false;true;EmptyOn;EmptyOn;false;true
+john@sensitivecompany.com;john@sensitivecompany.com;##null##;##null##;false;private;2;0.1;Cat;Dog;Cat;Dog;Dog;Cat;false;42;3.14;true;true;EmptyOn;EmptyOn;true;false
+jane@example.com;jane@example.com;##null##;##null##;true;public;42;3.14;Dog;Cat;Cat;Cat;Cat;Cat;true;1;1.1;false;true;EmptyOn;EmptyOn;false;true
