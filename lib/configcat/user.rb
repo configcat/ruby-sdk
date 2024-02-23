@@ -61,9 +61,9 @@ module ConfigCat
       dump = {
         'Identifier': @identifier,
         'Email': @data['Email'],
-        'Country': @data['Country'],
-        'Custom': @custom,
+        'Country': @data['Country']
       }
+      dump.merge!(@custom) if @custom
       filtered_dump = dump.reject { |_, v| v.nil? }
       return JSON.generate(filtered_dump, ascii_only: false, separators: %w[, :])
     end

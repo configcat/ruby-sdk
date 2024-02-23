@@ -36,15 +36,18 @@ module ConfigCat
           remaining = length - length_limit
           more_text = remaining == 1 ? "<1 more value>" : "<#{remaining} more values>"
 
-          return comparison_value.first(length_limit).to_s[0..-2] + ', ... ' + more_text + ']'
+          formatted_strings = comparison_value.first(length_limit).map { |str| "'#{str}'" }.join(", ")
+          return "[#{formatted_strings}, ... #{more_text}]"
         end
 
-        return comparison_value.to_s
+        # replace '"' with "'" in the string representation of the array
+        formatted_strings = comparison_value.map { |str| "'#{str}'" }.join(", ")
+        return "[#{formatted_strings}]"
       end
 
       if [Comparator::BEFORE_DATETIME, Comparator::AFTER_DATETIME].include?(comparator)
-        time = get_date_time(comparison_value)
-        return "'#{comparison_value}' (#{time.strftime('%Y-%m-%dT%H:%M:%S.%f')[0..-4]}Z UTC)"
+        time = Utils.get_date_time(comparison_value)
+        return "'#{comparison_value}' (#{time.strftime('%Y-%m-%dT%H:%M:%S.%L')}Z UTC)"
       end
 
       "'#{comparison_value.to_s}'"

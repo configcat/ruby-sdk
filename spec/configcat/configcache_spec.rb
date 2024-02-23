@@ -29,7 +29,7 @@ RSpec.describe ConfigCat::InMemoryConfigCache do
     expect(entry.serialize).to eq('1686756435844' + "\n" + etag + "\n" + TEST_JSON)
   end
 
-  it "tests_invalid_cache_content" do
+  it "test_invalid_cache_content" do
     hook_callbacks = HookCallbacks.new
     hooks = Hooks.new(on_error: hook_callbacks.method(:on_error))
     config_json_string = TEST_JSON_FORMAT % { value_type: SettingType::STRING, value: '{"s": "test"}' }

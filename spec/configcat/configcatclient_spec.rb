@@ -21,6 +21,41 @@ RSpec.describe ConfigCat::ConfigCatClient do
     }.to raise_error(ConfigCatClientException)
   end
 
+  [
+    ["sdk-key-90123456789012", false, false],
+    ["sdk-key-9012345678901/1234567890123456789012", false, false],
+    ["sdk-key-90123456789012/123456789012345678901", false, false],
+    ["sdk-key-90123456789012/12345678901234567890123", false, false],
+    ["sdk-key-901234567890123/1234567890123456789012", false, false],
+    ["sdk-key-90123456789012/1234567890123456789012", false, true],
+    ["configcat-sdk-1/sdk-key-90123456789012", false, false],
+    ["configcat-sdk-1/sdk-key-9012345678901/1234567890123456789012", false, false],
+    ["configcat-sdk-1/sdk-key-90123456789012/123456789012345678901", false, false],
+    ["configcat-sdk-1/sdk-key-90123456789012/12345678901234567890123", false, false],
+    ["configcat-sdk-1/sdk-key-901234567890123/1234567890123456789012", false, false],
+    ["configcat-sdk-1/sdk-key-90123456789012/1234567890123456789012", false, true],
+    ["configcat-sdk-2/sdk-key-90123456789012/1234567890123456789012", false, false],
+    ["configcat-proxy/", false, false],
+    ["configcat-proxy/", true, false],
+    ["configcat-proxy/sdk-key-90123456789012", false, false],
+    ["configcat-proxy/sdk-key-90123456789012", true, true],
+  ].each do |sdk_key, custom_base_url, is_valid|
+    it "test_sdk_key_format_validation (#{sdk_key}, #{custom_base_url}, #{is_valid})" do
+      if custom_base_url
+        base_url = 'https://my-configcat-proxy'
+      else
+        base_url = nil
+      end
+
+      begin
+        ConfigCatClient.get(sdk_key, ConfigCatOptions.new(base_url: base_url))
+        expect(is_valid).to eq(true)
+      rescue ConfigCatClientException => e
+        expect(is_valid).to eq(false)
+      end
+    end
+  end
+
   it "test_bool" do
     client = ConfigCatClient.get(TEST_SDK_KEY, ConfigCatOptions.new(polling_mode: PollingMode.manual_poll,
                                                                     config_cache: ConfigCacheMock.new))
@@ -61,6 +96,39 @@ RSpec.describe ConfigCat::ConfigCatClient do
                                                                     config_cache: ConfigCacheMock.new))
     expect(client.get_value("testBoolKey", false)).to eq true
     client.close()
+  end
+
+  it "test_incorrect_json" do
+    config_json_string = '{
+      "f": {
+        "testKey":  {
+          "t": 0,
+          "r": [ {
+            "c": [ { "u": { "a": "Custom1", "c": 19, "d": "wrong_utc_timestamp" } } ],
+            "s": { "v": { "b": true } }
+          } ],
+          "v": { "b": false }
+        }
+      }
+    }'
+    config_cache = SingleValueConfigCache.new(ConfigEntry.new(
+      JSON.parse(config_json_string),
+      'test-etag',
+      config_json_string,
+      Utils.get_utc_now_seconds_since_epoch).serialize
+    )
+
+
+    hook_callbacks = HookCallbacks.new
+    hooks = Hooks.new(on_error: hook_callbacks.method(:on_error))
+    client = ConfigCatClient.get(TEST_SDK_KEY, ConfigCatOptions.new(polling_mode: PollingMode.manual_poll,
+                                                                    config_cache: config_cache,
+                                                                    hooks: hooks))
+
+    expect(client.get_value('testKey', false, User.new('1234', custom: {'Custom1' => 1681118000.56}))).to eq(false)
+    expect(hook_callbacks.error_call_count).to eq(1)
+    expect(hook_callbacks.error).to include("Failed to evaluate setting 'testKey'.")
+    client.close
   end
 
   it "test_get_all_keys" do

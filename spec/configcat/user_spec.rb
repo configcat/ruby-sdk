@@ -43,6 +43,6 @@ RSpec.describe ConfigCat::User do
     expect(user_json['Identifier']).to eq user_id
     expect(user_json['Email']).to eq email
     expect(user_json['Country']).to eq country
-    expect(user_json['Custom']).to eq custom
+    expect(user_json['custom']).to eq 'test'
   end
 end

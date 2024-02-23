@@ -360,7 +360,7 @@ module ConfigCat
 
       _check_type_mismatch(value, default_value)
 
-      @log.info(log_builder.to_s, event_id: 5000) if log_builder
+      @log.info(5000, log_builder.to_s) if log_builder
 
       details = EvaluationDetails.new(key: key,
                                       value: value,

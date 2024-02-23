@@ -7,5 +7,5 @@ INFO [5000] Evaluating 'featureWithNegatedSegmentTargeting' for User '{"Identifi
       Segment evaluation result: User IS IN SEGMENT.
       Condition (User IS NOT IN SEGMENT 'Beta users') evaluates to false.
     )
-    THEN 'True' => no match
-  Returning 'False'.
+    THEN 'true' => no match
+  Returning 'false'.

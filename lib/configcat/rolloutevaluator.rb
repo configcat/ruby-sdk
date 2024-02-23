@@ -37,7 +37,7 @@ module ConfigCat
       context = EvaluationContext.new(key, setting_type, user, visited_keys)
       user_has_invalid_type = context.user && !context.user.is_a?(User)
       if user_has_invalid_type
-        @log.warn(4001, "Cannot evaluate targeting rules and %% options for setting '#{key}' " \
+        @log.warn(4001, "Cannot evaluate targeting rules and % options for setting '#{key}' " \
                         "(User Object is not an instance of User type). " \
                         "You should pass a User Object to the evaluation methods like `get_value()` " \
                         "in order to make targeting work properly. " \
@@ -176,7 +176,7 @@ module ConfigCat
         value = value.tr(',', '.')
       end
 
-      value.to_f
+      Float(value)
     end
 
     def get_user_attribute_value_as_seconds_since_epoch(attribute_value)
@@ -245,7 +245,7 @@ module ConfigCat
 
       if percentage_rule_attribute && user_key.nil?
         unless context.is_missing_user_object_attribute_logged
-          @log.warn(3003, "Cannot evaluate %% options for setting '#{key}' " \
+          @log.warn(3003, "Cannot evaluate % options for setting '#{key}' " \
                           "(the User.#{percentage_rule_attribute} attribute is missing). You should set the User.#{percentage_rule_attribute} attribute in order to make " \
                           "targeting work properly. Read more: https://configcat.com/docs/advanced/user-object/")
           context.is_missing_user_object_attribute_logged = true
@@ -270,7 +270,7 @@ module ConfigCat
             log_builder.new_line("Evaluating % options based on the User.#{user_attribute_name} attribute:")
             log_builder.new_line("- Computing hash in the [0..99] range from User.#{user_attribute_name} => #{hash_val} " \
                                  "(this value is sticky and consistent across all SDKs)")
-            log_builder.new_line("- Hash value #{hash_val} selects %% option #{index} (#{percentage}%), '#{percentage_value}'.")
+            log_builder.new_line("- Hash value #{hash_val} selects % option #{index} (#{percentage}%), '#{percentage_value}'.")
           end
           return [true, percentage_value, variation_id, percentage_option]
         end
@@ -394,7 +394,8 @@ module ConfigCat
         log_builder.new_line("Evaluating prerequisite flag '#{prerequisite_key}':")
       end
 
-      prerequisite_value, _, _, _, _ = evaluate(prerequisite_key, context.user, nil, nil, config, log_builder, context.visited_keys)
+      prerequisite_value, _, _, _, _ = evaluate(key: prerequisite_key, user: context.user, default_value: nil, default_variation_id: nil,
+                                                config: config, log_builder: log_builder, visited_keys: context.visited_keys)
 
       visited_keys.pop if visited_keys
 
@@ -440,7 +441,7 @@ module ConfigCat
                           "Read more: https://configcat.com/docs/advanced/user-object/")
           context.is_missing_user_object_logged = true
         end
-        log_builder&.append("User #{SEGMENT_COMPARATOR_TEXTS[segment_comparator]} '#{segment_name}'")
+        log_builder&.append("User #{SEGMENT_COMPARATOR_TEXTS[segment_comparator]} '#{segment_name}' ")
         return [false, "cannot evaluate, User Object is missing"]
       end
 
@@ -486,15 +487,17 @@ module ConfigCat
           segment_evaluation_result = segment_comparator == SegmentComparator::IS_IN ? segment_condition_result : !segment_condition_result
           log_builder.new_line("Segment evaluation result: ")
           unless error
-            log_builder.append("User IS#{' ' if segment_evaluation_result}NOT IN SEGMENT.")
+            log_builder.append("User IS#{segment_evaluation_result ? ' ' : ' NOT '}IN SEGMENT.")
           else
             log_builder.append("#{error}.")
           end
 
+          log_builder.new_line("Condition (User #{SEGMENT_COMPARATOR_TEXTS[segment_comparator]} '#{segment_name}') ")
+
           unless error
-            log_builder.append("Condition (User #{SEGMENT_COMPARATOR_TEXTS[segment_comparator]} '#{segment_name}') ")
+            log_builder.append("evaluates to #{segment_condition_result ? 'true' : 'false'}.")
           else
-            log_builder.append("Failed to evaluate.")
+            log_builder.append("failed to evaluate.")
           end
 
           log_builder.decrease_indent.new_line(')')
@@ -667,8 +670,8 @@ module ConfigCat
             if (comparator == Comparator::STARTS_WITH_ANY_OF_HASHED && sha256(user_value[0...length], salt, context_salt) == comparison_string) ||
               (comparator == Comparator::ENDS_WITH_ANY_OF_HASHED && sha256(user_value[-length..-1], salt, context_salt) == comparison_string)
               return true, error
-            elsif (comparator == Comparator::NOT_STARTS_WITH_ANY_OF_HASHED && sha256(user_value[0...length], salt, context_salt) != comparison_string) ||
-              (comparator == Comparator::NOT_ENDS_WITH_ANY_OF_HASHED && sha256(user_value[-length..-1], salt, context_salt) != comparison_string)
+            elsif (comparator == Comparator::NOT_STARTS_WITH_ANY_OF_HASHED && sha256(user_value[0...length], salt, context_salt) == comparison_string) ||
+              (comparator == Comparator::NOT_ENDS_WITH_ANY_OF_HASHED && sha256(user_value[-length..-1], salt, context_salt) == comparison_string)
               return false, nil
             end
           end

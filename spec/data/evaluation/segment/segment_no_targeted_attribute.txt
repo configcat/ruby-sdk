@@ -1,4 +1,4 @@
-WARNING [3003] Cannot evaluate condition (User.Email IS ONE OF ['jane@example.com', 'john@example.com']) for setting 'featureWithNegatedSegmentTargetingCleartext' (the User.Email attribute is missing). You should set the User.Email attribute in order to make targeting work properly. Read more: https://configcat.com/docs/advanced/user-object/
+WARN [3003] Cannot evaluate condition (User.Email IS ONE OF ['jane@example.com', 'john@example.com']) for setting 'featureWithNegatedSegmentTargetingCleartext' (the User.Email attribute is missing). You should set the User.Email attribute in order to make targeting work properly. Read more: https://configcat.com/docs/advanced/user-object/
 INFO [5000] Evaluating 'featureWithNegatedSegmentTargetingCleartext' for User '{"Identifier":"12345"}'
   Evaluating targeting rules and applying the first match if any:
   - IF User IS NOT IN SEGMENT 'Beta users (cleartext)'
@@ -8,6 +8,6 @@ INFO [5000] Evaluating 'featureWithNegatedSegmentTargetingCleartext' for User '{
       Segment evaluation result: cannot evaluate, the User.Email attribute is missing.
       Condition (User IS NOT IN SEGMENT 'Beta users (cleartext)') failed to evaluate.
     )
-    THEN 'True' => cannot evaluate, the User.Email attribute is missing
+    THEN 'true' => cannot evaluate, the User.Email attribute is missing
     The current targeting rule is ignored and the evaluation continues with the next rule.
-  Returning 'False'.
+  Returning 'false'.
