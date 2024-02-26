@@ -10,5 +10,9 @@ module ConfigCat
     def self.get_utc_now_seconds_since_epoch
       Time.now.utc.to_f
     end
+
+    def self.get_seconds_since_epoch(date_time)
+      date_time.to_time.to_f
+    end
   end
 end

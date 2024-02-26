@@ -174,6 +174,13 @@ module ConfigCat
     def convert_numeric_to_float(value)
       if value.is_a?(String)
         value = value.tr(',', '.')
+        if value == 'NaN'
+          return Float::NAN
+        elsif value == 'Infinity'
+          return Float::INFINITY
+        elsif value == '-Infinity'
+          return -Float::INFINITY
+        end
       end
 
       Float(value)
@@ -181,7 +188,7 @@ module ConfigCat
 
     def get_user_attribute_value_as_seconds_since_epoch(attribute_value)
       if attribute_value.is_a?(DateTime) || attribute_value.is_a?(Time)
-        return get_seconds_since_epoch(attribute_value)
+        return Utils.get_seconds_since_epoch(attribute_value)
       end
 
       convert_numeric_to_float(attribute_value)
@@ -541,7 +548,7 @@ module ConfigCat
       end
 
       user_value = user.get_attribute(comparison_attribute)
-      if user_value.nil? || (!user_value && !user_value.is_a?(Array))
+      if user_value.nil? || (user_value.is_a?(String) && user_value.empty?)
         @log.warn(3003, "Cannot evaluate condition (#{condition}) for setting '#{key}' " \
                         "(the User.#{comparison_attribute} attribute is missing). You should set the User.#{comparison_attribute} attribute in order to make " \
                         "targeting work properly. Read more: https://configcat.com/docs/advanced/user-object/")
@@ -580,15 +587,15 @@ module ConfigCat
             return true, error
           end
         rescue ArgumentError => e
-          validation_error = "'#{user_value.strip}' is not a valid semantic version"
+          validation_error = "'#{user_value.to_s.strip}' is not a valid semantic version"
           error = self.handle_invalid_user_attribute(comparison_attribute, comparator, comparison_value, key, validation_error)
           return false, error
         end
       # LESS THAN, LESS THAN OR EQUAL TO, GREATER THAN, GREATER THAN OR EQUAL TO (Semantic version)
       elsif comparator >= Comparator::LESS_THAN_SEMVER && comparator <= Comparator::GREATER_THAN_OR_EQUAL_SEMVER
         begin
-          user_value_version = Semantic::Version.new(user_value.to_s.strip())
-          comparison_value_version = Semantic::Version.new(comparison_value.to_s.strip())
+          user_value_version = Semantic::Version.new(user_value.to_s.strip)
+          comparison_value_version = Semantic::Version.new(comparison_value.to_s.strip)
           if (comparator == Comparator::LESS_THAN_SEMVER && user_value_version < comparison_value_version) ||
              (comparator == Comparator::LESS_THAN_OR_EQUAL_SEMVER && user_value_version <= comparison_value_version) ||
              (comparator == Comparator::GREATER_THAN_SEMVER && user_value_version > comparison_value_version) ||
@@ -596,7 +603,7 @@ module ConfigCat
             return true, error
           end
         rescue ArgumentError => e
-          validation_error = "'#{user_value.strip}' is not a valid semantic version"
+          validation_error = "'#{user_value.to_s.strip}' is not a valid semantic version"
           error = self.handle_invalid_user_attribute(comparison_attribute, comparator, comparison_value, key, validation_error)
           return false, error
         end
