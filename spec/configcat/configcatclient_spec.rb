@@ -326,6 +326,55 @@ RSpec.describe ConfigCat::ConfigCatClient do
     client.close
   end
 
+  [
+    # no type mismatch warning
+    ['testStringKey', 'test@example.com', 'default', 'testValue', false],
+    ['testBoolKey', nil, false, true, false],
+    ['testBoolKey', nil, nil, true, false],
+    ['testIntKey', nil, 3.14, 1, false],
+    ['testIntKey', nil, 42, 1, false],
+    ['testDoubleKey', nil, 3.14, 1.1, false],
+    ['testDoubleKey', nil, 42, 1.1, false],
+    # Type mismatch warning test cases
+    ['testStringKey', 'test@example.com', 0, 'testValue', true],
+    ['testStringKey', 'test@example.com', false, 'testValue', true],
+    ['testBoolKey', nil, 0, true, true],
+    ['testBoolKey', nil, 0.1, true, true],
+    ['testBoolKey', nil, 'default', true, true]
+  ].each do |key, user_id, default_value, expected_value, is_warning|
+    it "test_default_value_and_setting_type_mismatch (#{key}, #{user_id}, #{default_value}, #{expected_value}, #{is_warning})" do
+      stub_request = WebMock.stub_request(:get, Regexp.new('https://.*')).to_return(status: 200, body: TEST_OBJECT_JSON, headers: {})
+
+      begin
+        # Setup logging
+        logger = ConfigCat.logger
+        log_stream = StringIO.new
+        ConfigCat.logger = Logger.new(log_stream, level: Logger::WARN)
+
+        client = ConfigCatClient.get(TEST_SDK_KEY, ConfigCatOptions.new(polling_mode: PollingMode.manual_poll))
+        client.force_refresh
+
+        user = user_id ? User.new(user_id) : nil
+        value = client.get_value(key, default_value, user)
+        expect(value).to eq(expected_value)
+
+        log_stream.rewind
+        log = log_stream.read
+
+        if is_warning
+          expect(log).to include("[4002] The type of a setting does not match the type of the specified default value (#{default_value}). " \
+                                 "Setting's type was #{expected_value.class} but the default value's type was #{default_value.class}. " \
+                                 "Please make sure that using a default value not matching the setting's type was intended.")
+        else
+          expect(log).to be_empty
+        end
+      ensure
+        client.close
+        ConfigCat.logger = logger
+      end
+    end
+  end
+
   # variation id tests
 
   it "test_get_variation_id" do

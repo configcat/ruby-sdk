@@ -665,13 +665,13 @@ module ConfigCat
           length = comparison[0...underscore_index].to_i
           user_value = get_user_attribute_value_as_text(comparison_attribute, user_value, condition, key)
 
-          if user_value.length >= length
+          if user_value.bytesize >= length
             comparison_string = comparison[(underscore_index + 1)..-1]
-            if (comparator == Comparator::STARTS_WITH_ANY_OF_HASHED && sha256(user_value[0...length], salt, context_salt) == comparison_string) ||
-              (comparator == Comparator::ENDS_WITH_ANY_OF_HASHED && sha256(user_value[-length..-1], salt, context_salt) == comparison_string)
+            if (comparator == Comparator::STARTS_WITH_ANY_OF_HASHED && sha256(user_value.byteslice(0...length), salt, context_salt) == comparison_string) ||
+              (comparator == Comparator::ENDS_WITH_ANY_OF_HASHED && sha256(user_value.byteslice(-length..-1), salt, context_salt) == comparison_string)
               return true, error
-            elsif (comparator == Comparator::NOT_STARTS_WITH_ANY_OF_HASHED && sha256(user_value[0...length], salt, context_salt) == comparison_string) ||
-              (comparator == Comparator::NOT_ENDS_WITH_ANY_OF_HASHED && sha256(user_value[-length..-1], salt, context_salt) == comparison_string)
+            elsif (comparator == Comparator::NOT_STARTS_WITH_ANY_OF_HASHED && sha256(user_value.byteslice(0...length), salt, context_salt) == comparison_string) ||
+              (comparator == Comparator::NOT_ENDS_WITH_ANY_OF_HASHED && sha256(user_value.byteslice(-length..-1), salt, context_salt) == comparison_string)
               return false, nil
             end
           end

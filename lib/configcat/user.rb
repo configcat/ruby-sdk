@@ -65,7 +65,10 @@ module ConfigCat
       }
       dump.merge!(@custom) if @custom
       filtered_dump = dump.reject { |_, v| v.nil? }
-      return JSON.generate(filtered_dump, ascii_only: false, separators: %w[, :])
+      formatted_dump = filtered_dump.transform_values do |value|
+        value.is_a?(DateTime) ? value.strftime('%Y-%m-%dT%H:%M:%S.%L%z') : value
+      end
+      return JSON.generate(formatted_dump, ascii_only: false, separators: %w[, :])
     end
   end
 end

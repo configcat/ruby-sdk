@@ -183,4 +183,71 @@ RSpec.describe 'Override test', type: :feature do
 
     client.close
   end
+
+  [
+    ['stringDependsOnString', '1', 'john@sensitivecompany.com', nil, 'Dog'],
+    ['stringDependsOnString', '1', 'john@sensitivecompany.com', OverrideBehaviour::REMOTE_OVER_LOCAL, 'Dog'],
+    ['stringDependsOnString', '1', 'john@sensitivecompany.com', OverrideBehaviour::LOCAL_OVER_REMOTE, 'Dog'],
+    ['stringDependsOnString', '1', 'john@sensitivecompany.com', OverrideBehaviour::LOCAL_ONLY, nil],
+    ['stringDependsOnString', '2', 'john@notsensitivecompany.com', nil, 'Cat'],
+    ['stringDependsOnString', '2', 'john@notsensitivecompany.com', OverrideBehaviour::REMOTE_OVER_LOCAL, 'Cat'],
+    ['stringDependsOnString', '2', 'john@notsensitivecompany.com', OverrideBehaviour::LOCAL_OVER_REMOTE, 'Dog'],
+    ['stringDependsOnString', '2', 'john@notsensitivecompany.com', OverrideBehaviour::LOCAL_ONLY, nil],
+    ['stringDependsOnInt', '1', 'john@sensitivecompany.com', nil, 'Dog'],
+    ['stringDependsOnInt', '1', 'john@sensitivecompany.com', OverrideBehaviour::REMOTE_OVER_LOCAL, 'Dog'],
+    ['stringDependsOnInt', '1', 'john@sensitivecompany.com', OverrideBehaviour::LOCAL_OVER_REMOTE, 'Cat'],
+    ['stringDependsOnInt', '1', 'john@sensitivecompany.com', OverrideBehaviour::LOCAL_ONLY, nil],
+    ['stringDependsOnInt', '2', 'john@notsensitivecompany.com', nil, 'Cat'],
+    ['stringDependsOnInt', '2', 'john@notsensitivecompany.com', OverrideBehaviour::REMOTE_OVER_LOCAL, 'Cat'],
+    ['stringDependsOnInt', '2', 'john@notsensitivecompany.com', OverrideBehaviour::LOCAL_OVER_REMOTE, 'Dog'],
+    ['stringDependsOnInt', '2', 'john@notsensitivecompany.com', OverrideBehaviour::LOCAL_ONLY, nil]
+  ].each do |key, user_id, email, override_behaviour, expected_value|
+    it "test prerequisite flag override (#{key}, #{user_id}, #{email}, #{override_behaviour}, #{expected_value})" do
+      # The flag override alters the definition of the following flags:
+      # * 'mainStringFlag': to check the case where a prerequisite flag is overridden (dependent flag: 'stringDependsOnString')
+      # * 'stringDependsOnInt': to check the case where a dependent flag is overridden (prerequisite flag: 'mainIntFlag')
+      options = ConfigCatOptions.new(
+        polling_mode: PollingMode.manual_poll,
+        flag_overrides: override_behaviour.nil? ? nil : LocalFileFlagOverrides.new(
+          File.join(script_dir, "data/test_override_flagdependency_v6.json"), override_behaviour
+        )
+      )
+      client = ConfigCatClient.get('configcat-sdk-1/JcPbCGl_1E-K9M-fJOyKyQ/JoGwdqJZQ0K2xDy7LnbyOg', options)
+      client.force_refresh
+      value = client.get_value(key, nil, User.new(user_id, email: email))
+
+      expect(value).to eq(expected_value)
+      client.close
+    end
+  end
+
+  [
+    ['developerAndBetaUserSegment', '1', 'john@example.com', nil, false],
+    ['developerAndBetaUserSegment', '1', 'john@example.com', OverrideBehaviour::REMOTE_OVER_LOCAL, false],
+    ['developerAndBetaUserSegment', '1', 'john@example.com', OverrideBehaviour::LOCAL_OVER_REMOTE, true],
+    ['developerAndBetaUserSegment', '1', 'john@example.com', OverrideBehaviour::LOCAL_ONLY, true],
+    ['notDeveloperAndNotBetaUserSegment', '2', 'kate@example.com', nil, true],
+    ['notDeveloperAndNotBetaUserSegment', '2', 'kate@example.com', OverrideBehaviour::REMOTE_OVER_LOCAL, true],
+    ['notDeveloperAndNotBetaUserSegment', '2', 'kate@example.com', OverrideBehaviour::LOCAL_OVER_REMOTE, true],
+    ['notDeveloperAndNotBetaUserSegment', '2', 'kate@example.com', OverrideBehaviour::LOCAL_ONLY, nil]
+  ].each do |key, user_id, email, override_behaviour, expected_value|
+    it "test config salt segment override (#{key}, #{user_id}, #{email}, #{override_behaviour}, #{expected_value})" do
+      # The flag override uses a different config json salt than the downloaded one and
+      # overrides the following segments:
+      # * 'Beta Users': User.Email IS ONE OF ['jane@example.com']
+      # * 'Developers': User.Email IS ONE OF ['john@example.com']
+      options = ConfigCatOptions.new(
+        polling_mode: PollingMode.manual_poll,
+        flag_overrides: override_behaviour.nil? ? nil : LocalFileFlagOverrides.new(
+          File.join(script_dir, "data/test_override_segments_v6.json"), override_behaviour
+        )
+      )
+      client = ConfigCatClient.get('configcat-sdk-1/JcPbCGl_1E-K9M-fJOyKyQ/h99HYXWWNE2bH8eWyLAVMA', options)
+      client.force_refresh
+      value = client.get_value(key, nil, User.new(user_id, email: email))
+
+      expect(value).to eq(expected_value)
+      client.close
+    end
+  end
 end

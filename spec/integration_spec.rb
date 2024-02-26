@@ -19,6 +19,7 @@ RSpec.describe 'Integration test: DefaultTests', type: :feature do
     keys = client.get_all_keys
     expect(keys.size).to eq 5
     expect(keys).to include "keySampleText"
+    client.close
   end
 
   it "test_force_refresh" do
