@@ -30,7 +30,7 @@ module ConfigCat
                        DOUBLE_VALUE
                      else
                        UNSUPPORTED_VALUE
-                     end
+        end
 
         @_config[FEATURE_FLAGS] ||= {}
         @_config[FEATURE_FLAGS][key] = { VALUE => { value_type => value } }

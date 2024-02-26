@@ -189,7 +189,7 @@ RSpec.describe 'Rollout test', type: :feature do
 
       custom_attribute_name = 'Custom1'
       custom_attribute_value = 42
-      user = User.new('12345', custom: {custom_attribute_name => custom_attribute_value})
+      user = User.new('12345', custom: { custom_attribute_name => custom_attribute_value })
 
       key = 'boolTextEqualsNumber'
       value = client.get_value(key, nil, user)

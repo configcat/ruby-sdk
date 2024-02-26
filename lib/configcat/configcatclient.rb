@@ -315,16 +315,16 @@ module ConfigCat
         elsif behaviour == OverrideBehaviour::REMOTE_OVER_LOCAL
           remote_config, fetch_time = @_config_service.get_config()
           local_config = @_override_data_source.get_overrides()
-          remote_config ||= {FEATURE_FLAGS => {}}
-          local_config ||= {FEATURE_FLAGS => {}}
+          remote_config ||= { FEATURE_FLAGS => {} }
+          local_config ||= { FEATURE_FLAGS => {} }
           result = local_config.clone()
           result[FEATURE_FLAGS].update(remote_config[FEATURE_FLAGS])
           return result, fetch_time
         elsif behaviour == OverrideBehaviour::LOCAL_OVER_REMOTE
           remote_config, fetch_time = @_config_service.get_config()
           local_config = @_override_data_source.get_overrides()
-          remote_config ||= {FEATURE_FLAGS => {}}
-          local_config ||= {FEATURE_FLAGS => {}}
+          remote_config ||= { FEATURE_FLAGS => {} }
+          local_config ||= { FEATURE_FLAGS => {} }
           result = remote_config.clone()
           result[FEATURE_FLAGS].update(local_config[FEATURE_FLAGS])
           return result, fetch_time

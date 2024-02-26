@@ -7,7 +7,6 @@ require 'semantic'
 
 
 module ConfigCat
-
   class RolloutEvaluator
     def initialize(log)
       @log = log
@@ -758,6 +757,5 @@ module ConfigCat
 
       return false, error
     end
-
   end
 end

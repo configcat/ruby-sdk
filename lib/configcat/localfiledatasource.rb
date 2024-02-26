@@ -41,7 +41,7 @@ module ConfigCat
           file = File.read(@_file_path)
           data = JSON.parse(file)
           if data.key?("flags")
-            @_config = {FEATURE_FLAGS => {}}
+            @_config = { FEATURE_FLAGS => {} }
             source = data["flags"]
             source.each do |key, value|
               value_type = case value
@@ -55,9 +55,9 @@ module ConfigCat
                              DOUBLE_VALUE
                            else
                              UNSUPPORTED_VALUE
-                           end
+              end
 
-              @_config[FEATURE_FLAGS][key] = {VALUE => {value_type => value}}
+              @_config[FEATURE_FLAGS][key] = { VALUE => { value_type => value } }
               setting_type = SettingType.from_type(value.class)
               @_config[FEATURE_FLAGS][key][SETTING_TYPE] = setting_type.to_i unless setting_type.nil?
             end

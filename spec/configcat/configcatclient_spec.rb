@@ -125,7 +125,7 @@ RSpec.describe ConfigCat::ConfigCatClient do
                                                                     config_cache: config_cache,
                                                                     hooks: hooks))
 
-    expect(client.get_value('testKey', false, User.new('1234', custom: {'Custom1' => 1681118000.56}))).to eq(false)
+    expect(client.get_value('testKey', false, User.new('1234', custom: { 'Custom1' => 1681118000.56 }))).to eq(false)
     expect(hook_callbacks.error_call_count).to eq(1)
     expect(hook_callbacks.error).to include("Failed to evaluate setting 'testKey'.")
     client.close
