@@ -18,7 +18,7 @@ module ConfigCat
     def initialize(file_path, override_behaviour, log)
       super(override_behaviour)
       @log = log
-      if !File.exists?(file_path)
+      if !File.exist?(file_path)
         @log.error(1300, "Cannot find the local config file '#{file_path}'. This is a path that your application provided to the ConfigCat SDK by passing it to the `LocalFileFlagOverrides.new()` method. Read more: https://configcat.com/docs/sdk-reference/ruby/#json-file")
       end
       @_file_path = file_path

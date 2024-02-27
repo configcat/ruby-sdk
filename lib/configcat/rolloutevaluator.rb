@@ -556,21 +556,21 @@ module ConfigCat
 
       # IS ONE OF
       if comparator == Comparator::IS_ONE_OF
-        user_value = self.get_user_attribute_value_as_text(comparison_attribute, user_value, condition, key)
+        user_value = get_user_attribute_value_as_text(comparison_attribute, user_value, condition, key)
         return true, error if comparison_value.include?(user_value)
       # IS NOT ONE OF
       elsif comparator == Comparator::IS_NOT_ONE_OF
-        user_value = self.get_user_attribute_value_as_text(comparison_attribute, user_value, condition, key)
+        user_value = get_user_attribute_value_as_text(comparison_attribute, user_value, condition, key)
         return true, error unless comparison_value.include?(user_value)
       # CONTAINS ANY OF
       elsif comparator == Comparator::CONTAINS_ANY_OF
-        user_value = self.get_user_attribute_value_as_text(comparison_attribute, user_value, condition, key)
+        user_value = get_user_attribute_value_as_text(comparison_attribute, user_value, condition, key)
         comparison_value.each do |comparison|
           return true, error if user_value.include?(comparison)
         end
       # NOT CONTAINS ANY OF
       elsif comparator == Comparator::NOT_CONTAINS_ANY_OF
-        user_value = self.get_user_attribute_value_as_text(comparison_attribute, user_value, condition, key)
+        user_value = get_user_attribute_value_as_text(comparison_attribute, user_value, condition, key)
         return true, error unless comparison_value.any? { |comparison| user_value.include?(comparison) }
       # IS ONE OF, IS NOT ONE OF (Semantic version)
       elsif comparator >= Comparator::IS_ONE_OF_SEMVER && comparator <= Comparator::IS_NOT_ONE_OF_SEMVER
@@ -586,7 +586,7 @@ module ConfigCat
           end
         rescue ArgumentError => e
           validation_error = "'#{user_value.to_s.strip}' is not a valid semantic version"
-          error = self.handle_invalid_user_attribute(comparison_attribute, comparator, comparison_value, key, validation_error)
+          error = handle_invalid_user_attribute(comparison_attribute, comparator, comparison_value, key, validation_error)
           return false, error
         end
       # LESS THAN, LESS THAN OR EQUAL TO, GREATER THAN, GREATER THAN OR EQUAL TO (Semantic version)
@@ -602,7 +602,7 @@ module ConfigCat
           end
         rescue ArgumentError => e
           validation_error = "'#{user_value.to_s.strip}' is not a valid semantic version"
-          error = self.handle_invalid_user_attribute(comparison_attribute, comparator, comparison_value, key, validation_error)
+          error = handle_invalid_user_attribute(comparison_attribute, comparator, comparison_value, key, validation_error)
           return false, error
         end
       # =, <>, <, <=, >, >= (number)
@@ -611,7 +611,7 @@ module ConfigCat
           user_value_float = convert_numeric_to_float(user_value)
         rescue Exception => e
           validation_error = "'#{user_value}' is not a valid decimal number"
-          error = self.handle_invalid_user_attribute(comparison_attribute, comparator, comparison_value, key, validation_error)
+          error = handle_invalid_user_attribute(comparison_attribute, comparator, comparison_value, key, validation_error)
           return false, error
         end
 
@@ -626,13 +626,13 @@ module ConfigCat
         end
       # IS ONE OF (hashed)
       elsif comparator == Comparator::IS_ONE_OF_HASHED
-        user_value = self.get_user_attribute_value_as_text(comparison_attribute, user_value, condition, key)
+        user_value = get_user_attribute_value_as_text(comparison_attribute, user_value, condition, key)
         if comparison_value.include?(sha256(user_value, salt, context_salt))
           return true, error
         end
       # IS NOT ONE OF (hashed)
       elsif comparator == Comparator::IS_NOT_ONE_OF_HASHED
-        user_value = self.get_user_attribute_value_as_text(comparison_attribute, user_value, condition, key)
+        user_value = get_user_attribute_value_as_text(comparison_attribute, user_value, condition, key)
         unless comparison_value.include?(sha256(user_value, salt, context_salt))
           return true, error
         end
@@ -642,7 +642,7 @@ module ConfigCat
           user_value_float = get_user_attribute_value_as_seconds_since_epoch(user_value)
         rescue ArgumentError => e
           validation_error = "'#{user_value}' is not a valid Unix timestamp (number of seconds elapsed since Unix epoch)"
-          error = self.handle_invalid_user_attribute(comparison_attribute, comparator, comparison_value, key, validation_error)
+          error = handle_invalid_user_attribute(comparison_attribute, comparator, comparison_value, key, validation_error)
           return false, error
         end
 
