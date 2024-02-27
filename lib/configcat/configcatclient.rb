@@ -334,12 +334,10 @@ module ConfigCat
     end
 
     def _check_type_mismatch(value, default_value)
-      unless default_value.nil?
-        if Config.is_type_mismatch(value, default_value.class)
-          @log.warn(4002, "The type of a setting does not match the type of the specified default value (#{default_value}). " \
-                    "Setting's type was #{value.class} but the default value's type was #{default_value.class}. " \
-                    "Please make sure that using a default value not matching the setting's type was intended.")
-        end
+      if !default_value.nil? && Config.is_type_mismatch(value, default_value.class)
+        @log.warn(4002, "The type of a setting does not match the type of the specified default value (#{default_value}). " \
+                  "Setting's type was #{value.class} but the default value's type was #{default_value.class}. " \
+                  "Please make sure that using a default value not matching the setting's type was intended.")
       end
     end
 

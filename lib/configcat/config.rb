@@ -68,10 +68,8 @@ module ConfigCat
       is_bool_mismatch = value.is_a?(TrueClass) && ruby_type == FalseClass || \
         value.is_a?(FalseClass) && ruby_type == TrueClass
 
-      if value.class != ruby_type
-        if !is_float_int_mismatch && !is_bool_mismatch
-          return true
-        end
+      if value.class != ruby_type && !is_float_int_mismatch && !is_bool_mismatch
+        return true
       end
 
       return false

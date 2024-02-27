@@ -410,10 +410,9 @@ module ConfigCat
         log_builder.new_line("Condition (Flag '#{prerequisite_key}' #{PREREQUISITE_COMPARATOR_TEXTS[prerequisite_comparator]} '#{prerequisite_comparison_value}') evaluates to ")
       end
 
-      case prerequisite_comparator
-      when PrerequisiteComparator::EQUALS
+      if prerequisite_comparator == PrerequisiteComparator::EQUALS
         prerequisite_condition_result = true if prerequisite_value == prerequisite_comparison_value
-      when PrerequisiteComparator::NOT_EQUALS
+      elsif prerequisite_comparator == PrerequisiteComparator::NOT_EQUALS
         prerequisite_condition_result = true if prerequisite_value != prerequisite_comparison_value
       end
 
