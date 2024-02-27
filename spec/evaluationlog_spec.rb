@@ -114,7 +114,7 @@ RSpec.describe 'Evaluation log test', type: :feature do
         end
 
         # Clear log
-        log_stream.truncate(0)
+        log_stream.reopen("")
 
         value = client.get_value(key, default_value, user_object)
         log_stream.rewind
