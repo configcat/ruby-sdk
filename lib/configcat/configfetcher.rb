@@ -179,7 +179,7 @@ module ConfigCat
             response_etag = ""
           end
           config = JSON.parse(response.body)
-          Config.extend_config_with_inline_salt_and_segment(config)
+          Config.fixup_config_salt_and_segments(config)
           return FetchResponse.success(ConfigEntry.new(config, response_etag, response.body, Utils.get_utc_now_seconds_since_epoch))
         when Net::HTTPNotModified
           return FetchResponse.not_modified

@@ -24,7 +24,7 @@ RSpec.describe 'Hooks test', type: :feature do
     expect(hook_callbacks.is_ready).to be true
     expect(hook_callbacks.is_ready_call_count).to eq(1)
     extended_config = TEST_OBJECT
-    Config.extend_config_with_inline_salt_and_segment(extended_config)
+    Config.fixup_config_salt_and_segments(extended_config)
     expect(hook_callbacks.changed_config).to eq(extended_config.fetch(FEATURE_FLAGS))
     expect(hook_callbacks.changed_config_call_count).to eq(1)
     expect(hook_callbacks.evaluation_details).not_to be nil

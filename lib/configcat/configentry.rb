@@ -41,7 +41,7 @@ module ConfigCat
       begin
         config_json = string[etag_index + 1..-1]
         config = JSON.parse(config_json)
-        Config.extend_config_with_inline_salt_and_segment(config)
+        Config.fixup_config_salt_and_segments(config)
       rescue => e
         raise "Invalid config JSON: #{config_json}. #{e.message}"
       end

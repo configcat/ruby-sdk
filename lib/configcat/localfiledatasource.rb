@@ -62,7 +62,7 @@ module ConfigCat
               @_config[FEATURE_FLAGS][key][SETTING_TYPE] = setting_type.to_i unless setting_type.nil?
             end
           else
-            Config.extend_config_with_inline_salt_and_segment(data)
+            Config.fixup_config_salt_and_segments(data)
             @_config = data
           end
         end

@@ -114,7 +114,7 @@ module ConfigCat
       return nil
     end
 
-    def self.extend_config_with_inline_salt_and_segment(config)
+    def self.fixup_config_salt_and_segments(config)
       """
       Adds the inline salt and segment to the config.
       When using flag overrides, the original salt and segment indexes may become invalid. Therefore, we copy the
