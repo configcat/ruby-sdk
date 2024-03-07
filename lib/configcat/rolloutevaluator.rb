@@ -144,10 +144,9 @@ module ConfigCat
 
       if value.is_a?(DateTime) || value.is_a?(Time)
         value = get_user_attribute_value_as_seconds_since_epoch(value)
-      elsif value.is_a?(Array)
+      elsif Utils.is_string_list(value)
         value = get_user_attribute_value_as_string_list(value)
-        # Convert the array to a JSON string
-        return value.to_json
+        return value.to_json  # Convert the array to a JSON string
       end
 
       if value.is_a?(Float)
@@ -172,7 +171,7 @@ module ConfigCat
 
     def convert_numeric_to_float(value)
       if value.is_a?(String)
-        value = value.tr(',', '.')
+        value = value.tr(',', '.').strip
         if value == 'NaN'
           return Float::NAN
         elsif value == 'Infinity'
@@ -194,19 +193,13 @@ module ConfigCat
     end
 
     def get_user_attribute_value_as_string_list(attribute_value)
-      if !attribute_value.is_a?(Array)
+      if attribute_value.is_a?(String)
         attribute_value_list = JSON.parse(attribute_value)
       else
         attribute_value_list = attribute_value
       end
 
-      # Ensure the result is an Array
-      raise "Attribute value is not an Array" unless attribute_value_list.is_a?(Array)
-
-      # Check if all items in the list are Strings
-      attribute_value_list.each do |item|
-        raise "All items in the list must be strings" unless item.is_a?(String)
-      end
+      raise "All items in the list must be strings" unless Utils.is_string_list(attribute_value_list)
 
       attribute_value_list
     end
@@ -264,6 +257,12 @@ module ConfigCat
       hash_candidate = "#{key}#{user_attribute_value_to_string(user_key)}".encode("utf-8")
       hash_val = Digest::SHA1.hexdigest(hash_candidate)[0...7].to_i(16) % 100
 
+      if log_builder
+        log_builder.new_line("Evaluating % options based on the User.#{user_attribute_name} attribute:")
+        log_builder.new_line("- Computing hash in the [0..99] range from User.#{user_attribute_name} => #{hash_val} " \
+                               "(this value is sticky and consistent across all SDKs)")
+      end
+
       bucket = 0
       index = 1
       percentage_options.each do |percentage_option|
@@ -273,9 +272,6 @@ module ConfigCat
           percentage_value = Config.get_value(percentage_option, context.setting_type)
           variation_id = percentage_option[VARIATION_ID] || default_variation_id
           if log_builder
-            log_builder.new_line("Evaluating % options based on the User.#{user_attribute_name} attribute:")
-            log_builder.new_line("- Computing hash in the [0..99] range from User.#{user_attribute_name} => #{hash_val} " \
-                                 "(this value is sticky and consistent across all SDKs)")
             log_builder.new_line("- Hash value #{hash_val} selects % option #{index} (#{percentage}%), '#{percentage_value}'.")
           end
           return [true, percentage_value, variation_id, percentage_option]
@@ -403,7 +399,7 @@ module ConfigCat
       prerequisite_value, _, _, _, _ = evaluate(key: prerequisite_key, user: context.user, default_value: nil, default_variation_id: nil,
                                                 config: config, log_builder: log_builder, visited_keys: context.visited_keys)
 
-      visited_keys.pop if visited_keys
+      visited_keys.pop
 
       if log_builder
         log_builder.new_line("Prerequisite flag evaluation result: '#{prerequisite_value}'.")
@@ -414,6 +410,8 @@ module ConfigCat
         prerequisite_condition_result = true if prerequisite_value == prerequisite_comparison_value
       elsif prerequisite_comparator == PrerequisiteComparator::NOT_EQUALS
         prerequisite_condition_result = true if prerequisite_value != prerequisite_comparison_value
+      else
+        raise "Comparison operator is missing or invalid."
       end
 
       if log_builder
@@ -512,7 +510,7 @@ module ConfigCat
         return [segment_condition_result, error]
       end
 
-      [false, nil]
+      raise "Comparison operator is missing or invalid."
     end
 
     # :returns result of user condition, error
@@ -752,9 +750,11 @@ module ConfigCat
           end
           return true, error
         end
+      else
+        raise "Comparison operator is missing or invalid."
       end
 
-      return false, error
+      [false, nil]
     end
   end
 end

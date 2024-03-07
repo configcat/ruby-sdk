@@ -14,5 +14,17 @@ module ConfigCat
     def self.get_seconds_since_epoch(date_time)
       date_time.to_time.to_f
     end
+
+    def self.is_string_list(value)
+      # Check if the value is an Array
+      return false unless value.is_a?(Array)
+
+      # Check if all elements in the Array are Strings
+      value.each do |item|
+        return false unless item.is_a?(String)
+      end
+
+      return true
+    end
   end
 end

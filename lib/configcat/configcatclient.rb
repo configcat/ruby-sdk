@@ -180,14 +180,16 @@ module ConfigCat
           targeting_rules = value.fetch(TARGETING_RULES, [])
           targeting_rules.each do |targeting_rule|
             served_value = targeting_rule.fetch(SERVED_VALUE, nil)
-            if !served_value.nil? && variation_id == served_value.fetch(VARIATION_ID, nil)
-              return KeyValue.new(key, Config.get_value(served_value, setting_type))
-            end
-
-            percentage_options = targeting_rule.fetch(PERCENTAGE_OPTIONS, [])
-            percentage_options.each do |percentage_option|
-              if variation_id == percentage_option.fetch(VARIATION_ID, nil)
-                return KeyValue.new(key, Config.get_value(percentage_option, setting_type))
+            if !served_value.nil?
+              if variation_id == served_value.fetch(VARIATION_ID, nil)
+                return KeyValue.new(key, Config.get_value(served_value, setting_type))
+              end
+            else
+              percentage_options = targeting_rule.fetch(PERCENTAGE_OPTIONS, [])
+              percentage_options.each do |percentage_option|
+                if variation_id == percentage_option.fetch(VARIATION_ID, nil)
+                  return KeyValue.new(key, Config.get_value(percentage_option, setting_type))
+                end
               end
             end
           end
