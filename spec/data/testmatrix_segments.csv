@@ -1,0 +1,6 @@
+Identifier;Email;Country;Custom1;developerAndBetaUserSegment;developerAndBetaUserCleartextSegment;notDeveloperAndNotBetaUserSegment;notDeveloperAndNotBetaUserCleartextSegment
+##null##;;;;false;false;false;false
+;;;;false;false;false;false
+john@example.com;john@example.com;##null##;##null##;false;false;false;false
+jane@example.com;jane@example.com;##null##;##null##;false;false;false;false
+kate@example.com;kate@example.com;##null##;##null##;true;true;true;true

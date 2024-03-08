@@ -1,41 +1,61 @@
 require 'configcat/interfaces'
 require 'json'
 
-TEST_JSON = '{' \
-            '   "p": {' \
-            '       "u": "https://cdn-global.configcat.com",' \
-            '       "r": 0' \
-            '   },' \
-            '   "f": {' \
-            '       "testKey": { "v": "testValue", "t": 1, "p": [], "r": [] }' \
-            '   }' \
-            '}'
+TEST_SDK_KEY = 'configcat-sdk-test-key/0000000000000000000000'
+TEST_SDK_KEY1 = 'configcat-sdk-test-key/0000000000000000000001'
+TEST_SDK_KEY2 = 'configcat-sdk-test-key/0000000000000000000002'
 
-TEST_JSON_FORMAT = '{ "f": { "testKey": { "v": %{value}, "p": [], "r": [] } } }'
+TEST_JSON = '{
+   "p": {
+       "u": "https://cdn-global.configcat.com",
+       "r": 0
+   },
+   "f": {
+       "testKey": { "v": { "s": "testValue" }, "t": 1 }
+   }
+}'
 
-TEST_JSON2 = '{' \
-             '  "p": {' \
-             '       "u": "https://cdn-global.configcat.com",' \
-             '       "r": 0' \
-             '  },' \
-             '  "f": {' \
-             '      "testKey": { "v": "testValue", "t": 1, "p": [], "r": [] }, ' \
-             '      "testKey2": { "v": "testValue2", "t": 1, "p": [], "r": [] }' \
-             '  }' \
-             '}'
+TEST_JSON_FORMAT = '{ "f": { "testKey": { "t": %{value_type}, "v": %{value}, "p": [], "r": [] } } }'
+
+TEST_JSON2 = '{
+  "p": {
+       "u": "https://cdn-global.configcat.com",
+       "r": 0
+  },
+  "f": {
+      "testKey": { "v": { "s": "testValue" }, "t": 1 },
+      "testKey2": { "v": { "s": "testValue2" }, "t": 1 }
+  }
+}'
 
 TEST_OBJECT_JSON = '{
-  "p": {"u": "https://cdn-global.configcat.com", "r": 0},
+  "p": {
+    "u": "https://cdn-global.configcat.com",
+    "r": 0
+  },
+  "s": [
+    {"n": "id1", "r": [{"a": "Identifier", "c": 2, "l": ["@test1.com"]}]},
+    {"n": "id2", "r": [{"a": "Identifier", "c": 2, "l": ["@test2.com"]}]}
+  ],
   "f": {
-    "testBoolKey": {"v": true,"t": 0, "p": [],"r": []},
-    "testStringKey": {"v": "testValue", "i": "id", "t": 1, "p": [],"r": [
-      {"i":"id1","v":"fake1","a":"Identifier","t":2,"c":"@test1.com"},
-      {"i":"id2","v":"fake2","a":"Identifier","t":2,"c":"@test2.com"}
+    "testBoolKey": {"v": {"b": true}, "t": 0},
+    "testStringKey": {"v": {"s": "testValue"}, "i": "id", "t": 1, "r": [
+      {"c": [{"s": {"s": 0, "c": 0}}], "s": {"v": {"s": "fake1"}, "i": "id1"}},
+      {"c": [{"s": {"s": 1, "c": 0}}], "s": {"v": {"s": "fake2"}, "i": "id2"}}
     ]},
-    "testIntKey": {"v": 1,"t": 2, "p": [],"r": []},
-    "testDoubleKey": {"v": 1.1,"t": 3,"p": [],"r": []},
-    "key1": {"v": true, "i": "fakeId1","p": [], "r": []},
-    "key2": {"v": false, "i": "fakeId2","p": [], "r": []}
+    "testIntKey": {"v": {"i": 1}, "t": 2},
+    "testDoubleKey": {"v": {"d": 1.1}, "t": 3},
+    "key1": {"v": {"b": true}, "t": 0, "i": "id3"},
+    "key2": {"v": {"s": "fake4"}, "t": 1, "i": "id4",
+      "r": [
+        {"c": [{"s": {"s": 0, "c": 0}}], "p": [
+          {"p": 50, "v": {"s": "fake5"}, "i": "id5"}, {"p": 50, "v": {"s": "fake6"}, "i": "id6"}
+        ]}
+      ],
+      "p": [
+        {"p": 50, "v": {"s": "fake7"}, "i": "id7"}, {"p": 50, "v": {"s": "fake8"}, "i": "id8"}
+      ]
+    }
   }
 }'
 
@@ -127,7 +147,8 @@ class ConfigFetcherCountMock
 
   def get_configuration(etag = '')
     @_value += 1
-    config_json_string = TEST_JSON_FORMAT % { value: @_value }
+    value_string = "{ \"i\": #{@_value} }"
+    config_json_string = TEST_JSON_FORMAT % { value_type: SettingType::INT, value: value_string }
     config = JSON.parse(config_json_string)
     return FetchResponse.success(ConfigEntry.new(config, etag, config_json_string))
   end

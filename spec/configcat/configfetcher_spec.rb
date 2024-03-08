@@ -4,6 +4,7 @@ require_relative 'mocks'
 
 RSpec.describe ConfigCat::ConfigFetcher do
   it "test_simple_fetch_success" do
+    test_json = '{"test": "json"}'
     uri_template = Addressable::Template.new "https://{base_url}/{base_path}/{api_key}/{base_ext}"
     WebMock.stub_request(:get, uri_template)
       .with(
@@ -14,17 +15,19 @@ RSpec.describe ConfigCat::ConfigFetcher do
           'Accept-Encoding' => 'gzip;q=1.0,deflate;q=0.6,identity;q=0.3'
         }
       )
-      .to_return(status: 200, body: TEST_JSON, headers: {})
+      .to_return(status: 200, body: test_json, headers: {})
 
     log = ConfigCatLogger.new(Hooks.new)
     fetcher = ConfigCat::ConfigFetcher.new("", log, "m")
     fetch_response = fetcher.get_configuration()
     expect(fetch_response.is_fetched()).to be true
-    expect(fetch_response.entry.config).to eq JSON.parse(TEST_JSON)
+    expect(fetch_response.entry.config).to eq JSON.parse(test_json)
+    expect(fetch_response.entry.config_json_string).to eq test_json
   end
 
   it "test_fetch_not_modified_etag" do
     etag = "test"
+    test_json = '{"test": "json"}'
     uri_template = Addressable::Template.new "https://{base_url}/{base_path}/{api_key}/{base_ext}"
     WebMock.stub_request(:get, uri_template)
         .with(
@@ -35,12 +38,13 @@ RSpec.describe ConfigCat::ConfigFetcher do
               'Accept-Encoding' => 'gzip;q=1.0,deflate;q=0.6,identity;q=0.3'
           }
         )
-        .to_return(status: 200, body: TEST_JSON, headers: { "ETag" => etag })
+        .to_return(status: 200, body: test_json, headers: { "ETag" => etag })
     log = ConfigCatLogger.new(Hooks.new)
     fetcher = ConfigCat::ConfigFetcher.new("", log, "m")
     fetch_response = fetcher.get_configuration()
     expect(fetch_response.is_fetched()).to be true
-    expect(fetch_response.entry.config).to eq JSON.parse(TEST_JSON)
+    expect(fetch_response.entry.config).to eq JSON.parse(test_json)
+    expect(fetch_response.entry.config_json_string).to eq test_json
     expect(fetch_response.entry.etag).to eq etag
 
     WebMock.stub_request(:get, uri_template)

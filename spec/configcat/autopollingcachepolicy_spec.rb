@@ -13,8 +13,9 @@ RSpec.describe "AutoPollingCachePolicy" do
     logger = ConfigCatLogger.new(hooks)
     cache_policy = ConfigService.new("", polling_mode, hooks, config_fetcher, logger, config_cache, false)
     sleep(2)
-    settings, _ = cache_policy.get_settings
-    expect(settings.fetch("testKey").fetch(VALUE)).to eq "testValue"
+    config, _ = cache_policy.get_config
+    settings = config.fetch(FEATURE_FLAGS)
+    expect(settings.fetch("testKey").fetch(VALUE).fetch(STRING_VALUE)).to eq "testValue"
     cache_policy.close
   end
 
@@ -27,8 +28,9 @@ RSpec.describe "AutoPollingCachePolicy" do
     logger = ConfigCatLogger.new(hooks)
     cache_policy = ConfigService.new("", polling_mode, hooks, config_fetcher, logger, config_cache, false)
 
-    settings, _ = cache_policy.get_settings
-    expect(settings.fetch("testKey").fetch(VALUE)).to eq "testValue"
+    config, _ = cache_policy.get_config
+    settings = config.fetch(FEATURE_FLAGS)
+    expect(settings.fetch("testKey").fetch(VALUE).fetch(STRING_VALUE)).to eq "testValue"
     cache_policy.close
   end
 
@@ -41,10 +43,10 @@ RSpec.describe "AutoPollingCachePolicy" do
     hooks = Hooks.new
     logger = ConfigCatLogger.new(hooks)
     cache_policy = ConfigService.new("", polling_mode, hooks, config_fetcher, logger, config_cache, false)
-    settings, _ = cache_policy.get_settings
+    config, _ = cache_policy.get_config
     end_time = Time.now.utc
     elapsed_time = end_time - start_time
-    expect(settings).to be nil
+    expect(config).to be nil
     expect(elapsed_time).to be > 1
     expect(elapsed_time).to be < 2
     cache_policy.close
@@ -60,8 +62,9 @@ RSpec.describe "AutoPollingCachePolicy" do
     cache_policy = ConfigService.new("", polling_mode, hooks, config_fetcher, logger, config_cache, false)
     sleep(3)
     expect(config_fetcher.get_call_count).to eq 2
-    settings, _ = cache_policy.get_settings
-    expect(settings.fetch("testKey").fetch(VALUE)).to eq "testValue"
+    config, _ = cache_policy.get_config
+    settings = config.fetch(FEATURE_FLAGS)
+    expect(settings.fetch("testKey").fetch(VALUE).fetch(STRING_VALUE)).to eq "testValue"
     cache_policy.close
   end
 
@@ -74,13 +77,15 @@ RSpec.describe "AutoPollingCachePolicy" do
     logger = ConfigCatLogger.new(hooks)
     cache_policy = ConfigService.new("", polling_mode, hooks, config_fetcher, logger, config_cache, false)
 
-    settings, _ = cache_policy.get_settings
-    expect(settings.fetch("testKey").fetch(VALUE)).to eq 1
+    config, _ = cache_policy.get_config
+    settings = config.fetch(FEATURE_FLAGS)
+    expect(settings.fetch("testKey").fetch(VALUE).fetch(INT_VALUE)).to eq 1
 
     sleep(2.2)
 
-    settings, _ = cache_policy.get_settings
-    expect(settings.fetch("testKey").fetch(VALUE)).to eq 2
+    config, _ = cache_policy.get_config
+    settings = config.fetch(FEATURE_FLAGS)
+    expect(settings.fetch("testKey").fetch(VALUE).fetch(INT_VALUE)).to eq 2
 
     cache_policy.close
   end
@@ -95,8 +100,8 @@ RSpec.describe "AutoPollingCachePolicy" do
     cache_policy = ConfigService.new("", polling_mode, hooks, config_fetcher, logger, config_cache, false)
 
     # Get value from Config Store, which indicates a config_fetcher call
-    settings, _ = cache_policy.get_settings
-    expect(settings).to be nil
+    config, _ = cache_policy.get_config
+    expect(config).to be nil
     cache_policy.close
   end
 
@@ -109,11 +114,13 @@ RSpec.describe "AutoPollingCachePolicy" do
     logger = ConfigCatLogger.new(hooks)
     cache_policy = ConfigService.new("", polling_mode, hooks, config_fetcher, logger, config_cache, false)
     cache_policy.close
-    settings, _ = cache_policy.get_settings
-    expect(settings.fetch("testKey").fetch(VALUE)).to eq 1
+    config, _ = cache_policy.get_config
+    settings = config.fetch(FEATURE_FLAGS)
+    expect(settings.fetch("testKey").fetch(VALUE).fetch(INT_VALUE)).to eq 1
     sleep(2.2)
-    settings, _ = cache_policy.get_settings
-    expect(settings.fetch("testKey").fetch(VALUE)).to eq 1
+    config, _ = cache_policy.get_config
+    settings = config.fetch(FEATURE_FLAGS)
+    expect(settings.fetch("testKey").fetch(VALUE).fetch(INT_VALUE)).to eq 1
     cache_policy.close
   end
 
@@ -189,8 +196,9 @@ RSpec.describe "AutoPollingCachePolicy" do
     cache_policy = ConfigService.new("", polling_mode, hooks, config_fetcher, logger, config_cache, false)
 
     # first call
-    settings, _ = cache_policy.get_settings
-    expect(settings.fetch("testStringKey").fetch(VALUE)).to eq "testValue"
+    config, _ = cache_policy.get_config
+    settings = config.fetch(FEATURE_FLAGS)
+    expect(settings.fetch("testStringKey").fetch(VALUE).fetch(STRING_VALUE)).to eq "testValue"
 
     WebMock.stub_request(:get, Regexp.new('https://.*')).to_return(status: 500, body: "", headers: {})
 
@@ -198,8 +206,9 @@ RSpec.describe "AutoPollingCachePolicy" do
     sleep(1.5)
 
     # previous value returned because of the refresh failure
-    settings, _ = cache_policy.get_settings
-    expect(settings.fetch("testStringKey").fetch(VALUE)).to eq "testValue"
+    config, _ = cache_policy.get_config
+    settings = config.fetch(FEATURE_FLAGS)
+    expect(settings.fetch("testStringKey").fetch(VALUE).fetch(STRING_VALUE)).to eq "testValue"
 
     cache_policy.close
   end
@@ -221,22 +230,24 @@ RSpec.describe "AutoPollingCachePolicy" do
     hooks = Hooks.new
     logger = ConfigCatLogger.new(hooks)
     cache_policy = ConfigService.new("", polling_mode, hooks, config_fetcher, logger, config_cache, false)
-    settings, _ = cache_policy.get_settings
+    config, _ = cache_policy.get_config
+    settings = config.fetch(FEATURE_FLAGS)
     end_time = Time.now.utc
     elapsed_time = end_time - start_time
 
     # max init wait time should be ignored when cache is not expired
     expect(elapsed_time).to be <= max_init_wait_time_seconds
 
-    expect(settings.fetch("testKey").fetch(VALUE)).to eq "testValue"
+    expect(settings.fetch("testKey").fetch(VALUE).fetch(STRING_VALUE)).to eq "testValue"
     expect(config_fetcher.get_call_count).to eq 0
     expect(config_fetcher.get_fetch_count).to eq 0
 
     sleep(3)
 
-    settings, _ = cache_policy.get_settings
+    config, _ = cache_policy.get_config
+    settings = config.fetch(FEATURE_FLAGS)
 
-    expect(settings.fetch("testKey").fetch(VALUE)).to eq "testValue"
+    expect(settings.fetch("testKey").fetch(VALUE).fetch(STRING_VALUE)).to eq "testValue"
     expect(config_fetcher.get_call_count).to eq 1
     expect(config_fetcher.get_fetch_count).to eq 1
 
@@ -260,9 +271,10 @@ RSpec.describe "AutoPollingCachePolicy" do
     logger = ConfigCatLogger.new(hooks)
     cache_policy = ConfigService.new("", polling_mode, hooks, config_fetcher, logger, config_cache, false)
 
-    settings, _ = cache_policy.get_settings
+    config, _ = cache_policy.get_config
+    settings = config.fetch(FEATURE_FLAGS)
 
-    expect(settings.fetch("testKey").fetch(VALUE)).to eq "testValue"
+    expect(settings.fetch("testKey").fetch(VALUE).fetch(STRING_VALUE)).to eq "testValue"
     expect(config_fetcher.get_call_count).to eq 1
     expect(config_fetcher.get_fetch_count).to eq 1
 
@@ -286,14 +298,15 @@ RSpec.describe "AutoPollingCachePolicy" do
     hooks = Hooks.new
     logger = ConfigCatLogger.new(hooks)
     cache_policy = ConfigService.new("", polling_mode, hooks, config_fetcher, logger, config_cache, false)
-    settings, _ = cache_policy.get_settings
+    config, _ = cache_policy.get_config
+    settings = config.fetch(FEATURE_FLAGS)
     end_time = Time.now.utc
     elapsed_time = end_time - start_time
 
     expect(elapsed_time).to be > max_init_wait_time_seconds
     expect(elapsed_time).to be < max_init_wait_time_seconds + 1
-    expect(settings.fetch("testKey").fetch(VALUE)).to eq "testValue"
-    expect(settings.fetch("testKey2").fetch(VALUE)).to eq "testValue2"
+    expect(settings.fetch("testKey").fetch(VALUE).fetch(STRING_VALUE)).to eq "testValue"
+    expect(settings.fetch("testKey2").fetch(VALUE).fetch(STRING_VALUE)).to eq "testValue2"
 
     cache_policy.close
   end
@@ -314,8 +327,9 @@ RSpec.describe "AutoPollingCachePolicy" do
 
     cache_policy.set_offline
     expect(cache_policy.offline?).to be true
-    settings, _ = cache_policy.get_settings
-    expect(settings.fetch("testStringKey").fetch(VALUE)).to eq "testValue"
+    config, _ = cache_policy.get_config
+    settings = config.fetch(FEATURE_FLAGS)
+    expect(settings.fetch("testStringKey").fetch(VALUE).fetch(STRING_VALUE)).to eq "testValue"
     expect(stub_request).to have_been_made.times(2)
 
     sleep(2)
@@ -341,14 +355,14 @@ RSpec.describe "AutoPollingCachePolicy" do
     cache_policy = ConfigService.new("", polling_mode, hooks, config_fetcher, logger, config_cache, true)
 
     expect(cache_policy.offline?).to be true
-    settings, _ = cache_policy.get_settings
-    expect(settings).to be nil
+    config, _ = cache_policy.get_config
+    expect(config).to be nil
     expect(stub_request).to have_been_made.times(0)
 
     sleep(2)
 
-    settings, _ = cache_policy.get_settings
-    expect(settings).to be nil
+    config, _ = cache_policy.get_config
+    expect(config).to be nil
     expect(stub_request).to have_been_made.times(0)
 
     cache_policy.set_online
@@ -356,8 +370,9 @@ RSpec.describe "AutoPollingCachePolicy" do
 
     sleep(2.5)
 
-    settings, _ = cache_policy.get_settings
-    expect(settings.fetch("testStringKey").fetch(VALUE)).to eq "testValue"
+    config, _ = cache_policy.get_config
+    settings = config.fetch(FEATURE_FLAGS)
+    expect(settings.fetch("testStringKey").fetch(VALUE).fetch(STRING_VALUE)).to eq "testValue"
     expect(stub_request).to have_been_made.at_least_twice
 
     cache_policy.close

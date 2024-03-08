@@ -11,8 +11,9 @@ RSpec.describe "LazyLoadingCachePolicy" do
     hooks = Hooks.new
     logger = ConfigCatLogger.new(hooks)
     cache_policy = ConfigService.new("", polling_mode, hooks, config_fetcher, logger, config_cache, false)
-    settings, _ = cache_policy.get_settings
-    expect(settings.fetch("testKey").fetch(VALUE)).to eq "testValue"
+    config, _ = cache_policy.get_config
+    settings = config.fetch(FEATURE_FLAGS)
+    expect(settings.fetch("testKey").fetch(VALUE).fetch(STRING_VALUE)).to eq "testValue"
     cache_policy.close
   end
 
@@ -25,19 +26,22 @@ RSpec.describe "LazyLoadingCachePolicy" do
     cache_policy = ConfigService.new("", polling_mode, hooks, config_fetcher, logger, config_cache, false)
 
     # Get value from Config Store, which indicates a config_fetcher call
-    settings, _ = cache_policy.get_settings
-    expect(settings.fetch("testKey").fetch(VALUE)).to eq "testValue"
+    config, _ = cache_policy.get_config
+    settings = config.fetch(FEATURE_FLAGS)
+    expect(settings.fetch("testKey").fetch(VALUE).fetch(STRING_VALUE)).to eq "testValue"
     expect(config_fetcher.get_call_count).to eq 1
 
     # Get value from Config Store, which doesn't indicate a config_fetcher call (cache)
-    settings, _ = cache_policy.get_settings
-    expect(settings.fetch("testKey").fetch(VALUE)).to eq "testValue"
+    config, _ = cache_policy.get_config
+    settings = config.fetch(FEATURE_FLAGS)
+    expect(settings.fetch("testKey").fetch(VALUE).fetch(STRING_VALUE)).to eq "testValue"
     expect(config_fetcher.get_call_count).to eq 1
 
     # Get value from Config Store, which indicates a config_fetcher call - 1 sec cache TTL
     sleep(1)
-    settings, _ = cache_policy.get_settings
-    expect(settings.fetch("testKey").fetch(VALUE)).to eq "testValue"
+    config, _ = cache_policy.get_config
+    settings = config.fetch(FEATURE_FLAGS)
+    expect(settings.fetch("testKey").fetch(VALUE).fetch(STRING_VALUE)).to eq "testValue"
     expect(config_fetcher.get_call_count).to eq 2
 
     cache_policy.close
@@ -52,17 +56,19 @@ RSpec.describe "LazyLoadingCachePolicy" do
     cache_policy = ConfigService.new("", polling_mode, hooks, config_fetcher, logger, config_cache, false)
 
     # Get value from Config Store, which indicates a config_fetcher call
-    settings, fetch_time = cache_policy.get_settings
-    expect(settings.fetch("testKey").fetch(VALUE)).to eq "testValue"
+    config, fetch_time = cache_policy.get_config
+    settings = config.fetch(FEATURE_FLAGS)
+    expect(settings.fetch("testKey").fetch(VALUE).fetch(STRING_VALUE)).to eq "testValue"
     expect(config_fetcher.get_call_count).to eq 1
 
-    # assume 160 seconds has elapsed since the last call enough to do a
+    # assume 160 seconds has elapsed since the last call enough to do a force refresh
     allow(Time).to receive(:now).and_return(Time.at(fetch_time + 161))
 
     # Get value from Config Store, which indicates a config_fetcher call after cache invalidation
     cache_policy.refresh
-    settings, _ = cache_policy.get_settings
-    expect(settings.fetch("testKey").fetch(VALUE)).to eq "testValue"
+    config, _ = cache_policy.get_config
+    settings = config.fetch(FEATURE_FLAGS)
+    expect(settings.fetch("testKey").fetch(VALUE).fetch(STRING_VALUE)).to eq "testValue"
     expect(config_fetcher.get_call_count).to eq 2
 
     cache_policy.close
@@ -84,7 +90,7 @@ RSpec.describe "LazyLoadingCachePolicy" do
     successful_fetch_response.entry.fetch_time = now.utc.to_f
 
     # Get value from Config Store, which indicates a config_fetcher call
-    cache_policy.get_settings
+    cache_policy.get_config
     expect(config_fetcher).to have_received(:get_configuration).once
 
     # when the cache timeout is still within the limit skip any network
@@ -92,11 +98,11 @@ RSpec.describe "LazyLoadingCachePolicy" do
     # to acquire the lock at the same time, but only really one needs to update
 
     successful_fetch_response.entry.fetch_time = now.utc.to_f - 159
-    cache_policy.get_settings
+    cache_policy.get_config
     expect(config_fetcher).to have_received(:get_configuration).once
 
     successful_fetch_response.entry.fetch_time = now.utc.to_f - 161
-    cache_policy.get_settings
+    cache_policy.get_config
     expect(config_fetcher).to have_received(:get_configuration).twice
   end
 
@@ -109,8 +115,8 @@ RSpec.describe "LazyLoadingCachePolicy" do
     cache_policy = ConfigService.new("", polling_mode, hooks, config_fetcher, logger, config_cache, false)
 
     # Get value from Config Store, which indicates a config_fetcher call
-    settings, _ = cache_policy.get_settings
-    expect(settings).to be nil
+    config, _ = cache_policy.get_config
+    expect(config).to be nil
     cache_policy.close
   end
 
@@ -128,17 +134,19 @@ RSpec.describe "LazyLoadingCachePolicy" do
     logger = ConfigCatLogger.new(hooks)
     cache_policy = ConfigService.new("", polling_mode, hooks, config_fetcher, logger, config_cache, false)
 
-    settings, _ = cache_policy.get_settings
+    config, _ = cache_policy.get_config
+    settings = config.fetch(FEATURE_FLAGS)
 
-    expect(settings.fetch("testKey").fetch(VALUE)).to eq "testValue"
+    expect(settings.fetch("testKey").fetch(VALUE).fetch(STRING_VALUE)).to eq "testValue"
     expect(config_fetcher.get_call_count).to eq 0
     expect(config_fetcher.get_fetch_count).to eq 0
 
     sleep(1)
 
-    settings, _ = cache_policy.get_settings
+    config, _ = cache_policy.get_config
+    settings = config.fetch(FEATURE_FLAGS)
 
-    expect(settings.fetch("testKey").fetch(VALUE)).to eq "testValue"
+    expect(settings.fetch("testKey").fetch(VALUE).fetch(STRING_VALUE)).to eq "testValue"
     expect(config_fetcher.get_call_count).to eq 1
     expect(config_fetcher.get_fetch_count).to eq 1
 
@@ -160,13 +168,55 @@ RSpec.describe "LazyLoadingCachePolicy" do
     logger = ConfigCatLogger.new(hooks)
     cache_policy = ConfigService.new("", polling_mode, hooks, config_fetcher, logger, config_cache, false)
 
-    settings, _ = cache_policy.get_settings
+    config, _ = cache_policy.get_config
+    settings = config.fetch(FEATURE_FLAGS)
 
-    expect(settings.fetch("testKey").fetch(VALUE)).to eq "testValue"
+    expect(settings.fetch("testKey").fetch(VALUE).fetch(STRING_VALUE)).to eq "testValue"
     expect(config_fetcher.get_call_count).to eq 1
     expect(config_fetcher.get_fetch_count).to eq 1
 
     cache_policy.close
+  end
+
+  it "test_cache_TTL_respects_external_cache" do
+    WebMock.stub_request(:get, Regexp.new('https://.*'))
+           .to_return(status: 200, body: TEST_JSON_FORMAT % { value_type: SettingType::STRING, value: '{"s": "test-remote"}' },
+                      headers: {})
+
+    config_json_string_local = TEST_JSON_FORMAT % { value_type: SettingType::STRING, value: '{"s": "test-local"}' }
+    config_cache = SingleValueConfigCache.new(ConfigEntry.new(
+      JSON.parse(config_json_string_local),
+      'etag',
+      config_json_string_local,
+      Utils.get_utc_now_seconds_since_epoch).serialize
+    )
+
+    polling_mode = PollingMode.lazy_load(cache_refresh_interval_seconds: 1)
+    hooks = Hooks.new
+    logger = ConfigCatLogger.new(hooks)
+    config_fetcher = ConfigFetcherMock.new
+    cache_policy = ConfigService.new("", polling_mode, hooks, config_fetcher, logger, config_cache, false)
+
+    config, _ = cache_policy.get_config
+    settings = config.fetch(FEATURE_FLAGS)
+
+    expect(settings.fetch("testKey").fetch(VALUE).fetch(STRING_VALUE)).to eq "test-local"
+    expect(config_fetcher.get_fetch_count).to eq 0
+
+    sleep(1)
+
+    config_json_string_local = TEST_JSON_FORMAT % { value_type: SettingType::STRING, value: '{"s": "test-local2"}' }
+    config_cache.value = ConfigEntry.new(
+      JSON.parse(config_json_string_local),
+      'etag2',
+      config_json_string_local,
+      Utils.get_utc_now_seconds_since_epoch).serialize
+
+    config, _ = cache_policy.get_config
+    settings = config.fetch(FEATURE_FLAGS)
+
+    expect(settings.fetch("testKey").fetch(VALUE).fetch(STRING_VALUE)).to eq "test-local2"
+    expect(config_fetcher.get_fetch_count).to eq 0
   end
 
   it "test_online_offline" do
@@ -180,8 +230,9 @@ RSpec.describe "LazyLoadingCachePolicy" do
     cache_policy = ConfigService.new("", polling_mode, hooks, config_fetcher, logger, config_cache, false)
 
     expect(cache_policy.offline?).to be false
-    settings, _ = cache_policy.get_settings
-    expect(settings.fetch("testStringKey").fetch(VALUE)).to eq "testValue"
+    config, _ = cache_policy.get_config
+    settings = config.fetch(FEATURE_FLAGS)
+    expect(settings.fetch("testStringKey").fetch(VALUE).fetch(STRING_VALUE)).to eq "testValue"
     expect(stub_request).to have_been_made.times(1)
 
     cache_policy.set_offline
@@ -189,15 +240,17 @@ RSpec.describe "LazyLoadingCachePolicy" do
 
     sleep(1.5)
 
-    settings, _ = cache_policy.get_settings
-    expect(settings.fetch("testStringKey").fetch(VALUE)).to eq "testValue"
+    config, _ = cache_policy.get_config
+    settings = config.fetch(FEATURE_FLAGS)
+    expect(settings.fetch("testStringKey").fetch(VALUE).fetch(STRING_VALUE)).to eq "testValue"
     expect(stub_request).to have_been_made.times(1)
 
     cache_policy.set_online
     expect(cache_policy.offline?).to be false
 
-    settings, _ = cache_policy.get_settings
-    expect(settings.fetch("testStringKey").fetch(VALUE)).to eq "testValue"
+    config, _ = cache_policy.get_config
+    settings = config.fetch(FEATURE_FLAGS)
+    expect(settings.fetch("testStringKey").fetch(VALUE).fetch(STRING_VALUE)).to eq "testValue"
     expect(stub_request).to have_been_made.times(2)
 
     cache_policy.close
@@ -214,21 +267,22 @@ RSpec.describe "LazyLoadingCachePolicy" do
     cache_policy = ConfigService.new("", polling_mode, hooks, config_fetcher, logger, config_cache, true)
 
     expect(cache_policy.offline?).to be true
-    settings, _ = cache_policy.get_settings
-    expect(settings).to be nil
+    config, _ = cache_policy.get_config
+    expect(config).to be nil
     expect(stub_request).to have_been_made.times(0)
 
     sleep(1.5)
 
-    settings, _ = cache_policy.get_settings
-    expect(settings).to be nil
+    config, _ = cache_policy.get_config
+    expect(config).to be nil
     expect(stub_request).to have_been_made.times(0)
 
     cache_policy.set_online
     expect(cache_policy.offline?).to be false
 
-    settings, _ = cache_policy.get_settings
-    expect(settings.fetch("testStringKey").fetch(VALUE)).to eq "testValue"
+    config, _ = cache_policy.get_config
+    settings = config.fetch(FEATURE_FLAGS)
+    expect(settings.fetch("testStringKey").fetch(VALUE).fetch(STRING_VALUE)).to eq "testValue"
     expect(stub_request).to have_been_made.times(1)
 
     cache_policy.close

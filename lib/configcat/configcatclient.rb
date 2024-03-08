@@ -60,14 +60,25 @@ module ConfigCat
         raise ConfigCatClientException, "SDK Key is required."
       end
 
-      @_sdk_key = sdk_key
-      @_default_user = options.default_user
-      @_rollout_evaluator = RolloutEvaluator.new(@log)
       if options.flag_overrides
         @_override_data_source = options.flag_overrides.create_data_source(@log)
       else
         @_override_data_source = nil
       end
+
+      # In case of local only flag overrides mode, we accept any SDK Key format.
+      if @_override_data_source.nil? || @_override_data_source.get_behaviour() != OverrideBehaviour::LOCAL_ONLY
+        is_valid_sdk_key = /^.{22}\/.{22}$/.match?(sdk_key) ||
+          /^configcat-sdk-1\/.{22}\/.{22}$/.match?(sdk_key) ||
+          (options.base_url && /^configcat-proxy\/.+$/.match?(sdk_key))
+        unless is_valid_sdk_key
+          raise ConfigCatClientException, "SDK Key `#{sdk_key}` is invalid."
+        end
+      end
+
+      @_sdk_key = sdk_key
+      @_default_user = options.default_user
+      @_rollout_evaluator = RolloutEvaluator.new(@log)
 
       config_cache = options.config_cache.nil? ? NullConfigCache.new : options.config_cache
 
@@ -104,14 +115,14 @@ module ConfigCat
     # :param user [User] the user object to identify the caller.
     # :return the value.
     def get_value(key, default_value, user = nil)
-      settings, fetch_time = _get_settings()
-      if settings.nil?
+      config, fetch_time = _get_config()
+      if config.nil? || config[FEATURE_FLAGS].nil?
         message = "Config JSON is not present when evaluating setting '#{key}'. Returning the `default_value` parameter that you specified in your application: '#{default_value}'."
         @log.error(1000, message)
         @hooks.invoke_on_flag_evaluated(EvaluationDetails.from_error(key, default_value, error: message))
         return default_value
       end
-      details = _evaluate(key, user, default_value, nil, settings, fetch_time)
+      details = _evaluate(key, user, default_value, nil, config, fetch_time)
       return details.value
     end
 
@@ -122,15 +133,15 @@ module ConfigCat
     # :param user [User] the user object to identify the caller.
     # :return [EvaluationDetails] the evaluation details.
     def get_value_details(key, default_value, user = nil)
-      settings, fetch_time = _get_settings()
-      if settings.nil?
+      config, fetch_time = _get_config()
+      if config.nil? || config[FEATURE_FLAGS].nil?
         message = "Config JSON is not present when evaluating setting '#{key}'. Returning the `default_value` parameter that you specified in your application: '#{default_value}'."
         @log.error(1000, message)
         details = EvaluationDetails.from_error(key, default_value, error: message)
         @hooks.invoke_on_flag_evaluated(details)
         return details
       end
-      details = _evaluate(key, user, default_value, nil, settings, fetch_time)
+      details = _evaluate(key, user, default_value, nil, config, fetch_time)
       return details
     end
 
@@ -138,11 +149,12 @@ module ConfigCat
     #
     # :return list of keys.
     def get_all_keys
-      settings, _ = _get_settings()
-      if settings === nil
+      config, _ = _get_config()
+      if config.nil?
         @log.error(1000, "Config JSON is not present. Returning empty list.")
         return []
       end
+      settings = config.fetch(FEATURE_FLAGS, {})
       return settings.keys
     end
 
@@ -151,30 +163,47 @@ module ConfigCat
     # :param variation_id [String] variation ID
     # :return key and value
     def get_key_and_value(variation_id)
-      settings, _ = _get_settings()
-      if settings === nil
+      config, _ = _get_config()
+      if config.nil?
         @log.error(1000, "Config JSON is not present. Returning nil.")
         return nil
       end
 
-      for key, value in settings
-        if variation_id == value.fetch(VARIATION_ID, nil)
-          return KeyValue.new(key, value[VALUE])
-        end
+      settings = config.fetch(FEATURE_FLAGS, {})
+      begin
+        settings.each do |key, value|
+          setting_type = value.fetch(SETTING_TYPE, nil)
+          if variation_id == value.fetch(VARIATION_ID, nil)
+            return KeyValue.new(key, Config.get_value(value, setting_type))
+          end
 
-        rollout_rules = value.fetch(ROLLOUT_RULES, [])
-        for rollout_rule in rollout_rules
-          if variation_id == rollout_rule.fetch(VARIATION_ID, nil)
-            return KeyValue.new(key, rollout_rule[VALUE])
+          targeting_rules = value.fetch(TARGETING_RULES, [])
+          targeting_rules.each do |targeting_rule|
+            served_value = targeting_rule.fetch(SERVED_VALUE, nil)
+            if !served_value.nil?
+              if variation_id == served_value.fetch(VARIATION_ID, nil)
+                return KeyValue.new(key, Config.get_value(served_value, setting_type))
+              end
+            else
+              percentage_options = targeting_rule.fetch(PERCENTAGE_OPTIONS, [])
+              percentage_options.each do |percentage_option|
+                if variation_id == percentage_option.fetch(VARIATION_ID, nil)
+                  return KeyValue.new(key, Config.get_value(percentage_option, setting_type))
+                end
+              end
+            end
+          end
+
+          percentage_options = value.fetch(PERCENTAGE_OPTIONS, [])
+          percentage_options.each do |percentage_option|
+            if variation_id == percentage_option.fetch(VARIATION_ID, nil)
+              return KeyValue.new(key, Config.get_value(percentage_option, setting_type))
+            end
           end
         end
-
-        rollout_percentage_items = value.fetch(ROLLOUT_PERCENTAGE_ITEMS, [])
-        for rollout_percentage_item in rollout_percentage_items
-          if variation_id == rollout_percentage_item.fetch(VARIATION_ID, nil)
-            return KeyValue.new(key, rollout_percentage_item[VALUE])
-          end
-        end
+      rescue => e
+        @log.error("Error occurred in the `#{self.class.name}` method. Returning nil.", event_id: 1002)
+        return nil
       end
 
       @log.error(2011, "Could not find the setting for the specified variation ID: '#{variation_id}'.")
@@ -185,12 +214,13 @@ module ConfigCat
     # :param user [User] the user object to identify the caller.
     # :return dictionary of values
     def get_all_values(user = nil)
-      settings, _ = _get_settings()
-      if settings === nil
+      config, _ = _get_config()
+      if config.nil?
         @log.error(1000, "Config JSON is not present. Returning empty dictionary.")
         return {}
       end
 
+      settings = config.fetch(FEATURE_FLAGS, {})
       all_values = {}
       for key in settings.keys
         value = get_value(key, nil, user)
@@ -206,15 +236,16 @@ module ConfigCat
     # :param user [User] the user object to identify the caller.
     # :return list of all evaluation details
     def get_all_value_details(user = nil)
-      settings, fetch_time = _get_settings()
-      if settings.nil?
+      config, fetch_time = _get_config()
+      if config.nil?
         @log.error(1000, "Config JSON is not present. Returning empty list.")
         return []
       end
 
       details_result = []
+      settings = config.fetch(FEATURE_FLAGS, {})
       for key in settings.keys
-        details = _evaluate(key, user, nil, nil, settings, fetch_time)
+        details = _evaluate(key, user, nil, nil, config, fetch_time)
         details_result.push(details)
       end
 
@@ -227,8 +258,8 @@ module ConfigCat
     def force_refresh
       return @_config_service.refresh if @_config_service
 
-      return RefreshResult(false,
-                           "The SDK uses the LocalOnly flag override behavior which prevents making HTTP requests.")
+      return RefreshResult.new(false,
+                               "The SDK uses the LocalOnly flag override behavior which prevents making HTTP requests.")
     end
 
     # Sets the default user.
@@ -278,40 +309,57 @@ module ConfigCat
       @hooks.clear
     end
 
-    def _get_settings
+    def _get_config
       if !@_override_data_source.nil?
         behaviour = @_override_data_source.get_behaviour()
         if behaviour == OverrideBehaviour::LOCAL_ONLY
           return @_override_data_source.get_overrides(), Utils::DISTANT_PAST
         elsif behaviour == OverrideBehaviour::REMOTE_OVER_LOCAL
-          remote_settings, fetch_time = @_config_service.get_settings()
-          local_settings = @_override_data_source.get_overrides()
-          remote_settings ||= {}
-          local_settings ||= {}
-          result = local_settings.clone()
-          result.update(remote_settings)
+          remote_config, fetch_time = @_config_service.get_config()
+          local_config = @_override_data_source.get_overrides()
+          remote_config ||= { FEATURE_FLAGS => {} }
+          local_config ||= { FEATURE_FLAGS => {} }
+          result = local_config.clone()
+          result[FEATURE_FLAGS].update(remote_config[FEATURE_FLAGS])
           return result, fetch_time
         elsif behaviour == OverrideBehaviour::LOCAL_OVER_REMOTE
-          remote_settings, fetch_time = @_config_service.get_settings()
-          local_settings = @_override_data_source.get_overrides()
-          remote_settings ||= {}
-          local_settings ||= {}
-          result = remote_settings.clone()
-          result.update(local_settings)
+          remote_config, fetch_time = @_config_service.get_config()
+          local_config = @_override_data_source.get_overrides()
+          remote_config ||= { FEATURE_FLAGS => {} }
+          local_config ||= { FEATURE_FLAGS => {} }
+          result = remote_config.clone()
+          result[FEATURE_FLAGS].update(local_config[FEATURE_FLAGS])
           return result, fetch_time
         end
       end
-      return @_config_service.get_settings()
+      return @_config_service.get_config()
     end
 
-    def _evaluate(key, user, default_value, default_variation_id, settings, fetch_time)
-      user = user || @_default_user
+    def _check_type_mismatch(value, default_value)
+      if !default_value.nil? && Config.is_type_mismatch(value, default_value.class)
+        @log.warn(4002, "The type of a setting does not match the type of the specified default value (#{default_value}). " \
+                  "Setting's type was #{value.class} but the default value's type was #{default_value.class}. " \
+                  "Please make sure that using a default value not matching the setting's type was intended.")
+      end
+    end
+
+    def _evaluate(key, user, default_value, default_variation_id, config, fetch_time)
+      user ||= @_default_user
+
+      # Skip building the evaluation log if it won't be logged.
+      log_builder = EvaluationLogBuilder.new if @log.enabled_for?(Logger::INFO)
+
       value, variation_id, rule, percentage_rule, error = @_rollout_evaluator.evaluate(
         key: key,
         user: user,
         default_value: default_value,
         default_variation_id: default_variation_id,
-        settings: settings)
+        config: config,
+        log_builder: log_builder)
+
+      _check_type_mismatch(value, default_value)
+
+      @log.info(5000, log_builder.to_s) if log_builder
 
       details = EvaluationDetails.new(key: key,
                                       value: value,
@@ -320,8 +368,8 @@ module ConfigCat
                                       user: user,
                                       is_default_value: error.nil? || error.empty? ? false : true,
                                       error: error,
-                                      matched_evaluation_rule: rule,
-                                      matched_evaluation_percentage_rule: percentage_rule)
+                                      matched_targeting_rule: rule,
+                                      matched_percentage_option: percentage_rule)
       @hooks.invoke_on_flag_evaluated(details)
       return details
     end
