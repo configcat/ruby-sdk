@@ -31,13 +31,14 @@ module ConfigCat
     end
 
     def get_config
+      threshold = Utils::DISTANT_PAST
+      prefer_cached = @initialized.set?
       if @polling_mode.is_a?(LazyLoadingMode)
-        entry, _ = fetch_if_older(Utils.get_utc_now_seconds_since_epoch - @polling_mode.cache_refresh_interval_seconds)
-        return !entry.empty? ?
-          [entry.config, entry.fetch_time] :
-          [nil, Utils::DISTANT_PAST]
+        threshold = Utils.get_utc_now_seconds_since_epoch - @polling_mode.cache_refresh_interval_seconds
+        prefer_cached = false
       elsif @polling_mode.is_a?(AutoPollingMode) && !@initialized.set?
         elapsed_time = Utils.get_utc_now_seconds_since_epoch - @start_time # Elapsed time in seconds
+        threshold = Utils.get_utc_now_seconds_since_epoch - @polling_mode.poll_interval_seconds
         if elapsed_time < @polling_mode.max_init_wait_time_seconds
           @initialized.wait(@polling_mode.max_init_wait_time_seconds - elapsed_time)
 
@@ -52,7 +53,7 @@ module ConfigCat
       end
 
       # If we are initialized, we prefer the cached results
-      entry, _ = fetch_if_older(Utils::DISTANT_PAST, prefer_cache: @initialized.set?)
+      entry, _ = fetch_if_older(threshold, prefer_cached: prefer_cached)
       return !entry.empty? ?
         [entry.config, entry.fetch_time] :
         [nil, Utils::DISTANT_PAST]
@@ -117,7 +118,7 @@ module ConfigCat
     end
 
     # :return [ConfigEntry, String] Returns the ConfigEntry object and error message in case of any error.
-    def fetch_if_older(threshold, prefer_cache: false)
+    def fetch_if_older(threshold, prefer_cached: false)
       # Sync up with the cache and use it when it's not expired.
       @lock.synchronize do
         # Sync up with the cache and use it when it's not expired.
@@ -134,7 +135,7 @@ module ConfigCat
         end
 
         # If we are in offline mode or the caller prefers cached values, do not initiate fetch.
-        if @is_offline || prefer_cache
+        if @is_offline || prefer_cached
           return @cached_entry, nil
         end
       end
