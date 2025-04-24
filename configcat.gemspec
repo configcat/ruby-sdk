@@ -24,6 +24,10 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "rspec", "~> 3.0"
   spec.add_development_dependency "rake", "~> 12.3"
   spec.add_development_dependency "codecov", "~> 0.5"
-  spec.add_development_dependency "webmock", "~> 3.25"
+  if Gem::Version.new(RUBY_VERSION) < Gem::Version.new('2.5')
+    spec.add_development_dependency "webmock", "~> 3.18"
+  else
+    spec.add_development_dependency "webmock", "~> 3.25"
+  end
   spec.add_development_dependency "rubocop"
 end
