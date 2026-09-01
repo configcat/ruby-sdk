@@ -5,7 +5,7 @@ module ConfigCat
     end
 
     def enabled_for?(log_level)
-      ConfigCat.logger.level <= log_level
+      ::Logger::Severity.coerce(ConfigCat.logger.level) <= log_level
     end
 
     def debug(message)
