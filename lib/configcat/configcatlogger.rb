@@ -24,5 +24,27 @@ module ConfigCat
       @hooks.invoke_on_error(message)
       ConfigCat.logger.error("[" + event_id.to_s + "] " + message)
     end
+    private
+
+    def coerce_log_level(level)
+      return level if level.is_a?(Integer)
+
+      case level.to_s.downcase
+      when 'trace', 'debug'
+        ::Logger::DEBUG
+      when 'info'
+        ::Logger::INFO
+      when 'warn'
+        ::Logger::WARN
+      when 'error'
+        ::Logger::ERROR
+      when 'fatal'
+        ::Logger::FATAL
+      when 'unknown'
+        ::Logger::UNKNOWN
+      else
+        raise ArgumentError, "invalid log level: #{level}"
+      end
+    end
   end
 end
