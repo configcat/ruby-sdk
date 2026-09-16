@@ -5,17 +5,14 @@ require 'configcat'
 ConfigCat.logger.level = Logger::INFO
 
 # Initializing the ConfigCatClient with an SDK Key.
-client = ConfigCat.get("PKDVCLf-Hq-h-kCzMp-L7Q/HhOWfwVtZ0mb30i9wi17GQ")
+client = ConfigCat.get("configcat-sdk-1/PKDVCLf-Hq-h-kCzMp-L7Q/tiOvFw5gkky9LFu1Duuvzw")
 
 # Creating a user object to identify your user (optional).
 user_object = ConfigCat::User.new("Some UserID", email: "configcat@example.com", custom: {
     'version': '1.0.0'
 })
 
-value = client.get_value("isPOCFeatureEnabled", "default value", user_object)
+value = client.get_value("isPOCFeatureEnabled", false, user_object)
 puts("'isPOCFeatureEnabled' value from ConfigCat: " + value.to_s)
-
-value = client.get_value("isAwesomeFeatureEnabled", "default value")
-puts("'isAwesomeFeatureEnabled' value from ConfigCat: " + value.to_s)
 
 client.close

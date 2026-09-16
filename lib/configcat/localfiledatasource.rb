@@ -1,5 +1,6 @@
 require 'configcat/overridedatasource'
 require 'configcat/config'
+require 'json'
 
 
 module ConfigCat

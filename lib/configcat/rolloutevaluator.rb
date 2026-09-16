@@ -2,7 +2,9 @@ require 'configcat/user'
 require 'configcat/config'
 require 'configcat/evaluationcontext'
 require 'configcat/evaluationlogbuilder'
+require 'date'
 require 'digest'
+require 'json'
 require 'semantic'
 
 
