@@ -28,9 +28,10 @@ module ConfigCat
         client = @@instances[sdk_key]
         if client
           if options
+            masked_sdk_key = ConfigCatLogger.mask_sdk_key(sdk_key)
             client.log.warn(3000, "There is an existing client instance for the specified SDK Key. " \
                                   "No new client instance will be created and the specified options are ignored. " \
-                                  "Returning the existing client instance. SDK Key: '#{sdk_key}'.")
+                                  "Returning the existing client instance. SDK Key: '#{masked_sdk_key}'.")
           end
           return client
         end

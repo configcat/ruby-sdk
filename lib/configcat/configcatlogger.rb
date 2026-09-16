@@ -1,5 +1,12 @@
 module ConfigCat
   class ConfigCatLogger
+    def self.mask_sdk_key(sdk_key)
+      num_chars_to_keep = 6
+      return sdk_key if sdk_key.length <= num_chars_to_keep
+
+      sdk_key[0, sdk_key.length - num_chars_to_keep].gsub(%r{[^/]}, '*') + sdk_key[-num_chars_to_keep, num_chars_to_keep]
+    end
+
     def initialize(hooks)
       @hooks = hooks
     end
