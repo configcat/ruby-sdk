@@ -98,7 +98,7 @@ module ConfigCat
                                             read_timeout: options.read_timeout_seconds,
                                             data_governance: options.data_governance)
 
-        @_config_service = ConfigService.new(@sdk_key,
+        @_config_service = ConfigService.new(@_sdk_key,
                                              options.polling_mode,
                                              @hooks,
                                              @_config_fetcher,
