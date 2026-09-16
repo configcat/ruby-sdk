@@ -21,6 +21,29 @@ RSpec.describe ConfigCat::ConfigCatClient do
     }.to raise_error(ConfigCatClientException)
   end
 
+  it "test_config_service_reads_cache_with_expected_cache_key" do
+    mock_cache = instance_double(ConfigCache)
+    expected_cache_key = ConfigService.get_cache_key(TEST_SDK_KEY)
+
+    expect(mock_cache).to receive(:get).with(expected_cache_key).and_return(nil)
+    allow(mock_cache).to receive(:set)
+
+    WebMock.stub_request(:get, Regexp.new('https://.*')).to_return(
+      status: 200,
+      body: TEST_OBJECT_JSON,
+      headers: { 'ETag' => 'test-etag' }
+    )
+
+    ConfigCatClient.close_all
+    client = ConfigCatClient.get(
+      TEST_SDK_KEY,
+      ConfigCatOptions.new(polling_mode: PollingMode.manual_poll, config_cache: mock_cache)
+    )
+
+    client.force_refresh
+    client.close
+  end
+
   [
     ["sdk-key-90123456789012", false, false],
     ["sdk-key-9012345678901/1234567890123456789012", false, false],
