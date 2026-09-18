@@ -1,4 +1,5 @@
 require 'configcat/utils'
+require 'json'
 
 module ConfigCat
   class ConfigEntry

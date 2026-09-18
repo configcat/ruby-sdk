@@ -184,7 +184,8 @@ module ConfigCat
         when Net::HTTPNotModified
           return FetchResponse.not_modified
         when Net::HTTPNotFound, Net::HTTPForbidden
-          error = "Your SDK Key seems to be wrong. You can find the valid SDK Key at https://app.configcat.com/sdkkey. Received unexpected response: #{response}"
+          masked_sdk_key = ConfigCatLogger.mask_sdk_key(@_sdk_key)
+          error = "Your SDK Key seems to be wrong: '#{masked_sdk_key}'. You can find the valid SDK Key at https://app.configcat.com/sdkkey. Received unexpected response: #{response}"
           @log.error(1100, error)
           return FetchResponse.failure(error, false)
         else
