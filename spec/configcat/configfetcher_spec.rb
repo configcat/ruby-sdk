@@ -131,6 +131,41 @@ RSpec.describe ConfigCat::ConfigFetcher do
     expect(fetch_response.entry.empty?).to be true
   end
 
+  it "test_403_failed_fetch_response_logs_1100_invalid_sdk_key" do
+    uri_template = Addressable::Template.new "https://{base_url}/{base_path}/{api_key}/{base_ext}"
+
+    WebMock.stub_request(:get, uri_template)
+           .with(
+             body: "",
+             headers: {
+               'Accept' => '*/*',
+               'Content-Type' => 'application/json',
+               'Accept-Encoding' => 'gzip;q=1.0,deflate;q=0.6,identity;q=0.3'
+             }
+           )
+           .to_return(status: 403, body: "", headers: {})
+
+    logger = ConfigCat.logger
+    log_stream = StringIO.new
+    ConfigCat.logger = Logger.new(log_stream, level: Logger::ERROR)
+
+    begin
+      log = ConfigCatLogger.new(Hooks.new)
+      fetcher = ConfigCat::ConfigFetcher.new(TEST_SDK_KEY1, log, "m")
+      fetch_response = fetcher.get_configuration()
+
+      expect(fetch_response.is_failed()).to be true
+      expect(fetch_response.is_transient_error).to be false
+
+      log_stream.rewind
+      error_log = log_stream.read
+      expect(error_log).to include("[1100] Your SDK Key seems to be wrong: '**********************/****************000001'.")
+      expect(error_log).to include("You can find the valid SDK Key at https://app.configcat.com/sdkkey.")
+    ensure
+      ConfigCat.logger = logger
+    end
+  end
+
   it "test_server_side_etag" do
     log = ConfigCatLogger.new(Hooks.new)
     fetcher = ConfigCat::ConfigFetcher.new("PKDVCLf-Hq-h-kCzMp-L7Q/HhOWfwVtZ0mb30i9wi17GQ",

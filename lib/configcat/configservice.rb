@@ -2,6 +2,7 @@ require 'concurrent'
 require 'configcat/configentry'
 require 'configcat/pollingmode'
 require 'configcat/refreshresult'
+require 'digest'
 
 
 module ConfigCat

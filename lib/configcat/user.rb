@@ -1,3 +1,6 @@
+require 'date'
+require 'json'
+
 module ConfigCat
   # User Object. Contains user attributes which are used for evaluating targeting rules and percentage options.
   class User
