@@ -66,6 +66,9 @@ module ConfigCat
     end
   end
 
+  RETRY_DELAY_SECONDS = 0.05
+  CONNECTION_RESET_THRESHOLD_SECONDS = 30
+
   class ConfigFetcher
     def initialize(sdk_key, log, mode, base_url: nil, proxy_address: nil, proxy_port: nil, proxy_user: nil, proxy_pass: nil,
                    open_timeout: 10, read_timeout: 30,
@@ -79,6 +82,7 @@ module ConfigCat
       @_open_timeout = open_timeout
       @_read_timeout = read_timeout
       @_headers = { "User-Agent" => ((("ConfigCat-Ruby/") + mode) + ("-")) + VERSION, "X-ConfigCat-UserAgent" => ((("ConfigCat-Ruby/") + mode) + ("-")) + VERSION, "Content-Type" => "application/json" }
+      @_last_connection_reset = nil
       if !base_url.equal?(nil)
         @_base_url_overridden = true
         @_base_url = base_url.chomp("/")
@@ -163,6 +167,24 @@ module ConfigCat
     private
 
     def _fetch(etag)
+      response = _fetch_http(etag)
+      if response.is_failed && response.is_transient_error
+        _reset_http_if_needed
+        sleep(RETRY_DELAY_SECONDS)
+        response = _fetch_http(etag)
+      end
+      response
+    end
+
+    def _reset_http_if_needed
+      now = Utils.get_utc_now_seconds_since_epoch
+      if @_last_connection_reset.nil? || now - @_last_connection_reset >= CONNECTION_RESET_THRESHOLD_SECONDS
+        close
+        @_last_connection_reset = now
+      end
+    end
+
+    def _fetch_http(etag)
       begin
         @log.debug("Fetching configuration from ConfigCat")
         uri = URI.parse((((@_base_url + ("/")) + BASE_PATH) + @_sdk_key) + BASE_EXTENSION)

@@ -166,6 +166,119 @@ RSpec.describe ConfigCat::ConfigFetcher do
     end
   end
 
+  it "retry_on_transient_http_error" do
+    test_json = '{"f": {}}'
+    uri_template = Addressable::Template.new "https://{base_url}/{base_path}/{api_key}/{base_ext}"
+    stub = WebMock.stub_request(:get, uri_template)
+      .to_return(status: 500, body: "", headers: {})
+      .then
+      .to_return(status: 200, body: test_json, headers: {})
+
+    log = ConfigCatLogger.new(Hooks.new)
+    fetcher = ConfigCat::ConfigFetcher.new("", log, "m")
+    fetch_response = fetcher.get_configuration()
+
+    expect(fetch_response.is_fetched()).to be true
+    expect(WebMock).to have_requested(:get, uri_template).twice
+  end
+
+  it "retry_on_timeout" do
+    test_json = '{"f": {}}'
+    uri_template = Addressable::Template.new "https://{base_url}/{base_path}/{api_key}/{base_ext}"
+    WebMock.stub_request(:get, uri_template)
+      .to_raise(Timeout::Error.new("timed out"))
+      .then
+      .to_return(status: 200, body: test_json, headers: {})
+
+    log = ConfigCatLogger.new(Hooks.new)
+    fetcher = ConfigCat::ConfigFetcher.new("", log, "m")
+    fetch_response = fetcher.get_configuration()
+
+    expect(fetch_response.is_fetched()).to be true
+    expect(WebMock).to have_requested(:get, uri_template).twice
+  end
+
+  it "retry_on_unexpected_error" do
+    test_json = '{"f": {}}'
+    uri_template = Addressable::Template.new "https://{base_url}/{base_path}/{api_key}/{base_ext}"
+    WebMock.stub_request(:get, uri_template)
+      .to_raise(SocketError.new("connection reset"))
+      .then
+      .to_return(status: 200, body: test_json, headers: {})
+
+    log = ConfigCatLogger.new(Hooks.new)
+    fetcher = ConfigCat::ConfigFetcher.new("", log, "m")
+    fetch_response = fetcher.get_configuration()
+
+    expect(fetch_response.is_fetched()).to be true
+    expect(WebMock).to have_requested(:get, uri_template).twice
+  end
+
+  it "retry_on_transient_http_error_both_fail" do
+    uri_template = Addressable::Template.new "https://{base_url}/{base_path}/{api_key}/{base_ext}"
+    WebMock.stub_request(:get, uri_template)
+      .to_return(status: 500, body: "", headers: {})
+
+    log = ConfigCatLogger.new(Hooks.new)
+    fetcher = ConfigCat::ConfigFetcher.new("", log, "m")
+    fetch_response = fetcher.get_configuration()
+
+    expect(fetch_response.is_failed()).to be true
+    expect(fetch_response.is_transient_error).to be true
+    expect(WebMock).to have_requested(:get, uri_template).twice
+  end
+
+  it "evict_all_throttled_within_30_seconds" do
+    uri_template = Addressable::Template.new "https://{base_url}/{base_path}/{api_key}/{base_ext}"
+    WebMock.stub_request(:get, uri_template)
+      .to_return(status: 500, body: "", headers: {})
+
+    log = ConfigCatLogger.new(Hooks.new)
+    fetcher = ConfigCat::ConfigFetcher.new("", log, "m")
+
+    # First failure: connection reset should happen (last_reset is nil)
+    fetcher.get_configuration()
+    first_reset_time = fetcher.instance_variable_get(:@_last_connection_reset)
+    expect(first_reset_time).not_to be_nil
+
+    WebMock.reset!
+    WebMock.stub_request(:get, uri_template)
+      .to_return(status: 500, body: "", headers: {})
+
+    # Second failure within 30s: reset should NOT update the timestamp
+    fetcher.get_configuration()
+    second_reset_time = fetcher.instance_variable_get(:@_last_connection_reset)
+    expect(second_reset_time).to eq first_reset_time
+  end
+
+  it "no_retry_on_403" do
+    uri_template = Addressable::Template.new "https://{base_url}/{base_path}/{api_key}/{base_ext}"
+    WebMock.stub_request(:get, uri_template)
+      .to_return(status: 403, body: "", headers: {})
+
+    log = ConfigCatLogger.new(Hooks.new)
+    fetcher = ConfigCat::ConfigFetcher.new("", log, "m")
+    fetch_response = fetcher.get_configuration()
+
+    expect(fetch_response.is_failed()).to be true
+    expect(fetch_response.is_transient_error).to be false
+    expect(WebMock).to have_requested(:get, uri_template).once
+  end
+
+  it "no_retry_on_404" do
+    uri_template = Addressable::Template.new "https://{base_url}/{base_path}/{api_key}/{base_ext}"
+    WebMock.stub_request(:get, uri_template)
+      .to_return(status: 404, body: "", headers: {})
+
+    log = ConfigCatLogger.new(Hooks.new)
+    fetcher = ConfigCat::ConfigFetcher.new("", log, "m")
+    fetch_response = fetcher.get_configuration()
+
+    expect(fetch_response.is_failed()).to be true
+    expect(fetch_response.is_transient_error).to be false
+    expect(WebMock).to have_requested(:get, uri_template).once
+  end
+
   it "test_server_side_etag" do
     log = ConfigCatLogger.new(Hooks.new)
     fetcher = ConfigCat::ConfigFetcher.new("PKDVCLf-Hq-h-kCzMp-L7Q/HhOWfwVtZ0mb30i9wi17GQ",
