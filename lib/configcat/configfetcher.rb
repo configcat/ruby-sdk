@@ -185,6 +185,7 @@ module ConfigCat
     end
 
     def _fetch_http(etag)
+      response_cf_ray_id = nil
       begin
         @log.debug("Fetching configuration from ConfigCat")
         uri = URI.parse((((@_base_url + ("/")) + BASE_PATH) + @_sdk_key) + BASE_EXTENSION)
@@ -194,20 +195,32 @@ module ConfigCat
         request = Net::HTTP::Get.new(uri.request_uri, headers)
         response = @_http.request(request)
         case response
-        when Net::HTTPSuccess
+        when Net::HTTPOK
           @log.debug("ConfigCat configuration json fetch response code:#{response.code} Cached:#{response['ETag']}")
+          content = response.body
+          if content.nil? || content.empty?
+            raise ArgumentError.new("Config JSON content cannot be null or empty.")
+          end
+          config = JSON.parse(content)
+          if config.nil?
+            raise ArgumentError.new("Invalid config JSON content: #{content}")
+          end
+          Config.fixup_config_salt_and_segments(config)
+
           response_etag = response["ETag"]
           if response_etag.nil?
             response_etag = ""
           end
-          config = JSON.parse(response.body)
-          Config.fixup_config_salt_and_segments(config)
+
+          response_cf_ray_id = response["CF-RAY"]
+
           return FetchResponse.success(ConfigEntry.new(config, response_etag, response.body, Utils.get_utc_now_seconds_since_epoch))
         when Net::HTTPNotModified
           return FetchResponse.not_modified
         when Net::HTTPNotFound, Net::HTTPForbidden
           masked_sdk_key = ConfigCatLogger.mask_sdk_key(@_sdk_key)
           error = "Your SDK Key seems to be wrong: '#{masked_sdk_key}'. You can find the valid SDK Key at https://app.configcat.com/sdkkey. Received unexpected response: #{response}"
+          error = "%s (Ray ID: %s)" % [error, response_cf_ray_id] if response_cf_ray_id
           @log.error(1100, error)
           return FetchResponse.failure(error, false)
         else
@@ -215,16 +228,19 @@ module ConfigCat
         end
       rescue Net::HTTPError => e
         error = "Unexpected HTTP response was received while trying to fetch config JSON: #{e}"
+        error = "%s (Ray ID: %s)" % [error, response_cf_ray_id] if response_cf_ray_id
         @log.error(1101, error)
         return FetchResponse.failure(error, true)
       rescue Timeout::Error => e
         error = "Request timed out while trying to fetch config JSON. Timeout values: [connect: #{get_open_timeout()}s, read: #{get_read_timeout()}s]"
+        error = "%s (Ray ID: %s)" % [error, response_cf_ray_id] if response_cf_ray_id
         @log.error(1102, error)
         return FetchResponse.failure(error, true)
       rescue Exception => e
         error = "Unexpected error occurred while trying to fetch config JSON. It is most likely due to a local network " \
                 "issue. Please make sure your application can reach the ConfigCat CDN servers (or your proxy server) " \
                 "over HTTP. #{e}"
+        error = "%s (Ray ID: %s)" % [error, response_cf_ray_id] if response_cf_ray_id
         @log.error(1103, error)
         return FetchResponse.failure(error, true)
       end

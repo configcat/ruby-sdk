@@ -3,6 +3,25 @@ require 'configcat/configfetcher'
 require_relative 'mocks'
 
 RSpec.describe ConfigCat::ConfigFetcher do
+  [
+    "",
+    "null"
+  ].each do |body|
+    it "fetch_empty_#{body.empty? ? 'empty' : 'null'}" do
+      uri_template = Addressable::Template.new "https://{base_url}/{base_path}/{api_key}/{base_ext}"
+      WebMock.stub_request(:get, uri_template)
+        .to_return(status: 200, body: body, headers: {})
+
+      log = ConfigCatLogger.new(Hooks.new)
+      fetcher = ConfigCat::ConfigFetcher.new("", log, "m")
+      fetch_response = fetcher.get_configuration()
+
+      expect(fetch_response.is_fetched()).to be false
+      expect(fetch_response.is_failed()).to be true
+      expect(fetch_response.error).to include("Unexpected error occurred while trying to fetch config JSON")
+    end
+  end
+
   it "test_simple_fetch_success" do
     test_json = '{"test": "json"}'
     uri_template = Addressable::Template.new "https://{base_url}/{base_path}/{api_key}/{base_ext}"
