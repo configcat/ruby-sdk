@@ -193,7 +193,12 @@ module ConfigCat
         headers["If-None-Match"] = etag.empty? ? nil : etag
         _create_http()
         request = Net::HTTP::Get.new(uri.request_uri, headers)
-        response = @_http.request(request)
+        response = @_http.request(request) do |res|
+          # Capture the response before reading the body, so headers remain accessible even if the body download fails
+          response_cf_ray_id = res["CF-RAY"]
+          res.read_body
+        end
+
         case response
         when Net::HTTPOK
           @log.debug("ConfigCat configuration json fetch response code:#{response.code} Cached:#{response['ETag']}")
@@ -206,14 +211,10 @@ module ConfigCat
             raise ArgumentError.new("Invalid config JSON content: #{content}")
           end
           Config.fixup_config_salt_and_segments(config)
-
           response_etag = response["ETag"]
           if response_etag.nil?
             response_etag = ""
           end
-
-          response_cf_ray_id = response["CF-RAY"]
-
           return FetchResponse.success(ConfigEntry.new(config, response_etag, response.body, Utils.get_utc_now_seconds_since_epoch))
         when Net::HTTPNotModified
           return FetchResponse.not_modified
