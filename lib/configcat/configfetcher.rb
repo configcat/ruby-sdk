@@ -26,13 +26,14 @@ module ConfigCat
   end
 
   class FetchResponse
-    attr_reader :entry, :error, :is_transient_error
+    attr_reader :entry, :error, :is_transient_error, :cf_ray_id
 
-    def initialize(status, entry, error = nil, is_transient_error = false)
+    def initialize(status, entry, error = nil, is_transient_error = false, cf_ray_id = nil)
       @status = status
       @entry = entry
       @error = error
       @is_transient_error = is_transient_error
+      @cf_ray_id = cf_ray_id
     end
 
     # Gets whether a new configuration value was fetched or not.
@@ -53,18 +54,21 @@ module ConfigCat
       @status == Status::FAILURE
     end
 
-    def self.success(entry)
-      FetchResponse.new(Status::FETCHED, entry)
+    def self.success(entry, cf_ray_id = nil)
+      FetchResponse.new(Status::FETCHED, entry, nil, false, cf_ray_id)
     end
 
-    def self.not_modified
-      FetchResponse.new(Status::NOT_MODIFIED, ConfigEntry::EMPTY)
+    def self.not_modified(cf_ray_id = nil)
+      FetchResponse.new(Status::NOT_MODIFIED, ConfigEntry::EMPTY, nil, false, cf_ray_id)
     end
 
-    def self.failure(error, is_transient_error)
-      FetchResponse.new(Status::FAILURE, ConfigEntry::EMPTY, error, is_transient_error)
+    def self.failure(error, is_transient_error, cf_ray_id = nil)
+      FetchResponse.new(Status::FAILURE, ConfigEntry::EMPTY, error, is_transient_error, cf_ray_id)
     end
   end
+
+  RETRY_DELAY_SECONDS = 0.05
+  CONNECTION_RESET_THRESHOLD_SECONDS = 30
 
   class ConfigFetcher
     def initialize(sdk_key, log, mode, base_url: nil, proxy_address: nil, proxy_port: nil, proxy_user: nil, proxy_pass: nil,
@@ -79,6 +83,7 @@ module ConfigCat
       @_open_timeout = open_timeout
       @_read_timeout = read_timeout
       @_headers = { "User-Agent" => ((("ConfigCat-Ruby/") + mode) + ("-")) + VERSION, "X-ConfigCat-UserAgent" => ((("ConfigCat-Ruby/") + mode) + ("-")) + VERSION, "Content-Type" => "application/json" }
+      @_last_connection_reset = nil
       if !base_url.equal?(nil)
         @_base_url_overridden = true
         @_base_url = base_url.chomp("/")
@@ -146,7 +151,9 @@ module ConfigCat
 
       # To prevent loops we check if we retried at least 3 times with the new base_url
       if retries >= 2
-        @log.error(1104, "Redirection loop encountered while trying to fetch config JSON. Please contact us at https://configcat.com/support/")
+        error = "Redirection loop encountered while trying to fetch config JSON. Please contact us at https://configcat.com/support/"
+        error = "%s (Ray ID: %s)" % [error, fetch_response.cf_ray_id] if fetch_response.cf_ray_id
+        @log.error(1104, error)
         return fetch_response
       end
 
@@ -163,6 +170,25 @@ module ConfigCat
     private
 
     def _fetch(etag)
+      response = _fetch_http(etag)
+      if response.is_failed && response.is_transient_error
+        _reset_http_if_needed
+        sleep(RETRY_DELAY_SECONDS)
+        response = _fetch_http(etag)
+      end
+      response
+    end
+
+    def _reset_http_if_needed
+      now = Utils.get_utc_now_seconds_since_epoch
+      if @_last_connection_reset.nil? || now - @_last_connection_reset >= CONNECTION_RESET_THRESHOLD_SECONDS
+        close
+        @_last_connection_reset = now
+      end
+    end
+
+    def _fetch_http(etag)
+      response_cf_ray_id = nil
       begin
         @log.debug("Fetching configuration from ConfigCat")
         uri = URI.parse((((@_base_url + ("/")) + BASE_PATH) + @_sdk_key) + BASE_EXTENSION)
@@ -170,41 +196,57 @@ module ConfigCat
         headers["If-None-Match"] = etag.empty? ? nil : etag
         _create_http()
         request = Net::HTTP::Get.new(uri.request_uri, headers)
-        response = @_http.request(request)
+        response = @_http.request(request) do |res|
+          # Capture the response before reading the body, so headers remain accessible even if the body download fails
+          response_cf_ray_id = res["CF-RAY"]
+          res.read_body
+        end
+
         case response
-        when Net::HTTPSuccess
+        when Net::HTTPOK
           @log.debug("ConfigCat configuration json fetch response code:#{response.code} Cached:#{response['ETag']}")
+          content = response.body
+          if content.nil? || content.empty?
+            raise ArgumentError.new("Config JSON content cannot be null or empty.")
+          end
+          config = JSON.parse(content)
+          if config.nil?
+            raise ArgumentError.new("Invalid config JSON content: #{content}")
+          end
+          Config.fixup_config_salt_and_segments(config)
           response_etag = response["ETag"]
           if response_etag.nil?
             response_etag = ""
           end
-          config = JSON.parse(response.body)
-          Config.fixup_config_salt_and_segments(config)
-          return FetchResponse.success(ConfigEntry.new(config, response_etag, response.body, Utils.get_utc_now_seconds_since_epoch))
+          return FetchResponse.success(ConfigEntry.new(config, response_etag, response.body, Utils.get_utc_now_seconds_since_epoch), response_cf_ray_id)
         when Net::HTTPNotModified
-          return FetchResponse.not_modified
+          return FetchResponse.not_modified(response_cf_ray_id)
         when Net::HTTPNotFound, Net::HTTPForbidden
           masked_sdk_key = ConfigCatLogger.mask_sdk_key(@_sdk_key)
           error = "Your SDK Key seems to be wrong: '#{masked_sdk_key}'. You can find the valid SDK Key at https://app.configcat.com/sdkkey. Received unexpected response: #{response}"
+          error = "%s (Ray ID: %s)" % [error, response_cf_ray_id] if response_cf_ray_id
           @log.error(1100, error)
-          return FetchResponse.failure(error, false)
+          return FetchResponse.failure(error, false, response_cf_ray_id)
         else
           raise Net::HTTPError.new("", response)
         end
       rescue Net::HTTPError => e
         error = "Unexpected HTTP response was received while trying to fetch config JSON: #{e}"
+        error = "%s (Ray ID: %s)" % [error, response_cf_ray_id] if response_cf_ray_id
         @log.error(1101, error)
-        return FetchResponse.failure(error, true)
+        return FetchResponse.failure(error, true, response_cf_ray_id)
       rescue Timeout::Error => e
         error = "Request timed out while trying to fetch config JSON. Timeout values: [connect: #{get_open_timeout()}s, read: #{get_read_timeout()}s]"
+        error = "%s (Ray ID: %s)" % [error, response_cf_ray_id] if response_cf_ray_id
         @log.error(1102, error)
-        return FetchResponse.failure(error, true)
+        return FetchResponse.failure(error, true, response_cf_ray_id)
       rescue Exception => e
         error = "Unexpected error occurred while trying to fetch config JSON. It is most likely due to a local network " \
                 "issue. Please make sure your application can reach the ConfigCat CDN servers (or your proxy server) " \
                 "over HTTP. #{e}"
+        error = "%s (Ray ID: %s)" % [error, response_cf_ray_id] if response_cf_ray_id
         @log.error(1103, error)
-        return FetchResponse.failure(error, true)
+        return FetchResponse.failure(error, true, response_cf_ray_id)
       end
     end
 
