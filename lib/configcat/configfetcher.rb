@@ -192,6 +192,8 @@ module ConfigCat
       begin
         @log.debug("Fetching configuration from ConfigCat")
         uri = URI.parse((((@_base_url + ("/")) + BASE_PATH) + @_sdk_key) + BASE_EXTENSION)
+        # A URL with no http(s) scheme or no host can parse, but cannot be requested.
+        raise URI::InvalidURIError, "not an HTTP URL" unless uri.is_a?(URI::HTTP) && !uri.host.to_s.empty?
         headers = @_headers
         headers["If-None-Match"] = etag.empty? ? nil : etag
         _create_http()
@@ -240,14 +242,32 @@ module ConfigCat
         error = "%s (Ray ID: %s)" % [error, response_cf_ray_id] if response_cf_ray_id
         @log.error(1102, error)
         return FetchResponse.failure(error, true, response_cf_ray_id)
+      rescue URI::Error
+        # The exception message is left out of the error: it quotes the request URL, which contains the SDK Key
+        # and any credentials in the base URL.
+        masked_sdk_key = ConfigCatLogger.mask_sdk_key(@_sdk_key)
+        error = "Unexpected error occurred while trying to fetch config JSON. The request URL is invalid. " \
+                "Please check the SDK Key ('#{masked_sdk_key}') and the base URL."
+        @log.error(1103, error)
+        return FetchResponse.failure(error, true, response_cf_ray_id)
       rescue Exception => e
         error = "Unexpected error occurred while trying to fetch config JSON. It is most likely due to a local network " \
                 "issue. Please make sure your application can reach the ConfigCat CDN servers (or your proxy server) " \
-                "over HTTP. #{e}"
+                "over HTTP. #{_mask_sdk_key_in(e)}"
         error = "%s (Ray ID: %s)" % [error, response_cf_ray_id] if response_cf_ray_id
         @log.error(1103, error)
         return FetchResponse.failure(error, true, response_cf_ray_id)
       end
+    end
+
+    # An exception message can quote the request URL, which contains the SDK Key.
+    def _mask_sdk_key_in(exception)
+      message = exception.to_s
+      return message if @_sdk_key.nil? || @_sdk_key.empty?
+
+      message.gsub(@_sdk_key) { ConfigCatLogger.mask_sdk_key(@_sdk_key) }
+    rescue StandardError
+      exception.class.to_s
     end
 
     def _create_http

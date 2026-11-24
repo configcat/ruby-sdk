@@ -62,6 +62,14 @@ RSpec.describe ConfigCat::ConfigCatClient do
     ["configcat-proxy/", true, false],
     ["configcat-proxy/sdk-key-90123456789012", false, false],
     ["configcat-proxy/sdk-key-90123456789012", true, true],
+    ["sdk-key 90123456789012/1234567890123456789012", false, false],
+    ["sdk-key-90123456789012/1234567890123456789012\n", false, false],
+    ["x\nsdk-key-90123456789012/1234567890123456789012", false, false],
+    ["configcat-sdk-1/sdk-key 90123456789012/1234567890123456789012", false, false],
+    ["configcat-proxy/sdk key", true, false],
+    ["configcat-proxy/sdk-key-90123456789012\u00A0", true, false],
+    ["sdk-key-9012345678\e[2J/1234567890123456789012", false, false],
+    ["sdk-key-9012345678901\u00E9/1234567890123456789012", false, false],
   ].each do |sdk_key, custom_base_url, is_valid|
     it "test_sdk_key_format_validation (#{sdk_key}, #{custom_base_url}, #{is_valid})" do
       if custom_base_url
@@ -76,6 +84,65 @@ RSpec.describe ConfigCat::ConfigCatClient do
       rescue ConfigCatClientException => e
         expect(is_valid).to eq(false)
       end
+    end
+  end
+
+  it "test_invalid_sdk_key_is_masked_in_exception" do
+    sdk_key = "configcat-sdk-1/sdk-key-90123456789012/123456789012345678901"
+    expect {
+      ConfigCatClient.get(sdk_key)
+    }.to raise_error(ConfigCatClientException) { |e|
+      expect(e.message).not_to include(sdk_key)
+      expect(e.message).to include(ConfigCatLogger.mask_sdk_key(sdk_key))
+    }
+  end
+
+  [
+    ["configcat-proxy/\"sdk-key-90123456789012\"", "https://my-configcat-proxy"],
+    ["sdk-key-9012345678901\\/1234567890123456789012", nil],
+    ["sdk-key-90123456789012/1234567890123456789012", "https://user:pass@my-configcat-proxy "],
+    ["sdk-key-90123456789012/1234567890123456789012", "my-configcat-proxy"],
+    ["sdk-key-90123456789012/1234567890123456789012", "user:pass@my-configcat-proxy:8050"],
+    ["sdk-key-90123456789012/1234567890123456789012", "mailto:x"],
+  ].each do |sdk_key, base_url|
+    it "test_invalid_request_url_is_not_logged (#{sdk_key.inspect}, #{base_url.inspect})" do
+      ConfigCatClient.close_all
+      errors = []
+      hooks = Hooks.new(on_error: ->(error) { errors << error })
+      client = ConfigCatClient.get(sdk_key, ConfigCatOptions.new(base_url: base_url,
+                                                                 polling_mode: PollingMode.manual_poll,
+                                                                 hooks: hooks))
+      client.force_refresh
+      client.close
+
+      expect(errors).not_to be_empty
+      errors.each do |error|
+        expect(error).to include("The request URL is invalid")
+        expect(error).to include(ConfigCatLogger.mask_sdk_key(sdk_key))
+        expect(error).not_to include(sdk_key)
+        expect(error).not_to include(sdk_key.inspect[1..-2])
+        expect(error).not_to include("user:pass")
+      end
+    end
+  end
+
+  it "test_sdk_key_is_masked_in_unexpected_fetch_error" do
+    sdk_key = "sdk-key-90123456789012/1234567890123456789012"
+    WebMock.stub_request(:get, Regexp.new('https://.*'))
+      .to_raise(StandardError.new("Unregistered request: GET https://host/configuration-files/#{sdk_key}/config_v6.json"))
+
+    ConfigCatClient.close_all
+    errors = []
+    hooks = Hooks.new(on_error: ->(error) { errors << error })
+    client = ConfigCatClient.get(sdk_key, ConfigCatOptions.new(polling_mode: PollingMode.manual_poll, hooks: hooks))
+    client.force_refresh
+    client.close
+
+    expect(errors).not_to be_empty
+    errors.each do |error|
+      expect(error).to include("Unregistered request")
+      expect(error).to include(ConfigCatLogger.mask_sdk_key(sdk_key))
+      expect(error).not_to include(sdk_key)
     end
   end
 

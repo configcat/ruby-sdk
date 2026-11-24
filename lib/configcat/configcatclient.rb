@@ -69,11 +69,12 @@ module ConfigCat
 
       # In case of local only flag overrides mode, we accept any SDK Key format.
       if @_override_data_source.nil? || @_override_data_source.get_behaviour() != OverrideBehaviour::LOCAL_ONLY
-        is_valid_sdk_key = /^.{22}\/.{22}$/.match?(sdk_key) ||
-          /^configcat-sdk-1\/.{22}\/.{22}$/.match?(sdk_key) ||
-          (options.base_url && /^configcat-proxy\/.+$/.match?(sdk_key))
+        # Printable ASCII only: whitespace and control characters cannot form a request URL.
+        is_valid_sdk_key = /\A[\x21-\x7E]{22}\/[\x21-\x7E]{22}\z/.match?(sdk_key) ||
+          /\Aconfigcat-sdk-1\/[\x21-\x7E]{22}\/[\x21-\x7E]{22}\z/.match?(sdk_key) ||
+          (options.base_url && /\Aconfigcat-proxy\/[\x21-\x7E]+\z/.match?(sdk_key))
         unless is_valid_sdk_key
-          raise ConfigCatClientException, "SDK Key `#{sdk_key}` is invalid."
+          raise ConfigCatClientException, "SDK Key `#{ConfigCatLogger.mask_sdk_key(sdk_key)}` is invalid."
         end
       end
 
