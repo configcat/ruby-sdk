@@ -14,7 +14,7 @@ Gem::Specification.new do |spec|
   spec.homepage      = "https://configcat.com"
   github_repo        = "https://github.com/configcat/ruby-sdk"
   spec.metadata      = {
-    "homepage_uri"      => "https://configcat.com",
+    "homepage_uri"      => spec.homepage,
     "source_code_uri"   => "#{github_repo}/tree/v#{spec.version}",
     "changelog_uri"     => "#{github_repo}/releases/tag/v#{spec.version}",
     "bug_tracker_uri"   => "#{github_repo}/issues",
