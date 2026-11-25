@@ -20,7 +20,7 @@ Gem::Specification.new do |spec|
     "bug_tracker_uri"   => "#{github_repo}/issues",
     "documentation_uri" => "https://configcat.com/docs/sdk-reference/ruby"
   }
-  spec.files         = Dir['lib/*'] + Dir['lib/**/*.rb']
+  spec.files         = Dir['lib/*', 'lib/**/*.rb', 'README.md', 'LICENSE']
   spec.require_paths = ["lib"]
   spec.required_ruby_version = ">= 2.5"
 
